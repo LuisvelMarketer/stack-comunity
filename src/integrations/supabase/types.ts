@@ -94,6 +94,47 @@ export type Database = {
         }
         Relationships: []
       }
+      module_quizzes: {
+        Row: {
+          created_at: string
+          explanation: string | null
+          id: string
+          module_id: string
+          options: Json
+          order_index: number
+          question: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          explanation?: string | null
+          id?: string
+          module_id: string
+          options: Json
+          order_index?: number
+          question: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          explanation?: string | null
+          id?: string
+          module_id?: string
+          options?: Json
+          order_index?: number
+          question?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "module_quizzes_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "course_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -149,6 +190,41 @@ export type Database = {
             columns: ["module_id"]
             isOneToOne: false
             referencedRelation: "course_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_quiz_answers: {
+        Row: {
+          created_at: string
+          id: string
+          is_correct: boolean
+          quiz_id: string
+          selected_option: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_correct: boolean
+          quiz_id: string
+          selected_option: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_correct?: boolean
+          quiz_id?: string
+          selected_option?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_quiz_answers_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "module_quizzes"
             referencedColumns: ["id"]
           },
         ]
