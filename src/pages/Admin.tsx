@@ -1,23 +1,14 @@
 import { useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  BookOpen, 
-  FileText, 
-  MessageCircle, 
-  Users, 
-  LogOut,
-  LayoutDashboard
-} from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BookOpen, FileText, MessageCircle } from "lucide-react";
+import { UserMenu } from "@/components/UserMenu";
 import { CoursesManager } from "@/components/admin/CoursesManager";
 import { ModulesManager } from "@/components/admin/ModulesManager";
 import { QuizzesManager } from "@/components/admin/QuizzesManager";
 import { CommentsManager } from "@/components/admin/CommentsManager";
 
 export default function Admin() {
-  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("courses");
 
@@ -28,24 +19,7 @@ export default function Admin() {
           <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
             Panel de Administración
           </h1>
-          <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate("/dashboard")}
-            >
-              <LayoutDashboard className="h-4 w-4 mr-2" />
-              Ir al Dashboard
-            </Button>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Users className="h-4 w-4" />
-              <span>{user?.email}</span>
-            </div>
-            <Button variant="outline" size="sm" onClick={signOut}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Salir
-            </Button>
-          </div>
+          <UserMenu showAdminLink={false} />
         </div>
       </nav>
 
