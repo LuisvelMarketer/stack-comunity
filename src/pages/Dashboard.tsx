@@ -4,8 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { BookOpen, LogOut, User } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { UserMenu } from "@/components/UserMenu";
 
 interface Course {
   id: string;
@@ -15,14 +16,33 @@ interface Course {
 }
 
 const Dashboard = () => {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     loadCourses();
+    checkAdminRole();
   }, []);
+
+  const checkAdminRole = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase.rpc("has_role", {
+        _user_id: user.id,
+        _role: "admin",
+      });
+
+      if (!error && data) {
+        setIsAdmin(true);
+      }
+    } catch (error) {
+      console.error("Error checking admin role:", error);
+    }
+  };
 
   const loadCourses = async () => {
     try {
@@ -48,24 +68,7 @@ const Dashboard = () => {
           <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
             DevAcademy
           </h1>
-          <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate("/admin")}
-            >
-              <User className="h-4 w-4 mr-2" />
-              Admin
-            </Button>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <User className="h-4 w-4" />
-              <span>{user?.email}</span>
-            </div>
-            <Button variant="outline" size="sm" onClick={signOut}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Salir
-            </Button>
-          </div>
+          <UserMenu showAdminLink={isAdmin} />
         </div>
       </nav>
 
