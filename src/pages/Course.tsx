@@ -6,8 +6,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, CheckCircle2, Circle, Play } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Circle, Play, FileText } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MarkdownRenderer } from "@/components/MarkdownRenderer";
+import { Quiz } from "@/components/Quiz";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Module {
   id: string;
@@ -310,25 +313,46 @@ export default function Course() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {selectedModule.video_url && (
-                    <div className="aspect-video bg-muted rounded-lg overflow-hidden">
-                      <iframe
-                        src={selectedModule.video_url}
-                        className="w-full h-full"
-                        allowFullScreen
-                        title={selectedModule.title}
-                      />
-                    </div>
-                  )}
-                  {selectedModule.content && (
-                    <div className="prose prose-sm max-w-none">
-                      <div
-                        dangerouslySetInnerHTML={{
-                          __html: selectedModule.content,
-                        }}
-                      />
-                    </div>
-                  )}
+                  <Tabs defaultValue="content" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="content">
+                        <FileText className="mr-2 h-4 w-4" />
+                        Contenido
+                      </TabsTrigger>
+                      <TabsTrigger value="quiz">
+                        <CheckCircle2 className="mr-2 h-4 w-4" />
+                        Quiz
+                      </TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="content" className="space-y-6 mt-6">
+                      {selectedModule.video_url && (
+                        <div className="aspect-video bg-muted rounded-lg overflow-hidden shadow-elegant">
+                          <iframe
+                            src={selectedModule.video_url}
+                            className="w-full h-full"
+                            allowFullScreen
+                            title={selectedModule.title}
+                          />
+                        </div>
+                      )}
+                      {selectedModule.content && (
+                        <div className="mt-6">
+                          <MarkdownRenderer content={selectedModule.content} />
+                        </div>
+                      )}
+                      {!selectedModule.video_url && !selectedModule.content && (
+                        <div className="text-center py-12 text-muted-foreground">
+                          <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                          <p>No hay contenido disponible para este módulo</p>
+                        </div>
+                      )}
+                    </TabsContent>
+
+                    <TabsContent value="quiz" className="mt-6">
+                      <Quiz moduleId={selectedModule.id} />
+                    </TabsContent>
+                  </Tabs>
                 </CardContent>
               </Card>
             ) : (
