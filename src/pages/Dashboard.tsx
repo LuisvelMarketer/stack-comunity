@@ -49,6 +49,14 @@ const Dashboard = () => {
             DevAcademy
           </h1>
           <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate("/admin")}
+            >
+              <User className="h-4 w-4 mr-2" />
+              Admin
+            </Button>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <User className="h-4 w-4" />
               <span>{user?.email}</span>
