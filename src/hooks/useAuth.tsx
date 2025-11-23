@@ -158,6 +158,27 @@ export const useAuth = () => {
     }
   };
 
+  const signInWithGoogle = async () => {
+    try {
+      const redirectUrl = `${window.location.origin}/dashboard`;
+      
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectUrl,
+        },
+      });
+
+      if (error) throw error;
+    } catch (error: any) {
+      toast({
+        title: "Error al iniciar sesión con Google",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   return {
     user,
     session,
@@ -167,5 +188,6 @@ export const useAuth = () => {
     signOut,
     resetPassword,
     updatePassword,
+    signInWithGoogle,
   };
 };
