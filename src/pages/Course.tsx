@@ -6,10 +6,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, CheckCircle2, Circle, Play, FileText } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Circle, Play, FileText, MessageCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { Quiz } from "@/components/Quiz";
+import { ModuleComments } from "@/components/ModuleComments";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Module {
@@ -314,7 +315,7 @@ export default function Course() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <Tabs defaultValue="content" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
+                    <TabsList className="grid w-full grid-cols-3">
                       <TabsTrigger value="content">
                         <FileText className="mr-2 h-4 w-4" />
                         Contenido
@@ -322,6 +323,10 @@ export default function Course() {
                       <TabsTrigger value="quiz">
                         <CheckCircle2 className="mr-2 h-4 w-4" />
                         Quiz
+                      </TabsTrigger>
+                      <TabsTrigger value="comments">
+                        <MessageCircle className="mr-2 h-4 w-4" />
+                        Discusión
                       </TabsTrigger>
                     </TabsList>
 
@@ -351,6 +356,10 @@ export default function Course() {
 
                     <TabsContent value="quiz" className="mt-6">
                       <Quiz moduleId={selectedModule.id} />
+                    </TabsContent>
+
+                    <TabsContent value="comments" className="mt-6">
+                      <ModuleComments moduleId={selectedModule.id} />
                     </TabsContent>
                   </Tabs>
                 </CardContent>
