@@ -8,7 +8,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
-import { motion } from "framer-motion";
 
 // Lista de contraseñas comunes a rechazar
 const COMMON_PASSWORDS = [
@@ -152,12 +151,7 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-hero p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <Card className="w-full max-w-md shadow-elegant">
+      <Card className="w-full max-w-md shadow-elegant">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center bg-gradient-primary bg-clip-text text-transparent">
             DevAcademy
@@ -402,7 +396,6 @@ const Auth = () => {
           </Tabs>
         </CardContent>
       </Card>
-      </motion.div>
     </div>
   );
 };

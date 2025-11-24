@@ -12,7 +12,6 @@ import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { Quiz } from "@/components/Quiz";
 import { ModuleComments } from "@/components/ModuleComments";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { motion } from "framer-motion";
 
 interface Module {
   id: string;
@@ -198,29 +197,18 @@ export default function Course() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/dashboard")}
+          className="mb-6"
         >
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/dashboard")}
-            className="mb-6"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Volver
-          </Button>
-        </motion.div>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Volver
+        </Button>
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Course Info & Modules List */}
-          <motion.div
-            className="lg:col-span-1 space-y-6"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
+          <div className="lg:col-span-1 space-y-6">
             <Card className="border-primary/20">
               <CardHeader>
                 {course.thumbnail_url && (
@@ -288,15 +276,10 @@ export default function Course() {
                 ))}
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
 
           {/* Module Content */}
-          <motion.div
-            className="lg:col-span-2"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-          >
+          <div className="lg:col-span-2">
             {selectedModule ? (
               <Card>
                 <CardHeader>
@@ -394,7 +377,7 @@ export default function Course() {
                 </CardContent>
               </Card>
             )}
-          </motion.div>
+          </div>
         </div>
       </div>
     </div>
