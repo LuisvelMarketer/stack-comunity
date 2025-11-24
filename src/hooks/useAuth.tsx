@@ -14,10 +14,25 @@ export const useAuth = () => {
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+
+        // Check if user needs onboarding after sign in
+        if (event === 'SIGNED_IN' && session?.user) {
+          setTimeout(async () => {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('onboarding_completed')
+              .eq('id', session.user.id)
+              .single();
+
+            if (profile && !profile.onboarding_completed) {
+              navigate('/onboarding');
+            }
+          }, 0);
+        }
       }
     );
 
@@ -29,7 +44,7 @@ export const useAuth = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate]);
 
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
