@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { motion } from "framer-motion";
 
 export default function Onboarding() {
   const { user } = useAuth();
@@ -62,7 +63,13 @@ export default function Onboarding() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
-      <Card className="w-full max-w-2xl">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-2xl"
+      >
+        <Card>
         <CardHeader className="text-center space-y-2">
           <CardTitle className="text-3xl font-bold">
             ¡Bienvenido a la plataforma! 🎉
@@ -135,6 +142,7 @@ export default function Onboarding() {
           </form>
         </CardContent>
       </Card>
+      </motion.div>
     </div>
   );
 }

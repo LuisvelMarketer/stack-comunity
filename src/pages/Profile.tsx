@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Upload, Loader2 } from "lucide-react";
 import { UserMenu } from "@/components/UserMenu";
+import { motion } from "framer-motion";
 
 interface Profile {
   full_name: string | null;
@@ -186,30 +187,66 @@ export default function Profile() {
     );
   }
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5 },
+    },
+  };
+
   return (
     <div className="min-h-screen bg-gradient-hero">
-      <nav className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+      <motion.nav
+        className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
             Mi Perfil
           </h1>
           <UserMenu showAdminLink={false} />
         </div>
-      </nav>
+      </motion.nav>
 
       <main className="container mx-auto px-4 py-8 max-w-4xl">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/dashboard")}
-          className="mb-6"
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Volver al Dashboard
-        </Button>
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/dashboard")}
+            className="mb-6"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Volver al Dashboard
+          </Button>
+        </motion.div>
 
-        <div className="space-y-6">
+        <motion.div
+          className="space-y-6"
+          initial="hidden"
+          animate="visible"
+          variants={containerVariants}
+        >
           {/* Avatar Section */}
-          <Card>
+          <motion.div variants={itemVariants}>
+            <Card>
             <CardHeader>
               <CardTitle>Foto de Perfil</CardTitle>
               <CardDescription>
@@ -263,9 +300,11 @@ export default function Profile() {
               </div>
             </CardContent>
           </Card>
+          </motion.div>
 
           {/* Personal Info */}
-          <Card>
+          <motion.div variants={itemVariants}>
+            <Card>
             <CardHeader>
               <CardTitle>Información Personal</CardTitle>
               <CardDescription>
@@ -299,9 +338,11 @@ export default function Profile() {
               </div>
             </CardContent>
           </Card>
+          </motion.div>
 
           {/* Preferences */}
-          <Card>
+          <motion.div variants={itemVariants}>
+            <Card>
             <CardHeader>
               <CardTitle>Preferencias</CardTitle>
               <CardDescription>
@@ -371,9 +412,10 @@ export default function Profile() {
               </div>
             </CardContent>
           </Card>
+          </motion.div>
 
           {/* Save Button */}
-          <div className="flex justify-end">
+          <motion.div className="flex justify-end" variants={itemVariants}>
             <Button
               onClick={handleSaveProfile}
               disabled={saving}
@@ -388,8 +430,8 @@ export default function Profile() {
                 "Guardar Cambios"
               )}
             </Button>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </main>
     </div>
   );
