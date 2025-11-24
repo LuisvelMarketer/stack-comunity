@@ -34,6 +34,9 @@ export default function Onboarding() {
         .from("profiles")
         .update({
           full_name: formData.full_name,
+          bio: formData.bio || null,
+          location: formData.location || null,
+          interests: formData.interests || null,
           onboarding_completed: true,
         })
         .eq("id", user.id);
