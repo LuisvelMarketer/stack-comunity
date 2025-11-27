@@ -14,6 +14,74 @@ export type Database = {
   }
   public: {
     Tables: {
+      communities: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          member_count: number
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          member_count?: number
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          member_count?: number
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      community_members: {
+        Row: {
+          community_id: string
+          id: string
+          joined_at: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          community_id: string
+          id?: string
+          joined_at?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          community_id?: string
+          id?: string
+          joined_at?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_members_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       course_modules: {
         Row: {
           content: string | null
@@ -93,6 +161,85 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      event_attendees: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_attendees_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          community_id: string
+          created_at: string
+          created_by: string
+          description: string | null
+          event_date: string
+          id: string
+          location: string | null
+          max_attendees: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          community_id: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          event_date: string
+          id?: string
+          location?: string | null
+          max_attendees?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          community_id?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          event_date?: string
+          id?: string
+          location?: string | null
+          max_attendees?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       module_comments: {
         Row: {
@@ -183,40 +330,82 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          link: string | null
+          read: boolean
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          link?: string | null
+          read?: boolean
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          link?: string | null
+          read?: boolean
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
+          badges: Json | null
           bio: string | null
           created_at: string
           full_name: string | null
           id: string
           interests: string | null
+          level: number
           location: string | null
           onboarding_completed: boolean | null
+          points: number
           preferences: Json | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
+          badges?: Json | null
           bio?: string | null
           created_at?: string
           full_name?: string | null
           id: string
           interests?: string | null
+          level?: number
           location?: string | null
           onboarding_completed?: boolean | null
+          points?: number
           preferences?: Json | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
+          badges?: Json | null
           bio?: string | null
           created_at?: string
           full_name?: string | null
           id?: string
           interests?: string | null
+          level?: number
           location?: string | null
           onboarding_completed?: boolean | null
+          points?: number
           preferences?: Json | null
           updated_at?: string
         }

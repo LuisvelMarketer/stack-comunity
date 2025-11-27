@@ -11,6 +11,8 @@ import Dashboard from "./pages/Dashboard";
 import Course from "./pages/Course";
 import Admin from "./pages/Admin";
 import Profile from "./pages/Profile";
+import Communities from "./pages/Communities";
+import CommunityDetail from "./pages/CommunityDetail";
 import ResetPassword from "./pages/ResetPassword";
 import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
@@ -56,6 +58,22 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/communities"
+            element={
+              <ProtectedRoute>
+                <Communities />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/communities/:slug"
+            element={
+              <ProtectedRoute>
+                <CommunityDetail />
               </ProtectedRoute>
             }
           />

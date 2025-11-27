@@ -8,18 +8,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Upload, Loader2 } from "lucide-react";
+import { ArrowLeft, Upload, Loader2, Trophy, Award } from "lucide-react";
 import { UserMenu } from "@/components/UserMenu";
 
 interface Profile {
   full_name: string | null;
   avatar_url: string | null;
+  points: number;
+  level: number;
+  badges: any[];
   preferences: {
     email_notifications: boolean;
     course_updates: boolean;
     comment_replies: boolean;
-    theme: string;
   };
 }
 
@@ -33,11 +36,13 @@ export default function Profile() {
   const [profile, setProfile] = useState<Profile>({
     full_name: "",
     avatar_url: null,
+    points: 0,
+    level: 1,
+    badges: [],
     preferences: {
       email_notifications: true,
       course_updates: true,
       comment_replies: true,
-      theme: "system",
     },
   });
 
@@ -52,7 +57,7 @@ export default function Profile() {
       setLoading(true);
       const { data, error } = await supabase
         .from("profiles")
-        .select("full_name, avatar_url, preferences")
+        .select("full_name, avatar_url, points, level, badges, preferences")
         .eq("id", user?.id)
         .single();
 
@@ -62,7 +67,15 @@ export default function Profile() {
         setProfile({
           full_name: data.full_name,
           avatar_url: data.avatar_url,
-          preferences: (data.preferences as any) || profile.preferences,
+          points: data.points || 0,
+          level: data.level || 1,
+          badges: Array.isArray(data.badges) ? data.badges : [],
+          preferences: {
+            email_notifications:
+              (data.preferences as any)?.email_notifications ?? true,
+            course_updates: (data.preferences as any)?.course_updates ?? true,
+            comment_replies: (data.preferences as any)?.comment_replies ?? true,
+          },
         });
       }
     } catch (error: any) {
@@ -261,6 +274,43 @@ export default function Profile() {
                   </p>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Gamification Stats */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Estadísticas y Logros</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
+                  <Trophy className="h-8 w-8 text-primary" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Puntos</p>
+                    <p className="text-2xl font-bold">{profile.points}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
+                  <Award className="h-8 w-8 text-accent" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Nivel</p>
+                    <p className="text-2xl font-bold">{profile.level}</p>
+                  </div>
+                </div>
+              </div>
+              {profile.badges.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium mb-3">Insignias</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {profile.badges.map((badge: any, index: number) => (
+                      <Badge key={index} variant="secondary">
+                        {badge.name}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
