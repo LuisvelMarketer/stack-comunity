@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { BookOpen } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { UserMenu } from "@/components/UserMenu";
 
 interface Course {
@@ -65,9 +65,19 @@ const Dashboard = () => {
     <div className="min-h-screen bg-gradient-hero">
       <nav className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            DevAcademy
-          </h1>
+          <div className="flex items-center gap-6">
+            <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              DevAcademy
+            </h1>
+            <div className="hidden md:flex items-center gap-4">
+              <Button variant="ghost" onClick={() => navigate("/dashboard")}>
+                Mis Cursos
+              </Button>
+              <Button variant="ghost" onClick={() => navigate("/communities")}>
+                Comunidades
+              </Button>
+            </div>
+          </div>
           <UserMenu showAdminLink={isAdmin} />
         </div>
       </nav>
