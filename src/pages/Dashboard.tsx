@@ -3,27 +3,17 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { BookOpen } from "lucide-react";
 import { UserMenu } from "@/components/UserMenu";
-
-interface Course {
-  id: string;
-  title: string;
-  description: string;
-  thumbnail_url: string | null;
-}
+import { SocialFeed } from "@/components/social/SocialFeed";
+import { Leaderboard } from "@/components/social/Leaderboard";
+import { UpcomingEvents } from "@/components/social/UpcomingEvents";
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    loadCourses();
     checkAdminRole();
   }, []);
 
@@ -44,22 +34,6 @@ const Dashboard = () => {
     }
   };
 
-  const loadCourses = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("courses")
-        .select("*")
-        .eq("is_published", true)
-        .order("order_index");
-
-      if (error) throw error;
-      setCourses(data || []);
-    } catch (error) {
-      console.error("Error loading courses:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-hero">
@@ -83,65 +57,25 @@ const Dashboard = () => {
       </nav>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold mb-2">Mi Dashboard</h2>
+        <div className="mb-6">
+          <h2 className="text-3xl font-bold mb-2">Feed</h2>
           <p className="text-muted-foreground">
-            Bienvenido a tu panel de aprendizaje
+            Mantente al día con tu comunidad de aprendizaje
           </p>
         </div>
 
-        {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Main Feed - 8 columns */}
+          <div className="lg:col-span-8">
+            <SocialFeed />
           </div>
-        ) : courses.length === 0 ? (
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center py-12">
-                <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-semibold mb-2">
-                  No hay cursos disponibles
-                </h3>
-                <p className="text-muted-foreground">
-                  Los cursos estarán disponibles pronto
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {courses.map((course) => (
-              <Card
-                key={course.id}
-                className="hover:shadow-glow transition-all duration-300 cursor-pointer"
-                onClick={() => navigate(`/course/${course.id}`)}
-              >
-                {course.thumbnail_url && (
-                  <div className="h-48 overflow-hidden rounded-t-lg">
-                    <img
-                      src={course.thumbnail_url}
-                      alt={course.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                )}
-                <CardHeader>
-                  <CardTitle>{course.title}</CardTitle>
-                  <CardDescription>{course.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Progreso</span>
-                      <span className="font-medium">0%</span>
-                    </div>
-                    <Progress value={0} className="h-2" />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+
+          {/* Sidebar - 4 columns */}
+          <div className="lg:col-span-4 space-y-6">
+            <Leaderboard />
+            <UpcomingEvents />
           </div>
-        )}
+        </div>
       </main>
     </div>
   );
