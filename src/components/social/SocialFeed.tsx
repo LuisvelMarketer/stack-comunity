@@ -56,7 +56,7 @@ export const SocialFeed = ({ communityId }: SocialFeedProps) => {
         .from("posts")
         .select(`
           *,
-          profiles:user_id(full_name, avatar_url)
+          profiles!posts_user_id_fkey(full_name, avatar_url)
         `)
         .order("created_at", { ascending: false });
 
