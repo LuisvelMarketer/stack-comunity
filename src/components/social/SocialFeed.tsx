@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { CreatePost } from "./CreatePost";
 import { PostCard } from "./PostCard";
 import { Loader2 } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Post {
   id: string;
@@ -25,6 +26,7 @@ interface SocialFeedProps {
 export const SocialFeed = ({ communityId }: SocialFeedProps) => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("todas");
 
   useEffect(() => {
     loadPosts();
@@ -86,6 +88,15 @@ export const SocialFeed = ({ communityId }: SocialFeedProps) => {
   return (
     <div className="space-y-4">
       <CreatePost onPostCreated={loadPosts} communityId={communityId} />
+      
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="todas">Todas</TabsTrigger>
+          <TabsTrigger value="tendencias">Tendencias</TabsTrigger>
+          <TabsTrigger value="siguiendo">Siguiendo</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
       {posts.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           No hay publicaciones aún. ¡Sé el primero en publicar!

@@ -7,6 +7,10 @@ import { UserMenu } from "@/components/UserMenu";
 import { SocialFeed } from "@/components/social/SocialFeed";
 import { Leaderboard } from "@/components/social/Leaderboard";
 import { UpcomingEvents } from "@/components/social/UpcomingEvents";
+import { MyCommunities } from "@/components/social/MyCommunities";
+import { UserProgress } from "@/components/social/UserProgress";
+import { ContinueLearning } from "@/components/social/ContinueLearning";
+import { Home, Users, BookOpen, Calendar, Search, Bell } from "lucide-react";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -38,42 +42,67 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-hero">
       <nav className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              DevAcademy
-            </h1>
-            <div className="hidden md:flex items-center gap-4">
-              <Button variant="ghost" onClick={() => navigate("/dashboard")}>
-                Mis Cursos
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-8">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
+                  <span className="text-primary-foreground font-bold text-sm">S</span>
+                </div>
+                <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                  Skoolify
+                </h1>
+              </div>
+              <div className="hidden md:flex items-center gap-1">
+                <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
+                  <Home className="w-4 h-4 mr-2" />
+                  Inicio
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/communities")}>
+                  <Users className="w-4 h-4 mr-2" />
+                  Comunidades
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
+                  <BookOpen className="w-4 h-4 mr-2" />
+                  Cursos
+                </Button>
+                <Button variant="ghost" size="sm">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Eventos
+                </Button>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon">
+                <Search className="w-5 h-5" />
               </Button>
-              <Button variant="ghost" onClick={() => navigate("/communities")}>
-                Comunidades
+              <Button variant="ghost" size="icon">
+                <Bell className="w-5 h-5" />
               </Button>
+              <UserMenu showAdminLink={isAdmin} />
             </div>
           </div>
-          <UserMenu showAdminLink={isAdmin} />
         </div>
       </nav>
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-6">
-          <h2 className="text-3xl font-bold mb-2">Feed</h2>
-          <p className="text-muted-foreground">
-            Mantente al día con tu comunidad de aprendizaje
-          </p>
-        </div>
-
+      <main className="container mx-auto px-4 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Main Feed - 8 columns */}
-          <div className="lg:col-span-8">
+          {/* Left Sidebar - 3 columns */}
+          <div className="lg:col-span-3 space-y-4">
+            <MyCommunities />
+            <UserProgress />
+          </div>
+
+          {/* Main Feed - 6 columns */}
+          <div className="lg:col-span-6">
             <SocialFeed />
           </div>
 
-          {/* Sidebar - 4 columns */}
-          <div className="lg:col-span-4 space-y-6">
-            <Leaderboard />
+          {/* Right Sidebar - 3 columns */}
+          <div className="lg:col-span-3 space-y-4">
             <UpcomingEvents />
+            <ContinueLearning />
+            <Leaderboard />
           </div>
         </div>
       </main>
