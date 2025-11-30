@@ -75,7 +75,7 @@ export const PostCard = ({ post, onUpdate }: PostCardProps) => {
       .from("post_comments")
       .select(`
         *,
-        profiles:user_id(full_name, avatar_url)
+        profiles!post_comments_user_id_fkey(full_name, avatar_url)
       `)
       .eq("post_id", post.id)
       .order("created_at", { ascending: true });
