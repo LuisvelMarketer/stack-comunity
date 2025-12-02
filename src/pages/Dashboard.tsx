@@ -10,7 +10,8 @@ import { UpcomingEvents } from "@/components/social/UpcomingEvents";
 import { MyCommunities } from "@/components/social/MyCommunities";
 import { UserProgress } from "@/components/social/UserProgress";
 import { ContinueLearning } from "@/components/social/ContinueLearning";
-import { Home, Users, BookOpen, Calendar, Search, Bell } from "lucide-react";
+import { Home, Users, BookOpen, Calendar, Search } from "lucide-react";
+import { NotificationCenter } from "@/components/NotificationCenter";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -76,9 +77,7 @@ const Dashboard = () => {
               <Button variant="ghost" size="icon">
                 <Search className="w-5 h-5" />
               </Button>
-              <Button variant="ghost" size="icon">
-                <Bell className="w-5 h-5" />
-              </Button>
+              <NotificationCenter />
               <UserMenu showAdminLink={isAdmin} />
             </div>
           </div>
