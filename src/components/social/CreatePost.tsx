@@ -2,11 +2,11 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Image, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { MentionInput } from "./MentionInput";
 
 interface CreatePostProps {
   onPostCreated?: () => void;
@@ -72,11 +72,12 @@ export const CreatePost = ({ onPostCreated, communityId }: CreatePostProps) => {
             </AvatarFallback>
           </Avatar>
           <div className="flex-1">
-            <Textarea
-              placeholder="¿Qué estás pensando?"
+            <MentionInput
               value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="min-h-[100px] resize-none border-none bg-muted/50 focus-visible:ring-0"
+              onChange={setContent}
+              placeholder="¿Qué estás pensando? Usa @ para mencionar usuarios"
+              className="border-none bg-muted/50 focus-visible:ring-0"
+              minHeight="100px"
             />
             <div className="flex items-center justify-between mt-3">
               <Button type="button" variant="ghost" size="sm" disabled>

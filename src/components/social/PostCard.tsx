@@ -4,11 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Heart, MessageCircle, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
+import { MentionInput } from "./MentionInput";
 
 interface Post {
   id: string;
@@ -239,11 +239,11 @@ export const PostCard = ({ post, onUpdate }: PostCardProps) => {
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 flex gap-2">
-                  <Textarea
-                    placeholder="Escribe un comentario..."
+                  <MentionInput
                     value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    className="min-h-[40px] resize-none"
+                    onChange={setNewComment}
+                    placeholder="Escribe un comentario... Usa @ para mencionar"
+                    minHeight="40px"
                   />
                   <Button
                     type="submit"
