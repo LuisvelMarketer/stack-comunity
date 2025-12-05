@@ -95,6 +95,28 @@ export function NotificationCenter() {
     }
   };
 
+  const markAllAsRead = async () => {
+    if (!user || unreadCount === 0) return;
+
+    try {
+      const { error } = await supabase
+        .from("notifications")
+        .update({ read: true })
+        .eq("user_id", user.id)
+        .eq("read", false);
+
+      if (error) throw error;
+
+      loadNotifications();
+      toast({
+        title: "Notificaciones",
+        description: "Todas las notificaciones fueron marcadas como leídas",
+      });
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+    }
+  };
+
   const handleNotificationClick = (notification: Notification) => {
     markAsRead(notification.id);
     if (notification.link) {
@@ -118,7 +140,22 @@ export function NotificationCenter() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80">
-        <div className="p-2 font-semibold border-b">Notificaciones</div>
+        <div className="p-2 flex items-center justify-between border-b">
+          <span className="font-semibold">Notificaciones</span>
+          {unreadCount > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs h-7 px-2"
+              onClick={(e) => {
+                e.preventDefault();
+                markAllAsRead();
+              }}
+            >
+              Marcar todo como leído
+            </Button>
+          )}
+        </div>
         <div className="max-h-96 overflow-y-auto">
           {notifications.length === 0 ? (
             <div className="p-4 text-center text-muted-foreground text-sm">
