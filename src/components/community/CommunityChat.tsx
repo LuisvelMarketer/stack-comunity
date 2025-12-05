@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Send, MessageSquare, SmilePlus, Reply, X, Paperclip, FileText, Loader2, Mic, Square, Pencil, Trash2 } from "lucide-react";
+import { Send, MessageSquare, SmilePlus, Reply, X, Paperclip, FileText, Loader2, Mic, Square, Pencil, Trash2, Search } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -60,6 +60,8 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
   const [editContent, setEditContent] = useState("");
   const [typingUsers, setTypingUsers] = useState<{ id: string; name: string }[]>([]);
   const [onlineUsers, setOnlineUsers] = useState<{ id: string; name: string; avatar?: string }[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showSearch, setShowSearch] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -570,6 +572,28 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
   const isImageFile = (type: string | null) => type === "image";
   const isAudioFile = (type: string | null) => type === "audio";
 
+  const filteredMessages = searchQuery.trim()
+    ? messages.filter((m) =>
+        m.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        m.user_name?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : messages;
+
+  const highlightText = (text: string, query: string) => {
+    if (!query.trim()) return text;
+    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
+    const parts = text.split(regex);
+    return parts.map((part, i) =>
+      regex.test(part) ? (
+        <mark key={i} className="bg-yellow-200 dark:bg-yellow-800 rounded px-0.5">
+          {part}
+        </mark>
+      ) : (
+        part
+      )
+    );
+  };
+
   const handleTyping = (value: string) => {
     setNewMessage(value);
     
@@ -663,25 +687,54 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
             <MessageSquare className="h-5 w-5" />
             Chat de la Comunidad
           </CardTitle>
-          {onlineUsers.length > 0 && (
-            <div className="flex items-center gap-2">
-              <div className="flex -space-x-2">
-                {onlineUsers.slice(0, 5).map((u) => (
-                  <Avatar key={u.id} className="h-6 w-6 border-2 border-background">
-                    {u.avatar && <AvatarImage src={u.avatar} />}
-                    <AvatarFallback className="text-[10px] bg-primary text-primary-foreground">
-                      {u.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)}
-                    </AvatarFallback>
-                  </Avatar>
-                ))}
+          <div className="flex items-center gap-2">
+            {onlineUsers.length > 0 && (
+              <div className="flex items-center gap-2">
+                <div className="flex -space-x-2">
+                  {onlineUsers.slice(0, 5).map((u) => (
+                    <Avatar key={u.id} className="h-6 w-6 border-2 border-background">
+                      {u.avatar && <AvatarImage src={u.avatar} />}
+                      <AvatarFallback className="text-[10px] bg-primary text-primary-foreground">
+                        {u.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)}
+                      </AvatarFallback>
+                    </Avatar>
+                  ))}
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <span className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
+                  <span>{onlineUsers.length}</span>
+                </div>
               </div>
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <span className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
-                <span>{onlineUsers.length} en línea</span>
-              </div>
-            </div>
-          )}
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => {
+                setShowSearch(!showSearch);
+                if (showSearch) setSearchQuery("");
+              }}
+            >
+              <Search className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
+        {showSearch && (
+          <div className="mt-2 flex gap-2">
+            <Input
+              placeholder="Buscar mensajes..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-8 text-sm"
+              autoFocus
+            />
+            {searchQuery && (
+              <span className="text-xs text-muted-foreground self-center whitespace-nowrap">
+                {filteredMessages.length} resultado{filteredMessages.length !== 1 ? "s" : ""}
+              </span>
+            )}
+          </div>
+        )}
       </CardHeader>
       <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
         <ScrollArea ref={scrollRef} className="flex-1 p-4">
@@ -691,9 +744,15 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
               <p>No hay mensajes aún</p>
               <p className="text-sm">¡Sé el primero en escribir!</p>
             </div>
+          ) : searchQuery && filteredMessages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
+              <Search className="h-12 w-12 mb-4 opacity-20" />
+              <p>No se encontraron mensajes</p>
+              <p className="text-sm">Intenta con otra búsqueda</p>
+            </div>
           ) : (
             <div className="space-y-4">
-              {messages.map((message) => (
+              {filteredMessages.map((message) => (
                 <div
                   key={message.id}
                   className={`flex gap-3 ${isOwnMessage(message) ? "flex-row-reverse" : ""}`}
@@ -747,7 +806,9 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
                           </a>
                         )}
                         {message.content && (!message.file_url || (message.content !== message.file_name && message.content !== "🎤 Mensaje de voz")) && (
-                          <p className="text-sm whitespace-pre-wrap break-words px-4 py-2">{message.content}</p>
+                          <p className="text-sm whitespace-pre-wrap break-words px-4 py-2">
+                            {searchQuery ? highlightText(message.content, searchQuery) : message.content}
+                          </p>
                         )}
                       </div>
 
