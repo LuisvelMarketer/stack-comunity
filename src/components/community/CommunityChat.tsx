@@ -58,12 +58,15 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
   const [audioPreviewUrl, setAudioPreviewUrl] = useState<string | null>(null);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
   const [editContent, setEditContent] = useState("");
+  const [typingUsers, setTypingUsers] = useState<{ id: string; name: string }[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const typingChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   useEffect(() => {
     loadMessages();
@@ -142,6 +145,43 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
       supabase.removeChannel(channel);
     };
   }, [communityId]);
+
+  // Typing indicator presence
+  useEffect(() => {
+    if (!user) return;
+
+    const typingChannel = supabase.channel(`typing-${communityId}`);
+    typingChannelRef.current = typingChannel;
+
+    typingChannel
+      .on("presence", { event: "sync" }, () => {
+        const state = typingChannel.presenceState();
+        const typing: { id: string; name: string }[] = [];
+        
+        Object.values(state).forEach((presences: any[]) => {
+          presences.forEach((presence) => {
+            if (presence.user_id !== user.id && presence.is_typing) {
+              typing.push({ id: presence.user_id, name: presence.user_name || "Usuario" });
+            }
+          });
+        });
+        
+        setTypingUsers(typing);
+      })
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          await typingChannel.track({
+            user_id: user.id,
+            user_name: user.user_metadata?.full_name || "Usuario",
+            is_typing: false,
+          });
+        }
+      });
+
+    return () => {
+      supabase.removeChannel(typingChannel);
+    };
+  }, [communityId, user]);
 
   useEffect(() => {
     if (messages.length > 0) {
@@ -480,6 +520,17 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
       setReplyingTo(null);
       clearFile();
       clearAudio();
+      
+      // Clear typing status
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      typingChannelRef.current?.track({
+        user_id: user.id,
+        user_name: user.user_metadata?.full_name || "Usuario",
+        is_typing: false,
+      });
+      
       inputRef.current?.focus();
     } catch (error) {
       console.error("Error sending message:", error);
@@ -505,6 +556,33 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
 
   const isImageFile = (type: string | null) => type === "image";
   const isAudioFile = (type: string | null) => type === "audio";
+
+  const handleTyping = (value: string) => {
+    setNewMessage(value);
+    
+    if (!typingChannelRef.current || !user) return;
+
+    // Clear existing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    // Track typing status
+    typingChannelRef.current.track({
+      user_id: user.id,
+      user_name: user.user_metadata?.full_name || "Usuario",
+      is_typing: value.length > 0,
+    });
+
+    // Stop typing after 2 seconds of inactivity
+    typingTimeoutRef.current = setTimeout(() => {
+      typingChannelRef.current?.track({
+        user_id: user.id,
+        user_name: user.user_metadata?.full_name || "Usuario",
+        is_typing: false,
+      });
+    }, 2000);
+  };
 
   const deleteMessage = async (messageId: string) => {
     if (!confirm("¿Estás seguro de que quieres eliminar este mensaje?")) return;
@@ -692,6 +770,25 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
           )}
         </ScrollArea>
 
+        {typingUsers.length > 0 && (
+          <div className="px-4 py-2 border-t bg-muted/20">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="flex gap-1">
+                <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+              </div>
+              <span>
+                {typingUsers.length === 1
+                  ? `${typingUsers[0].name} está escribiendo...`
+                  : typingUsers.length === 2
+                  ? `${typingUsers[0].name} y ${typingUsers[1].name} están escribiendo...`
+                  : `${typingUsers[0].name} y ${typingUsers.length - 1} más están escribiendo...`}
+              </span>
+            </div>
+          </div>
+        )}
+
         {replyingTo && (
           <div className="px-4 py-2 border-t bg-muted/30 flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm">
@@ -791,7 +888,7 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
           <Input
             ref={inputRef}
             value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
+            onChange={(e) => handleTyping(e.target.value)}
             placeholder={replyingTo ? "Escribe tu respuesta..." : "Escribe un mensaje..."}
             disabled={sending || isRecording}
             className="flex-1"
