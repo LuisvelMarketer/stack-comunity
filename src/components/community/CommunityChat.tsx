@@ -59,6 +59,7 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
   const [editContent, setEditContent] = useState("");
   const [typingUsers, setTypingUsers] = useState<{ id: string; name: string }[]>([]);
+  const [onlineUsers, setOnlineUsers] = useState<{ id: string; name: string; avatar?: string }[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -157,15 +158,25 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
       .on("presence", { event: "sync" }, () => {
         const state = typingChannel.presenceState();
         const typing: { id: string; name: string }[] = [];
+        const online: { id: string; name: string; avatar?: string }[] = [];
         
         Object.values(state).forEach((presences: any[]) => {
           presences.forEach((presence) => {
+            // Track online users
+            online.push({
+              id: presence.user_id,
+              name: presence.user_name || "Usuario",
+              avatar: presence.user_avatar,
+            });
+            
+            // Track typing users (exclude self)
             if (presence.user_id !== user.id && presence.is_typing) {
               typing.push({ id: presence.user_id, name: presence.user_name || "Usuario" });
             }
           });
         });
         
+        setOnlineUsers(online);
         setTypingUsers(typing);
       })
       .subscribe(async (status) => {
@@ -173,6 +184,7 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
           await typingChannel.track({
             user_id: user.id,
             user_name: user.user_metadata?.full_name || "Usuario",
+            user_avatar: user.user_metadata?.avatar_url || null,
             is_typing: false,
           });
         }
@@ -528,6 +540,7 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
       typingChannelRef.current?.track({
         user_id: user.id,
         user_name: user.user_metadata?.full_name || "Usuario",
+        user_avatar: user.user_metadata?.avatar_url || null,
         is_typing: false,
       });
       
@@ -571,6 +584,7 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
     typingChannelRef.current.track({
       user_id: user.id,
       user_name: user.user_metadata?.full_name || "Usuario",
+      user_avatar: user.user_metadata?.avatar_url || null,
       is_typing: value.length > 0,
     });
 
@@ -579,6 +593,7 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
       typingChannelRef.current?.track({
         user_id: user.id,
         user_name: user.user_metadata?.full_name || "Usuario",
+        user_avatar: user.user_metadata?.avatar_url || null,
         is_typing: false,
       });
     }, 2000);
@@ -643,10 +658,30 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
   return (
     <Card className="h-[600px] flex flex-col">
       <CardHeader className="pb-3 border-b">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <MessageSquare className="h-5 w-5" />
-          Chat de la Comunidad
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <MessageSquare className="h-5 w-5" />
+            Chat de la Comunidad
+          </CardTitle>
+          {onlineUsers.length > 0 && (
+            <div className="flex items-center gap-2">
+              <div className="flex -space-x-2">
+                {onlineUsers.slice(0, 5).map((u) => (
+                  <Avatar key={u.id} className="h-6 w-6 border-2 border-background">
+                    {u.avatar && <AvatarImage src={u.avatar} />}
+                    <AvatarFallback className="text-[10px] bg-primary text-primary-foreground">
+                      {u.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)}
+                    </AvatarFallback>
+                  </Avatar>
+                ))}
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
+                <span>{onlineUsers.length} en línea</span>
+              </div>
+            </div>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
         <ScrollArea ref={scrollRef} className="flex-1 p-4">
