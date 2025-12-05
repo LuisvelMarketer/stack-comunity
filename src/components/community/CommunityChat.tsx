@@ -6,9 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, MessageSquare } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Send, MessageSquare, SmilePlus } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
+
+const EMOJI_OPTIONS = ["👍", "❤️", "😂", "😮", "😢", "🎉", "🔥", "👏"];
 
 interface Message {
   id: string;
@@ -19,6 +22,13 @@ interface Message {
   user_avatar: string | null;
 }
 
+interface Reaction {
+  emoji: string;
+  count: number;
+  users: string[];
+  hasReacted: boolean;
+}
+
 interface CommunityChatProps {
   communityId: string;
 }
@@ -26,6 +36,7 @@ interface CommunityChatProps {
 export const CommunityChat = ({ communityId }: CommunityChatProps) => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
+  const [reactions, setReactions] = useState<Record<string, Reaction[]>>({});
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -35,7 +46,6 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
   useEffect(() => {
     loadMessages();
 
-    // Subscribe to new messages
     const channel = supabase
       .channel(`community-chat-${communityId}`)
       .on(
@@ -47,8 +57,6 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
           filter: `community_id=eq.${communityId}`,
         },
         async (payload) => {
-          console.log("New message received:", payload);
-          // Fetch profile info for the new message
           const { data: profile } = await supabase
             .from("profiles")
             .select("full_name, avatar_url")
@@ -76,8 +84,19 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
           filter: `community_id=eq.${communityId}`,
         },
         (payload) => {
-          console.log("Message deleted:", payload);
           setMessages((prev) => prev.filter((m) => m.id !== payload.old.id));
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "message_reactions",
+        },
+        () => {
+          // Reload reactions when any change occurs
+          loadReactions(messages.map((m) => m.id));
         }
       )
       .subscribe();
@@ -88,7 +107,12 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
   }, [communityId]);
 
   useEffect(() => {
-    // Scroll to bottom when messages change
+    if (messages.length > 0) {
+      loadReactions(messages.map((m) => m.id));
+    }
+  }, [messages.length]);
+
+  useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
@@ -96,7 +120,6 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
 
   const loadMessages = async () => {
     try {
-      // Fetch messages
       const { data: messagesData, error } = await supabase
         .from("community_messages")
         .select("id, content, created_at, user_id")
@@ -112,7 +135,6 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
         return;
       }
 
-      // Fetch profiles for all users
       const userIds = [...new Set(messagesData.map((m) => m.user_id))];
       const { data: profiles } = await supabase
         .from("profiles")
@@ -131,10 +153,131 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
       }));
 
       setMessages(formattedMessages);
+      await loadReactions(formattedMessages.map((m) => m.id));
     } catch (error) {
       console.error("Error loading messages:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadReactions = async (messageIds: string[]) => {
+    if (messageIds.length === 0) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("message_reactions")
+        .select("message_id, emoji, user_id")
+        .in("message_id", messageIds);
+
+      if (error) throw error;
+
+      const reactionMap: Record<string, Reaction[]> = {};
+
+      messageIds.forEach((id) => {
+        reactionMap[id] = [];
+      });
+
+      if (data) {
+        const groupedByMessage: Record<string, Record<string, string[]>> = {};
+
+        data.forEach((r) => {
+          if (!groupedByMessage[r.message_id]) {
+            groupedByMessage[r.message_id] = {};
+          }
+          if (!groupedByMessage[r.message_id][r.emoji]) {
+            groupedByMessage[r.message_id][r.emoji] = [];
+          }
+          groupedByMessage[r.message_id][r.emoji].push(r.user_id);
+        });
+
+        Object.entries(groupedByMessage).forEach(([messageId, emojis]) => {
+          reactionMap[messageId] = Object.entries(emojis).map(([emoji, users]) => ({
+            emoji,
+            count: users.length,
+            users,
+            hasReacted: user ? users.includes(user.id) : false,
+          }));
+        });
+      }
+
+      setReactions(reactionMap);
+    } catch (error) {
+      console.error("Error loading reactions:", error);
+    }
+  };
+
+  const toggleReaction = async (messageId: string, emoji: string) => {
+    if (!user) return;
+
+    const messageReactions = reactions[messageId] || [];
+    const existingReaction = messageReactions.find((r) => r.emoji === emoji);
+    const hasReacted = existingReaction?.hasReacted;
+
+    try {
+      if (hasReacted) {
+        await supabase
+          .from("message_reactions")
+          .delete()
+          .eq("message_id", messageId)
+          .eq("user_id", user.id)
+          .eq("emoji", emoji);
+      } else {
+        await supabase.from("message_reactions").insert({
+          message_id: messageId,
+          user_id: user.id,
+          emoji,
+        });
+      }
+
+      // Optimistic update
+      setReactions((prev) => {
+        const current = prev[messageId] || [];
+        if (hasReacted) {
+          return {
+            ...prev,
+            [messageId]: current
+              .map((r) =>
+                r.emoji === emoji
+                  ? {
+                      ...r,
+                      count: r.count - 1,
+                      users: r.users.filter((u) => u !== user.id),
+                      hasReacted: false,
+                    }
+                  : r
+              )
+              .filter((r) => r.count > 0),
+          };
+        } else {
+          const existing = current.find((r) => r.emoji === emoji);
+          if (existing) {
+            return {
+              ...prev,
+              [messageId]: current.map((r) =>
+                r.emoji === emoji
+                  ? {
+                      ...r,
+                      count: r.count + 1,
+                      users: [...r.users, user.id],
+                      hasReacted: true,
+                    }
+                  : r
+              ),
+            };
+          } else {
+            return {
+              ...prev,
+              [messageId]: [
+                ...current,
+                { emoji, count: 1, users: [user.id], hasReacted: true },
+              ],
+            };
+          }
+        }
+      });
+    } catch (error) {
+      console.error("Error toggling reaction:", error);
     }
   };
 
@@ -224,16 +367,64 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
                         })}
                       </span>
                     </div>
-                    <div
-                      className={`rounded-2xl px-4 py-2 ${
-                        isOwnMessage(message)
-                          ? "bg-primary text-primary-foreground rounded-tr-sm"
-                          : "bg-muted rounded-tl-sm"
-                      }`}
-                    >
-                      <p className="text-sm whitespace-pre-wrap break-words">
-                        {message.content}
-                      </p>
+                    <div className="group relative">
+                      <div
+                        className={`rounded-2xl px-4 py-2 ${
+                          isOwnMessage(message)
+                            ? "bg-primary text-primary-foreground rounded-tr-sm"
+                            : "bg-muted rounded-tl-sm"
+                        }`}
+                      >
+                        <p className="text-sm whitespace-pre-wrap break-words">
+                          {message.content}
+                        </p>
+                      </div>
+
+                      {/* Reactions display */}
+                      {reactions[message.id]?.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {reactions[message.id].map((reaction) => (
+                            <button
+                              key={reaction.emoji}
+                              onClick={() => toggleReaction(message.id, reaction.emoji)}
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs transition-colors ${
+                                reaction.hasReacted
+                                  ? "bg-primary/20 border border-primary/30"
+                                  : "bg-muted hover:bg-muted/80"
+                              }`}
+                            >
+                              <span>{reaction.emoji}</span>
+                              <span className="text-muted-foreground">{reaction.count}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Add reaction button */}
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button
+                            className={`absolute -bottom-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-full bg-card border shadow-sm hover:bg-muted ${
+                              isOwnMessage(message) ? "left-0" : "right-0"
+                            }`}
+                          >
+                            <SmilePlus className="h-4 w-4 text-muted-foreground" />
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-2" side="top">
+                          <div className="flex gap-1">
+                            {EMOJI_OPTIONS.map((emoji) => (
+                              <button
+                                key={emoji}
+                                onClick={() => toggleReaction(message.id, emoji)}
+                                className="p-1.5 hover:bg-muted rounded transition-colors text-lg"
+                              >
+                                {emoji}
+                              </button>
+                            ))}
+                          </div>
+                        </PopoverContent>
+                      </Popover>
                     </div>
                   </div>
                 </div>
