@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User, LogOut, Settings, LayoutDashboard, Shield, MessageCircle } from "lucide-react";
 import { NotificationCenter } from "@/components/NotificationCenter";
+import { GlobalSearch } from "@/components/GlobalSearch";
 
 interface UserMenuProps {
   showAdminLink?: boolean;
@@ -136,6 +137,7 @@ export const UserMenu = ({ showAdminLink = false }: UserMenuProps) => {
 
   return (
     <div className="flex items-center gap-2">
+      <GlobalSearch />
       <Button
         variant="ghost"
         size="icon"
