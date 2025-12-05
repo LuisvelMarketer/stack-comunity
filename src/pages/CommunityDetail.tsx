@@ -2,14 +2,16 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useOnlinePresence } from "@/hooks/useOnlinePresence";
 import { UserMenu } from "@/components/UserMenu";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Users, BookOpen, MessageSquare, ArrowLeft } from "lucide-react";
+import { Calendar, Users, BookOpen, MessageSquare, ArrowLeft, Circle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { EventsList } from "@/components/community/EventsList";
 import { MembersList } from "@/components/community/MembersList";
+import { OnlineUsers } from "@/components/community/OnlineUsers";
 
 interface Community {
   id: string;
@@ -28,6 +30,7 @@ export default function CommunityDetail() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { onlineUsers, onlineCount } = useOnlinePresence(community?.id);
 
   useEffect(() => {
     loadCommunity();
@@ -188,6 +191,12 @@ export default function CommunityDetail() {
                   <Users className="h-3 w-3" />
                   {community.member_count} miembros
                 </Badge>
+                {onlineCount > 0 && (
+                  <Badge variant="outline" className="flex items-center gap-1 text-green-600 border-green-600/30">
+                    <Circle className="h-2 w-2 fill-green-500 text-green-500" />
+                    {onlineCount} en línea
+                  </Badge>
+                )}
               </div>
             </div>
             <div>
@@ -241,7 +250,14 @@ export default function CommunityDetail() {
           </TabsContent>
 
           <TabsContent value="members" className="mt-6">
-            <MembersList communityId={community.id} />
+            <div className="grid gap-6 lg:grid-cols-3">
+              <div className="lg:col-span-2">
+                <MembersList communityId={community.id} />
+              </div>
+              <div>
+                <OnlineUsers users={onlineUsers} count={onlineCount} />
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="chat" className="mt-6">
