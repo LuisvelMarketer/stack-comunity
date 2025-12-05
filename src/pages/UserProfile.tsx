@@ -52,6 +52,8 @@ interface UserCommunity {
   joined_at: string;
 }
 
+const ITEMS_PER_PAGE = 5;
+
 export default function UserProfile() {
   const { userId } = useParams<{ userId: string }>();
   const { user } = useAuth();
@@ -62,6 +64,11 @@ export default function UserProfile() {
   const [recentComments, setRecentComments] = useState<RecentComment[]>([]);
   const [communities, setCommunities] = useState<UserCommunity[]>([]);
   const [activityFilter, setActivityFilter] = useState<ActivityFilter>("all");
+  const [postsPage, setPostsPage] = useState(0);
+  const [commentsPage, setCommentsPage] = useState(0);
+  const [hasMorePosts, setHasMorePosts] = useState(true);
+  const [hasMoreComments, setHasMoreComments] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   useEffect(() => {
     // If viewing own profile, redirect to /profile
@@ -72,8 +79,8 @@ export default function UserProfile() {
     
     if (userId) {
       fetchProfile();
-      fetchRecentPosts();
-      fetchRecentComments();
+      fetchRecentPosts(0, false);
+      fetchRecentComments(0, false);
       fetchUserCommunities();
     }
   }, [userId, user?.id]);
@@ -100,36 +107,64 @@ export default function UserProfile() {
     }
   };
 
-  const fetchRecentPosts = async () => {
+  const fetchRecentPosts = async (page: number, append: boolean) => {
     try {
       const { data, error } = await supabase
         .from("posts")
         .select("id, content, created_at, likes_count, comments_count")
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
-        .limit(5);
+        .range(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE - 1);
 
       if (error) throw error;
-      setRecentPosts(data || []);
+      
+      const newPosts = data || [];
+      setRecentPosts(prev => append ? [...prev, ...newPosts] : newPosts);
+      setHasMorePosts(newPosts.length === ITEMS_PER_PAGE);
+      setPostsPage(page);
     } catch (error) {
       console.error("Error fetching recent posts:", error);
     }
   };
 
-  const fetchRecentComments = async () => {
+  const fetchRecentComments = async (page: number, append: boolean) => {
     try {
       const { data, error } = await supabase
         .from("post_comments")
         .select("id, content, created_at, post_id")
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
-        .limit(5);
+        .range(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE - 1);
 
       if (error) throw error;
-      setRecentComments(data || []);
+      
+      const newComments = data || [];
+      setRecentComments(prev => append ? [...prev, ...newComments] : newComments);
+      setHasMoreComments(newComments.length === ITEMS_PER_PAGE);
+      setCommentsPage(page);
     } catch (error) {
       console.error("Error fetching recent comments:", error);
     }
+  };
+
+  const loadMoreActivity = async () => {
+    setLoadingMore(true);
+    try {
+      if (activityFilter === "posts" || activityFilter === "all") {
+        if (hasMorePosts) await fetchRecentPosts(postsPage + 1, true);
+      }
+      if (activityFilter === "comments" || activityFilter === "all") {
+        if (hasMoreComments) await fetchRecentComments(commentsPage + 1, true);
+      }
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const canLoadMore = () => {
+    if (activityFilter === "posts") return hasMorePosts;
+    if (activityFilter === "comments") return hasMoreComments;
+    return hasMorePosts || hasMoreComments;
   };
 
   const fetchUserCommunities = async () => {
@@ -414,6 +449,18 @@ export default function UserProfile() {
                   <p className="text-muted-foreground text-center py-4">
                     Sin actividad reciente
                   </p>
+                )}
+
+                {/* Load More Button */}
+                {canLoadMore() && (recentPosts.length > 0 || recentComments.length > 0) && (
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={loadMoreActivity}
+                    disabled={loadingMore}
+                  >
+                    {loadingMore ? "Cargando..." : "Cargar más"}
+                  </Button>
                 )}
               </div>
             </CardContent>
