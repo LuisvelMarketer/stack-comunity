@@ -71,6 +71,8 @@ export default function UserProfile() {
   const [hasMoreComments, setHasMoreComments] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [communitySort, setCommunitySort] = useState<"joined" | "name">("joined");
+  const [totalPosts, setTotalPosts] = useState(0);
+  const [totalComments, setTotalComments] = useState(0);
 
   const sortedCommunities = [...communities].sort((a, b) => {
     if (communitySort === "name") {
@@ -91,6 +93,7 @@ export default function UserProfile() {
       fetchRecentPosts(0, false);
       fetchRecentComments(0, false);
       fetchUserCommunities();
+      fetchTotalCounts();
     }
   }, [userId, user?.id]);
 
@@ -208,6 +211,26 @@ export default function UserProfile() {
     }
   };
 
+  const fetchTotalCounts = async () => {
+    try {
+      const [postsResult, commentsResult] = await Promise.all([
+        supabase
+          .from("posts")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", userId),
+        supabase
+          .from("post_comments")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", userId),
+      ]);
+
+      setTotalPosts(postsResult.count || 0);
+      setTotalComments(commentsResult.count || 0);
+    } catch (error) {
+      console.error("Error fetching total counts:", error);
+    }
+  };
+
   const getInitials = () => {
     if (profile?.full_name) {
       return profile.full_name
@@ -300,6 +323,45 @@ export default function UserProfile() {
                       <span>{profile.bio}</span>
                     </p>
                   )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Stats */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Estadísticas</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
+                  <Trophy className="h-8 w-8 text-primary" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Puntos</p>
+                    <p className="text-2xl font-bold">{profile.points}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
+                  <Award className="h-8 w-8 text-accent" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Nivel</p>
+                    <p className="text-2xl font-bold">{profile.level}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
+                  <FileText className="h-8 w-8 text-primary" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Publicaciones</p>
+                    <p className="text-2xl font-bold">{totalPosts}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
+                  <MessageSquare className="h-8 w-8 text-accent" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Comentarios</p>
+                    <p className="text-2xl font-bold">{totalComments}</p>
+                  </div>
                 </div>
               </div>
             </CardContent>
