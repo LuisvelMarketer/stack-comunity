@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Trophy, Award, MapPin, FileText, MessageSquare, Heart, Users, Sparkles, Calendar, UserPlus, UserMinus } from "lucide-react";
+import { ArrowLeft, Trophy, Award, MapPin, FileText, MessageSquare, Heart, Users, Sparkles, Calendar, UserPlus, UserMinus, Mail } from "lucide-react";
 import { UserMenu } from "@/components/UserMenu";
 import { MentionText } from "@/components/social/MentionText";
 import { formatDistanceToNow, format } from "date-fns";
@@ -177,6 +177,43 @@ export default function UserProfile() {
       console.error("Error toggling follow:", error);
     } finally {
       setFollowLoading(false);
+    }
+  };
+
+  const startConversation = async () => {
+    if (!user || !userId) {
+      navigate("/auth");
+      return;
+    }
+
+    try {
+      // Order participants so participant_1 < participant_2
+      const [p1, p2] = [user.id, userId].sort();
+
+      // Check if conversation already exists
+      const { data: existing } = await supabase
+        .from("conversations")
+        .select("id")
+        .eq("participant_1", p1)
+        .eq("participant_2", p2)
+        .maybeSingle();
+
+      if (existing) {
+        navigate(`/messages/${existing.id}`);
+        return;
+      }
+
+      // Create new conversation
+      const { data: newConv, error } = await supabase
+        .from("conversations")
+        .insert({ participant_1: p1, participant_2: p2 })
+        .select("id")
+        .single();
+
+      if (error) throw error;
+      navigate(`/messages/${newConv.id}`);
+    } catch (error) {
+      console.error("Error starting conversation:", error);
     }
   };
 
@@ -391,6 +428,15 @@ export default function UserProfile() {
                           Seguir
                         </>
                       )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={startConversation}
+                      className="w-fit mx-auto sm:mx-0"
+                    >
+                      <Mail className="h-4 w-4 mr-1" />
+                      Mensaje
                     </Button>
                   </div>
                   <div className="flex items-center justify-center sm:justify-start gap-4 mt-2 text-sm">

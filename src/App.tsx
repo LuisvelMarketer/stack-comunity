@@ -16,6 +16,7 @@ import Communities from "./pages/Communities";
 import CommunityDetail from "./pages/CommunityDetail";
 import ResetPassword from "./pages/ResetPassword";
 import Onboarding from "./pages/Onboarding";
+import Messages from "./pages/Messages";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -92,6 +93,22 @@ const App = () => (
               <AdminRoute>
                 <Admin />
               </AdminRoute>
+            }
+          />
+          <Route
+            path="/messages"
+            element={
+              <ProtectedRoute>
+                <Messages />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/messages/:conversationId"
+            element={
+              <ProtectedRoute>
+                <Messages />
+              </ProtectedRoute>
             }
           />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
