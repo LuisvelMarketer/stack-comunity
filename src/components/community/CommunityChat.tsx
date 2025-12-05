@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Send, MessageSquare, SmilePlus, Reply, X, Paperclip, Image, FileText, Loader2 } from "lucide-react";
+import { Send, MessageSquare, SmilePlus, Reply, X, Paperclip, FileText, Loader2, Mic, Square, Play } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -52,9 +52,16 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [audioPreviewUrl, setAudioPreviewUrl] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     loadMessages();
@@ -350,11 +357,72 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
     }
   };
 
-  const uploadFile = async (file: File): Promise<{ url: string; type: string; name: string } | null> => {
+  const clearAudio = () => {
+    setAudioBlob(null);
+    if (audioPreviewUrl) {
+      URL.revokeObjectURL(audioPreviewUrl);
+      setAudioPreviewUrl(null);
+    }
+    setRecordingTime(0);
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        setAudioBlob(blob);
+        setAudioPreviewUrl(URL.createObjectURL(blob));
+        stream.getTracks().forEach((track) => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      setRecordingTime(0);
+
+      recordingIntervalRef.current = setInterval(() => {
+        setRecordingTime((prev) => prev + 1);
+      }, 1000);
+    } catch (error) {
+      console.error("Error accessing microphone:", error);
+      alert("No se pudo acceder al micrófono. Verifica los permisos.");
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      if (recordingIntervalRef.current) {
+        clearInterval(recordingIntervalRef.current);
+        recordingIntervalRef.current = null;
+      }
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const uploadFile = async (file: File | Blob, customName?: string): Promise<{ url: string; type: string; name: string } | null> => {
     if (!user) return null;
 
-    const fileExt = file.name.split(".").pop();
+    const isBlob = file instanceof Blob && !(file instanceof File);
+    const fileExt = isBlob ? "webm" : (file as File).name.split(".").pop();
     const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+    const displayName = customName || (isBlob ? `audio_${Date.now()}.webm` : (file as File).name);
 
     const { error } = await supabase.storage.from("chat-files").upload(fileName, file);
 
@@ -365,30 +433,39 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
 
     const { data: urlData } = supabase.storage.from("chat-files").getPublicUrl(fileName);
 
+    let type = "file";
+    if (isBlob || (file instanceof File && file.type.startsWith("audio/"))) {
+      type = "audio";
+    } else if (file instanceof File && file.type.startsWith("image/")) {
+      type = "image";
+    }
+
     return {
       url: urlData.publicUrl,
-      type: file.type.startsWith("image/") ? "image" : "file",
-      name: file.name,
+      type,
+      name: displayName,
     };
   };
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if ((!newMessage.trim() && !selectedFile) || !user || sending) return;
+    if ((!newMessage.trim() && !selectedFile && !audioBlob) || !user || sending) return;
 
     setSending(true);
-    setUploading(!!selectedFile);
+    setUploading(!!(selectedFile || audioBlob));
 
     try {
       let fileData = null;
-      if (selectedFile) {
+      if (audioBlob) {
+        fileData = await uploadFile(audioBlob, `audio_${Date.now()}.webm`);
+      } else if (selectedFile) {
         fileData = await uploadFile(selectedFile);
       }
 
       const { error } = await supabase.from("community_messages").insert({
         community_id: communityId,
         user_id: user.id,
-        content: newMessage.trim() || (fileData ? fileData.name : ""),
+        content: newMessage.trim() || (fileData ? (fileData.type === "audio" ? "🎤 Mensaje de voz" : fileData.name) : ""),
         reply_to_id: replyingTo?.id || null,
         file_url: fileData?.url || null,
         file_type: fileData?.type || null,
@@ -400,6 +477,7 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
       setNewMessage("");
       setReplyingTo(null);
       clearFile();
+      clearAudio();
       inputRef.current?.focus();
     } catch (error) {
       console.error("Error sending message:", error);
@@ -424,6 +502,7 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
   };
 
   const isImageFile = (type: string | null) => type === "image";
+  const isAudioFile = (type: string | null) => type === "audio";
 
   if (loading) {
     return (
@@ -483,7 +562,17 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
                             <img src={message.file_url} alt={message.file_name || "imagen"} className="max-w-full max-h-64 object-cover" />
                           </a>
                         )}
-                        {message.file_url && !isImageFile(message.file_type) && (
+                        {message.file_url && isAudioFile(message.file_type) && (
+                          <div className="px-4 py-3 flex items-center gap-3">
+                            <div className={`p-2 rounded-full ${isOwnMessage(message) ? "bg-primary-foreground/20" : "bg-primary/20"}`}>
+                              <Mic className="h-4 w-4" />
+                            </div>
+                            <audio controls className="h-8 max-w-[200px]" src={message.file_url}>
+                              Tu navegador no soporta audio.
+                            </audio>
+                          </div>
+                        )}
+                        {message.file_url && !isImageFile(message.file_type) && !isAudioFile(message.file_type) && (
                           <a
                             href={message.file_url}
                             target="_blank"
@@ -494,7 +583,7 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
                             <span className="text-sm underline">{message.file_name}</span>
                           </a>
                         )}
-                        {message.content && (!message.file_url || message.content !== message.file_name) && (
+                        {message.content && (!message.file_url || (message.content !== message.file_name && message.content !== "🎤 Mensaje de voz")) && (
                           <p className="text-sm whitespace-pre-wrap break-words px-4 py-2">{message.content}</p>
                         )}
                       </div>
@@ -575,20 +664,56 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
           </div>
         )}
 
+        {audioBlob && audioPreviewUrl && (
+          <div className="px-4 py-2 border-t bg-muted/30 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 bg-primary/20 rounded-full flex items-center justify-center">
+                <Mic className="h-5 w-5 text-primary" />
+              </div>
+              <audio controls src={audioPreviewUrl} className="h-8 max-w-[200px]" />
+            </div>
+            <button onClick={clearAudio} className="p-1 hover:bg-muted rounded">
+              <X className="h-4 w-4 text-muted-foreground" />
+            </button>
+          </div>
+        )}
+
+        {isRecording && (
+          <div className="px-4 py-2 border-t bg-destructive/10 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-3 w-3 bg-destructive rounded-full animate-pulse" />
+              <span className="text-sm font-medium text-destructive">Grabando... {formatTime(recordingTime)}</span>
+            </div>
+            <Button type="button" variant="destructive" size="sm" onClick={stopRecording}>
+              <Square className="h-4 w-4 mr-1" />
+              Detener
+            </Button>
+          </div>
+        )}
+
         <form onSubmit={sendMessage} className="p-4 border-t flex gap-2">
           <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept="image/*,.pdf,.doc,.docx,.txt" />
-          <Button type="button" variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} disabled={sending}>
+          <Button type="button" variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} disabled={sending || isRecording}>
             <Paperclip className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant={isRecording ? "destructive" : "ghost"}
+            size="icon"
+            onClick={isRecording ? stopRecording : startRecording}
+            disabled={sending || !!audioBlob}
+          >
+            {isRecording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
           </Button>
           <Input
             ref={inputRef}
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder={replyingTo ? "Escribe tu respuesta..." : "Escribe un mensaje..."}
-            disabled={sending}
+            disabled={sending || isRecording}
             className="flex-1"
           />
-          <Button type="submit" size="icon" disabled={sending || (!newMessage.trim() && !selectedFile)}>
+          <Button type="submit" size="icon" disabled={sending || isRecording || (!newMessage.trim() && !selectedFile && !audioBlob)}>
             {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>
         </form>
