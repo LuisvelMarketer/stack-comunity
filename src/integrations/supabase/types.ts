@@ -91,6 +91,9 @@ export type Database = {
           file_type: string | null
           file_url: string | null
           id: string
+          is_pinned: boolean | null
+          pinned_at: string | null
+          pinned_by: string | null
           reply_to_id: string | null
           user_id: string
         }
@@ -102,6 +105,9 @@ export type Database = {
           file_type?: string | null
           file_url?: string | null
           id?: string
+          is_pinned?: boolean | null
+          pinned_at?: string | null
+          pinned_by?: string | null
           reply_to_id?: string | null
           user_id: string
         }
@@ -113,6 +119,9 @@ export type Database = {
           file_type?: string | null
           file_url?: string | null
           id?: string
+          is_pinned?: boolean | null
+          pinned_at?: string | null
+          pinned_by?: string | null
           reply_to_id?: string | null
           user_id?: string
         }

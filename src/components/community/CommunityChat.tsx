@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Send, MessageSquare, SmilePlus, Reply, X, Paperclip, FileText, Loader2, Mic, Square, Pencil, Trash2, Search } from "lucide-react";
+import { Send, MessageSquare, SmilePlus, Reply, X, Paperclip, FileText, Loader2, Mic, Square, Pencil, Trash2, Search, Pin } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -24,6 +24,8 @@ interface Message {
   file_url: string | null;
   file_type: string | null;
   file_name: string | null;
+  is_pinned: boolean;
+  pinned_at: string | null;
   reply_to?: {
     content: string;
     user_name: string | null;
@@ -113,6 +115,8 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
             file_url: (payload.new.file_url as string) || null,
             file_type: (payload.new.file_type as string) || null,
             file_name: (payload.new.file_name as string) || null,
+            is_pinned: (payload.new.is_pinned as boolean) || false,
+            pinned_at: (payload.new.pinned_at as string) || null,
             reply_to: replyTo,
           };
 
@@ -219,7 +223,7 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
     try {
       const { data: messagesData, error } = await supabase
         .from("community_messages")
-        .select("id, content, created_at, user_id, reply_to_id, file_url, file_type, file_name")
+        .select("id, content, created_at, user_id, reply_to_id, file_url, file_type, file_name, is_pinned, pinned_at")
         .eq("community_id", communityId)
         .order("created_at", { ascending: true })
         .limit(100);
@@ -253,6 +257,8 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
           file_url: m.file_url,
           file_type: m.file_type,
           file_name: m.file_name,
+          is_pinned: m.is_pinned || false,
+          pinned_at: m.pinned_at,
           reply_to: null,
         });
       });
@@ -639,6 +645,36 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
     }
   };
 
+  const togglePinMessage = async (message: Message) => {
+    if (!user) return;
+    
+    try {
+      const newPinnedState = !message.is_pinned;
+      const { error } = await supabase
+        .from("community_messages")
+        .update({
+          is_pinned: newPinnedState,
+          pinned_at: newPinnedState ? new Date().toISOString() : null,
+          pinned_by: newPinnedState ? user.id : null,
+        })
+        .eq("id", message.id);
+
+      if (error) throw error;
+
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === message.id
+            ? { ...m, is_pinned: newPinnedState, pinned_at: newPinnedState ? new Date().toISOString() : null }
+            : m
+        )
+      );
+    } catch (error) {
+      console.error("Error toggling pin:", error);
+    }
+  };
+
+  const pinnedMessages = messages.filter((m) => m.is_pinned);
+
   const startEditing = (message: Message) => {
     setEditingMessage(message);
     setEditContent(message.content);
@@ -737,6 +773,33 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
         )}
       </CardHeader>
       <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
+        {pinnedMessages.length > 0 && (
+          <div className="border-b bg-amber-50 dark:bg-amber-950/20 px-4 py-2">
+            <div className="flex items-center gap-2 text-sm">
+              <Pin className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+              <span className="font-medium text-amber-800 dark:text-amber-200">
+                {pinnedMessages.length} mensaje{pinnedMessages.length > 1 ? "s" : ""} fijado{pinnedMessages.length > 1 ? "s" : ""}
+              </span>
+            </div>
+            <div className="mt-1 space-y-1 max-h-24 overflow-y-auto">
+              {pinnedMessages.map((m) => (
+                <div key={m.id} className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span className="truncate flex-1">
+                    <span className="font-medium">{m.user_name}: </span>
+                    {m.content.slice(0, 60)}{m.content.length > 60 ? "..." : ""}
+                  </span>
+                  <button
+                    onClick={() => togglePinMessage(m)}
+                    className="ml-2 p-1 hover:bg-amber-200 dark:hover:bg-amber-900 rounded"
+                    title="Desfijar"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         <ScrollArea ref={scrollRef} className="flex-1 p-4">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
@@ -847,6 +910,13 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
                             </div>
                           </PopoverContent>
                         </Popover>
+                        <button
+                          onClick={() => togglePinMessage(message)}
+                          className={`p-1 rounded-full bg-card border shadow-sm hover:bg-amber-100 dark:hover:bg-amber-900 ${message.is_pinned ? "bg-amber-100 dark:bg-amber-900 border-amber-300" : ""}`}
+                          title={message.is_pinned ? "Desfijar" : "Fijar"}
+                        >
+                          <Pin className={`h-4 w-4 ${message.is_pinned ? "text-amber-600" : "text-muted-foreground"}`} />
+                        </button>
                         {isOwnMessage(message) && !message.file_url && (
                           <button onClick={() => startEditing(message)} className="p-1 rounded-full bg-card border shadow-sm hover:bg-muted" title="Editar">
                             <Pencil className="h-4 w-4 text-muted-foreground" />
