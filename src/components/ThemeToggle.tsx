@@ -1,4 +1,4 @@
-import { Moon, Sun, Monitor } from "lucide-react";
+import { Moon, Sun, Monitor, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -9,7 +9,7 @@ import {
 import { useThemePreference } from "@/hooks/useThemePreference";
 
 export function ThemeToggle() {
-  const { setTheme } = useThemePreference();
+  const { theme, setTheme } = useThemePreference();
 
   return (
     <DropdownMenu>
@@ -20,18 +20,36 @@ export function ThemeToggle() {
           <span className="sr-only">Cambiar tema</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme("light")} className="gap-2">
-          <Sun className="h-4 w-4" />
-          Claro
+      <DropdownMenuContent align="end" className="bg-popover">
+        <DropdownMenuItem 
+          onClick={() => setTheme("light")} 
+          className="flex items-center justify-between gap-2"
+        >
+          <div className="flex items-center gap-2">
+            <Sun className="h-4 w-4" />
+            Claro
+          </div>
+          {theme === "light" && <Check className="h-4 w-4 text-primary" />}
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")} className="gap-2">
-          <Moon className="h-4 w-4" />
-          Oscuro
+        <DropdownMenuItem 
+          onClick={() => setTheme("dark")} 
+          className="flex items-center justify-between gap-2"
+        >
+          <div className="flex items-center gap-2">
+            <Moon className="h-4 w-4" />
+            Oscuro
+          </div>
+          {theme === "dark" && <Check className="h-4 w-4 text-primary" />}
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("system")} className="gap-2">
-          <Monitor className="h-4 w-4" />
-          Sistema
+        <DropdownMenuItem 
+          onClick={() => setTheme("system")} 
+          className="flex items-center justify-between gap-2"
+        >
+          <div className="flex items-center gap-2">
+            <Monitor className="h-4 w-4" />
+            Sistema
+          </div>
+          {theme === "system" && <Check className="h-4 w-4 text-primary" />}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
