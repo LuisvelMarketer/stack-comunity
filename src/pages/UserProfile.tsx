@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Trophy, Award, MapPin, FileText, MessageSquare, Heart, Users } from "lucide-react";
 import { UserMenu } from "@/components/UserMenu";
 import { MentionText } from "@/components/social/MentionText";
@@ -69,6 +70,14 @@ export default function UserProfile() {
   const [hasMorePosts, setHasMorePosts] = useState(true);
   const [hasMoreComments, setHasMoreComments] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [communitySort, setCommunitySort] = useState<"joined" | "name">("joined");
+
+  const sortedCommunities = [...communities].sort((a, b) => {
+    if (communitySort === "name") {
+      return a.name.localeCompare(b.name);
+    }
+    return new Date(b.joined_at).getTime() - new Date(a.joined_at).getTime();
+  });
 
   useEffect(() => {
     // If viewing own profile, redirect to /profile
@@ -299,10 +308,23 @@ export default function UserProfile() {
           {/* User Communities */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Comunidades
-              </CardTitle>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Comunidades
+                </CardTitle>
+                {communities.length > 1 && (
+                  <Select value={communitySort} onValueChange={(v) => setCommunitySort(v as "joined" | "name")}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Ordenar por" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="joined">Fecha de ingreso</SelectItem>
+                      <SelectItem value="name">Nombre</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               {communities.length === 0 ? (
@@ -311,7 +333,7 @@ export default function UserProfile() {
                 </p>
               ) : (
                 <div className="grid gap-3 sm:grid-cols-2">
-                  {communities.map((community) => (
+                  {sortedCommunities.map((community) => (
                     <div
                       key={community.id}
                       onClick={() => navigate(`/communities/${community.slug}`)}
