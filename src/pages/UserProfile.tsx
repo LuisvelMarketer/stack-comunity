@@ -8,10 +8,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Trophy, Award, MapPin, FileText, MessageSquare, Heart, Users, Sparkles } from "lucide-react";
+import { ArrowLeft, Trophy, Award, MapPin, FileText, MessageSquare, Heart, Users, Sparkles, Calendar } from "lucide-react";
 import { UserMenu } from "@/components/UserMenu";
 import { MentionText } from "@/components/social/MentionText";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 import { es } from "date-fns/locale";
 
 type ActivityFilter = "all" | "posts" | "comments";
@@ -318,6 +318,10 @@ export default function UserProfile() {
                       {profile.location}
                     </p>
                   )}
+                  <p className="text-muted-foreground flex items-center justify-center sm:justify-start gap-1 mt-1">
+                    <Calendar className="h-4 w-4" />
+                    Miembro desde {format(new Date(profile.created_at), "MMMM yyyy", { locale: es })}
+                  </p>
                   {profile.bio && (
                     <p className="text-muted-foreground mt-2 flex items-start gap-2">
                       <FileText className="h-4 w-4 mt-0.5 shrink-0" />
