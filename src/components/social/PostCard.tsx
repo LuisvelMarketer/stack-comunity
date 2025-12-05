@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import { MentionInput } from "./MentionInput";
+import { MentionText } from "./MentionText";
 
 interface Post {
   id: string;
@@ -172,7 +173,9 @@ export const PostCard = ({ post, onUpdate }: PostCardProps) => {
               })}
             </span>
           </div>
-          <p className="text-foreground mb-4 whitespace-pre-wrap">{post.content}</p>
+          <p className="text-foreground mb-4 whitespace-pre-wrap">
+            <MentionText content={post.content} />
+          </p>
           
           {post.image_url && (
             <img
@@ -225,7 +228,9 @@ export const PostCard = ({ post, onUpdate }: PostCardProps) => {
                           })}
                         </span>
                       </div>
-                      <p className="text-sm">{comment.content}</p>
+                      <p className="text-sm">
+                        <MentionText content={comment.content} />
+                      </p>
                     </div>
                   </div>
                 ))}
