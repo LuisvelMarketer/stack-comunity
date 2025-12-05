@@ -8,6 +8,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { ArrowLeft, Trophy, Award, MapPin, FileText, MessageSquare, Heart, Users, Sparkles, Calendar, UserPlus, UserMinus, Mail } from "lucide-react";
 import { UserMenu } from "@/components/UserMenu";
 import { MentionText } from "@/components/social/MentionText";
@@ -15,6 +17,13 @@ import { formatDistanceToNow, format } from "date-fns";
 import { es } from "date-fns/locale";
 
 type ActivityFilter = "all" | "posts" | "comments";
+type FollowListType = "followers" | "following" | null;
+
+interface FollowUser {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+}
 
 interface UserProfileData {
   id: string;
@@ -78,6 +87,9 @@ export default function UserProfile() {
   const [totalComments, setTotalComments] = useState(0);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+  const [followListType, setFollowListType] = useState<FollowListType>(null);
+  const [followList, setFollowList] = useState<FollowUser[]>([]);
+  const [followListLoading, setFollowListLoading] = useState(false);
 
   const sortedCommunities = [...communities].sort((a, b) => {
     if (communitySort === "name") {
@@ -329,6 +341,45 @@ export default function UserProfile() {
     }
   };
 
+  const fetchFollowList = async (type: FollowListType) => {
+    if (!type || !userId) return;
+    setFollowListLoading(true);
+    setFollowList([]);
+    try {
+      if (type === "followers") {
+        const { data, error } = await supabase
+          .from("user_follows")
+          .select("follower_id, profiles:follower_id(id, full_name, avatar_url)")
+          .eq("following_id", userId);
+        if (error) throw error;
+        setFollowList(data?.map((d: any) => d.profiles).filter(Boolean) || []);
+      } else {
+        const { data, error } = await supabase
+          .from("user_follows")
+          .select("following_id, profiles:following_id(id, full_name, avatar_url)")
+          .eq("follower_id", userId);
+        if (error) throw error;
+        setFollowList(data?.map((d: any) => d.profiles).filter(Boolean) || []);
+      }
+    } catch (error) {
+      console.error("Error fetching follow list:", error);
+    } finally {
+      setFollowListLoading(false);
+    }
+  };
+
+  const openFollowList = (type: FollowListType) => {
+    setFollowListType(type);
+    fetchFollowList(type);
+  };
+
+  const getUserInitials = (name: string | null) => {
+    if (name) {
+      return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+    }
+    return "U";
+  };
+
   const getInitials = () => {
     if (profile?.full_name) {
       return profile.full_name
@@ -440,8 +491,12 @@ export default function UserProfile() {
                     </Button>
                   </div>
                   <div className="flex items-center justify-center sm:justify-start gap-4 mt-2 text-sm">
-                    <span><strong>{profile.followers_count}</strong> seguidores</span>
-                    <span><strong>{profile.following_count}</strong> siguiendo</span>
+                    <button onClick={() => openFollowList("followers")} className="hover:underline">
+                      <strong>{profile.followers_count}</strong> seguidores
+                    </button>
+                    <button onClick={() => openFollowList("following")} className="hover:underline">
+                      <strong>{profile.following_count}</strong> siguiendo
+                    </button>
                   </div>
                   {profile.location && (
                     <p className="text-muted-foreground flex items-center justify-center sm:justify-start gap-1 mt-1">
@@ -717,6 +772,49 @@ export default function UserProfile() {
           </Card>
         </div>
       </main>
+
+      {/* Follow List Dialog */}
+      <Dialog open={!!followListType} onOpenChange={() => setFollowListType(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {followListType === "followers" ? "Seguidores" : "Siguiendo"}
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[400px]">
+            {followListLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : followList.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">
+                {followListType === "followers" ? "Sin seguidores" : "No sigue a nadie"}
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {followList.map((u) => (
+                  <div
+                    key={u.id}
+                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted cursor-pointer"
+                    onClick={() => {
+                      setFollowListType(null);
+                      navigate(`/user/${u.id}`);
+                    }}
+                  >
+                    <Avatar className="h-10 w-10">
+                      {u.avatar_url && <AvatarImage src={u.avatar_url} />}
+                      <AvatarFallback className="bg-primary text-primary-foreground">
+                        {getUserInitials(u.full_name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="font-medium">{u.full_name || "Usuario"}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
