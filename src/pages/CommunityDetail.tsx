@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { EventsList } from "@/components/community/EventsList";
 import { MembersList } from "@/components/community/MembersList";
 import { OnlineUsers } from "@/components/community/OnlineUsers";
+import { CommunityChat } from "@/components/community/CommunityChat";
 
 interface Community {
   id: string;
@@ -262,9 +263,7 @@ export default function CommunityDetail() {
 
           <TabsContent value="chat" className="mt-6">
             {community.is_member ? (
-              <div className="text-center py-12 text-muted-foreground">
-                Próximamente: Chat en tiempo real
-              </div>
+              <CommunityChat communityId={community.id} />
             ) : (
               <div className="text-center py-12 text-muted-foreground">
                 Únete a la comunidad para acceder al chat
