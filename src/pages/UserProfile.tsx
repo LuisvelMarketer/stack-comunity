@@ -49,6 +49,7 @@ interface UserCommunity {
   image_url: string | null;
   member_count: number;
   role: string;
+  joined_at: string;
 }
 
 export default function UserProfile() {
@@ -137,6 +138,7 @@ export default function UserProfile() {
         .from("community_members")
         .select(`
           role,
+          joined_at,
           communities:community_id (
             id,
             name,
@@ -152,7 +154,8 @@ export default function UserProfile() {
       const userCommunities = data
         ?.map((item: any) => ({
           ...item.communities,
-          role: item.role
+          role: item.role,
+          joined_at: item.joined_at
         }))
         .filter((c: any) => c.id) || [];
       setCommunities(userCommunities);
@@ -293,7 +296,7 @@ export default function UserProfile() {
                       <div className="flex-1 min-w-0">
                         <p className="font-medium truncate">{community.name}</p>
                         <p className="text-xs text-muted-foreground">
-                          {community.member_count} miembros
+                          {community.member_count} miembros · Desde {formatDistanceToNow(new Date(community.joined_at), { addSuffix: false, locale: es })}
                         </p>
                       </div>
                       <Badge variant={community.role === 'admin' ? 'default' : community.role === 'moderator' ? 'secondary' : 'outline'} className="capitalize shrink-0">
