@@ -1,0 +1,202 @@
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, Trophy, Award, MapPin, FileText } from "lucide-react";
+import { UserMenu } from "@/components/UserMenu";
+
+interface UserProfileData {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  bio: string | null;
+  location: string | null;
+  points: number;
+  level: number;
+  badges: any[];
+  created_at: string;
+}
+
+export default function UserProfile() {
+  const { userId } = useParams<{ userId: string }>();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<UserProfileData | null>(null);
+
+  useEffect(() => {
+    // If viewing own profile, redirect to /profile
+    if (userId === user?.id) {
+      navigate("/profile", { replace: true });
+      return;
+    }
+    
+    if (userId) {
+      fetchProfile();
+    }
+  }, [userId, user?.id]);
+
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, full_name, avatar_url, bio, location, points, level, badges, created_at")
+        .eq("id", userId)
+        .single();
+
+      if (error) throw error;
+      setProfile({
+        ...data,
+        badges: Array.isArray(data.badges) ? data.badges : [],
+      });
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+      setProfile(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getInitials = () => {
+    if (profile?.full_name) {
+      return profile.full_name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2);
+    }
+    return "U";
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-gradient-hero">
+        <nav className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+            <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              Perfil de Usuario
+            </h1>
+            <UserMenu showAdminLink={false} />
+          </div>
+        </nav>
+        <main className="container mx-auto px-4 py-8 max-w-4xl">
+          <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Volver
+          </Button>
+          <Card>
+            <CardContent className="py-12 text-center">
+              <p className="text-muted-foreground">Usuario no encontrado</p>
+            </CardContent>
+          </Card>
+        </main>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-hero">
+      <nav className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+            Perfil de Usuario
+          </h1>
+          <UserMenu showAdminLink={false} />
+        </div>
+      </nav>
+
+      <main className="container mx-auto px-4 py-8 max-w-4xl">
+        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Volver
+        </Button>
+
+        <div className="space-y-6">
+          {/* Profile Header */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex flex-col sm:flex-row items-center gap-6">
+                <Avatar className="h-24 w-24">
+                  {profile.avatar_url && (
+                    <AvatarImage src={profile.avatar_url} alt="Avatar" />
+                  )}
+                  <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
+                    {getInitials()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="text-center sm:text-left flex-1">
+                  <h2 className="text-2xl font-bold">
+                    {profile.full_name || "Usuario"}
+                  </h2>
+                  {profile.location && (
+                    <p className="text-muted-foreground flex items-center justify-center sm:justify-start gap-1 mt-1">
+                      <MapPin className="h-4 w-4" />
+                      {profile.location}
+                    </p>
+                  )}
+                  {profile.bio && (
+                    <p className="text-muted-foreground mt-2 flex items-start gap-2">
+                      <FileText className="h-4 w-4 mt-0.5 shrink-0" />
+                      <span>{profile.bio}</span>
+                    </p>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Stats */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Estadísticas y Logros</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
+                  <Trophy className="h-8 w-8 text-primary" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Puntos</p>
+                    <p className="text-2xl font-bold">{profile.points}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
+                  <Award className="h-8 w-8 text-accent" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Nivel</p>
+                    <p className="text-2xl font-bold">{profile.level}</p>
+                  </div>
+                </div>
+              </div>
+              {profile.badges && profile.badges.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium mb-3">Insignias</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {profile.badges.map((badge: any, index: number) => (
+                      <Badge key={index} variant="secondary">
+                        {badge.name}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+    </div>
+  );
+}

@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import Course from "./pages/Course";
 import Admin from "./pages/Admin";
 import Profile from "./pages/Profile";
+import UserProfile from "./pages/UserProfile";
 import Communities from "./pages/Communities";
 import CommunityDetail from "./pages/CommunityDetail";
 import ResetPassword from "./pages/ResetPassword";
@@ -58,6 +59,14 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile/:userId"
+            element={
+              <ProtectedRoute>
+                <UserProfile />
               </ProtectedRoute>
             }
           />
