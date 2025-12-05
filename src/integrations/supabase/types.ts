@@ -87,6 +87,9 @@ export type Database = {
           community_id: string
           content: string
           created_at: string
+          file_name: string | null
+          file_type: string | null
+          file_url: string | null
           id: string
           reply_to_id: string | null
           user_id: string
@@ -95,6 +98,9 @@ export type Database = {
           community_id: string
           content: string
           created_at?: string
+          file_name?: string | null
+          file_type?: string | null
+          file_url?: string | null
           id?: string
           reply_to_id?: string | null
           user_id: string
@@ -103,6 +109,9 @@ export type Database = {
           community_id?: string
           content?: string
           created_at?: string
+          file_name?: string | null
+          file_type?: string | null
+          file_url?: string | null
           id?: string
           reply_to_id?: string | null
           user_id?: string
