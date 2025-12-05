@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Trophy, Award, MapPin, FileText, MessageSquare, Heart, Users } from "lucide-react";
+import { ArrowLeft, Trophy, Award, MapPin, FileText, MessageSquare, Heart, Users, Sparkles } from "lucide-react";
 import { UserMenu } from "@/components/UserMenu";
 import { MentionText } from "@/components/social/MentionText";
 import { formatDistanceToNow } from "date-fns";
@@ -22,6 +22,7 @@ interface UserProfileData {
   avatar_url: string | null;
   bio: string | null;
   location: string | null;
+  interests: string | null;
   points: number;
   level: number;
   badges: any[];
@@ -102,7 +103,7 @@ export default function UserProfile() {
       setLoading(true);
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, full_name, avatar_url, bio, location, points, level, badges, created_at")
+        .select("id, full_name, avatar_url, bio, location, interests, points, level, badges, created_at")
         .eq("id", userId)
         .single();
 
@@ -322,6 +323,18 @@ export default function UserProfile() {
                       <FileText className="h-4 w-4 mt-0.5 shrink-0" />
                       <span>{profile.bio}</span>
                     </p>
+                  )}
+                  {profile.interests && (
+                    <div className="mt-3 flex items-start gap-2">
+                      <Sparkles className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
+                      <div className="flex flex-wrap gap-1.5">
+                        {profile.interests.split(",").map((interest, index) => (
+                          <Badge key={index} variant="secondary" className="text-xs">
+                            {interest.trim()}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>
