@@ -45,6 +45,7 @@ interface UserCommunity {
   slug: string;
   image_url: string | null;
   member_count: number;
+  role: string;
 }
 
 export default function UserProfile() {
@@ -131,7 +132,7 @@ export default function UserProfile() {
       const { data, error } = await supabase
         .from("community_members")
         .select(`
-          community_id,
+          role,
           communities:community_id (
             id,
             name,
@@ -145,8 +146,11 @@ export default function UserProfile() {
       if (error) throw error;
       
       const userCommunities = data
-        ?.map((item: any) => item.communities)
-        .filter(Boolean) || [];
+        ?.map((item: any) => ({
+          ...item.communities,
+          role: item.role
+        }))
+        .filter((c: any) => c.id) || [];
       setCommunities(userCommunities);
     } catch (error) {
       console.error("Error fetching user communities:", error);
@@ -288,6 +292,9 @@ export default function UserProfile() {
                           {community.member_count} miembros
                         </p>
                       </div>
+                      <Badge variant={community.role === 'admin' ? 'default' : community.role === 'moderator' ? 'secondary' : 'outline'} className="capitalize shrink-0">
+                        {community.role === 'member' ? 'Miembro' : community.role === 'admin' ? 'Admin' : 'Moderador'}
+                      </Badge>
                     </div>
                   ))}
                 </div>
