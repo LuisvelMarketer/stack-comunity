@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Send, MessageSquare, SmilePlus } from "lucide-react";
+import { Send, MessageSquare, SmilePlus, Reply, X } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -20,6 +20,11 @@ interface Message {
   user_id: string;
   user_name: string | null;
   user_avatar: string | null;
+  reply_to_id: string | null;
+  reply_to?: {
+    content: string;
+    user_name: string | null;
+  } | null;
 }
 
 interface Reaction {
@@ -40,6 +45,7 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -63,6 +69,17 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
             .eq("id", payload.new.user_id)
             .single();
 
+          let replyTo = null;
+          if (payload.new.reply_to_id) {
+            const existingMsg = messages.find((m) => m.id === payload.new.reply_to_id);
+            if (existingMsg) {
+              replyTo = {
+                content: existingMsg.content,
+                user_name: existingMsg.user_name,
+              };
+            }
+          }
+
           const newMsg: Message = {
             id: payload.new.id as string,
             content: payload.new.content as string,
@@ -70,6 +87,8 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
             user_id: payload.new.user_id as string,
             user_name: profile?.full_name || null,
             user_avatar: profile?.avatar_url || null,
+            reply_to_id: (payload.new.reply_to_id as string) || null,
+            reply_to: replyTo,
           };
 
           setMessages((prev) => [...prev, newMsg]);
@@ -95,7 +114,6 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
           table: "message_reactions",
         },
         () => {
-          // Reload reactions when any change occurs
           loadReactions(messages.map((m) => m.id));
         }
       )
@@ -118,11 +136,17 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
     }
   }, [messages]);
 
+  useEffect(() => {
+    if (replyingTo) {
+      inputRef.current?.focus();
+    }
+  }, [replyingTo]);
+
   const loadMessages = async () => {
     try {
       const { data: messagesData, error } = await supabase
         .from("community_messages")
-        .select("id, content, created_at, user_id")
+        .select("id, content, created_at, user_id, reply_to_id")
         .eq("community_id", communityId)
         .order("created_at", { ascending: true })
         .limit(100);
@@ -143,14 +167,35 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
 
       const profileMap = new Map(profiles?.map((p) => [p.id, p]) || []);
 
-      const formattedMessages: Message[] = messagesData.map((m) => ({
-        id: m.id,
-        content: m.content,
-        created_at: m.created_at,
-        user_id: m.user_id,
-        user_name: profileMap.get(m.user_id)?.full_name || null,
-        user_avatar: profileMap.get(m.user_id)?.avatar_url || null,
-      }));
+      // First pass: create messages without reply_to
+      const messageMap = new Map<string, Message>();
+      messagesData.forEach((m) => {
+        messageMap.set(m.id, {
+          id: m.id,
+          content: m.content,
+          created_at: m.created_at,
+          user_id: m.user_id,
+          user_name: profileMap.get(m.user_id)?.full_name || null,
+          user_avatar: profileMap.get(m.user_id)?.avatar_url || null,
+          reply_to_id: m.reply_to_id,
+          reply_to: null,
+        });
+      });
+
+      // Second pass: populate reply_to
+      const formattedMessages: Message[] = messagesData.map((m) => {
+        const msg = messageMap.get(m.id)!;
+        if (m.reply_to_id) {
+          const replyMsg = messageMap.get(m.reply_to_id);
+          if (replyMsg) {
+            msg.reply_to = {
+              content: replyMsg.content,
+              user_name: replyMsg.user_name,
+            };
+          }
+        }
+        return msg;
+      });
 
       setMessages(formattedMessages);
       await loadReactions(formattedMessages.map((m) => m.id));
@@ -173,7 +218,6 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
       if (error) throw error;
 
       const reactionMap: Record<string, Reaction[]> = {};
-
       messageIds.forEach((id) => {
         reactionMap[id] = [];
       });
@@ -230,7 +274,6 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
         });
       }
 
-      // Optimistic update
       setReactions((prev) => {
         const current = prev[messageId] || [];
         if (hasReacted) {
@@ -291,10 +334,12 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
         community_id: communityId,
         user_id: user.id,
         content: newMessage.trim(),
+        reply_to_id: replyingTo?.id || null,
       });
 
       if (error) throw error;
       setNewMessage("");
+      setReplyingTo(null);
       inputRef.current?.focus();
     } catch (error) {
       console.error("Error sending message:", error);
@@ -311,6 +356,11 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
   };
 
   const isOwnMessage = (message: Message) => message.user_id === user?.id;
+
+  const truncateText = (text: string, maxLength: number = 50) => {
+    if (text.length <= maxLength) return text;
+    return text.slice(0, maxLength) + "...";
+  };
 
   if (loading) {
     return (
@@ -368,6 +418,22 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
                       </span>
                     </div>
                     <div className="group relative">
+                      {/* Reply preview */}
+                      {message.reply_to && (
+                        <div
+                          className={`mb-1 px-3 py-1.5 rounded-lg border-l-2 border-primary/50 bg-muted/50 text-xs ${
+                            isOwnMessage(message) ? "text-right" : "text-left"
+                          }`}
+                        >
+                          <span className="font-medium text-primary/70">
+                            {message.reply_to.user_name || "Usuario"}
+                          </span>
+                          <p className="text-muted-foreground truncate">
+                            {truncateText(message.reply_to.content)}
+                          </p>
+                        </div>
+                      )}
+
                       <div
                         className={`rounded-2xl px-4 py-2 ${
                           isOwnMessage(message)
@@ -400,31 +466,40 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
                         </div>
                       )}
 
-                      {/* Add reaction button */}
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <button
-                            className={`absolute -bottom-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-full bg-card border shadow-sm hover:bg-muted ${
-                              isOwnMessage(message) ? "left-0" : "right-0"
-                            }`}
-                          >
-                            <SmilePlus className="h-4 w-4 text-muted-foreground" />
-                          </button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-2" side="top">
-                          <div className="flex gap-1">
-                            {EMOJI_OPTIONS.map((emoji) => (
-                              <button
-                                key={emoji}
-                                onClick={() => toggleReaction(message.id, emoji)}
-                                className="p-1.5 hover:bg-muted rounded transition-colors text-lg"
-                              >
-                                {emoji}
-                              </button>
-                            ))}
-                          </div>
-                        </PopoverContent>
-                      </Popover>
+                      {/* Action buttons */}
+                      <div
+                        className={`absolute -bottom-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 ${
+                          isOwnMessage(message) ? "left-0" : "right-0"
+                        }`}
+                      >
+                        <button
+                          onClick={() => setReplyingTo(message)}
+                          className="p-1 rounded-full bg-card border shadow-sm hover:bg-muted"
+                          title="Responder"
+                        >
+                          <Reply className="h-4 w-4 text-muted-foreground" />
+                        </button>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button className="p-1 rounded-full bg-card border shadow-sm hover:bg-muted">
+                              <SmilePlus className="h-4 w-4 text-muted-foreground" />
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-2" side="top">
+                            <div className="flex gap-1">
+                              {EMOJI_OPTIONS.map((emoji) => (
+                                <button
+                                  key={emoji}
+                                  onClick={() => toggleReaction(message.id, emoji)}
+                                  className="p-1.5 hover:bg-muted rounded transition-colors text-lg"
+                                >
+                                  {emoji}
+                                </button>
+                              ))}
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -433,12 +508,32 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
           )}
         </ScrollArea>
 
+        {/* Reply indicator */}
+        {replyingTo && (
+          <div className="px-4 py-2 border-t bg-muted/30 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm">
+              <Reply className="h-4 w-4 text-primary" />
+              <span className="text-muted-foreground">Respondiendo a</span>
+              <span className="font-medium">{replyingTo.user_name || "Usuario"}</span>
+              <span className="text-muted-foreground truncate max-w-[200px]">
+                {truncateText(replyingTo.content, 30)}
+              </span>
+            </div>
+            <button
+              onClick={() => setReplyingTo(null)}
+              className="p-1 hover:bg-muted rounded"
+            >
+              <X className="h-4 w-4 text-muted-foreground" />
+            </button>
+          </div>
+        )}
+
         <form onSubmit={sendMessage} className="p-4 border-t flex gap-2">
           <Input
             ref={inputRef}
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Escribe un mensaje..."
+            placeholder={replyingTo ? "Escribe tu respuesta..." : "Escribe un mensaje..."}
             disabled={sending}
             className="flex-1"
           />

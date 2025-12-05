@@ -88,6 +88,7 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          reply_to_id: string | null
           user_id: string
         }
         Insert: {
@@ -95,6 +96,7 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          reply_to_id?: string | null
           user_id: string
         }
         Update: {
@@ -102,6 +104,7 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          reply_to_id?: string | null
           user_id?: string
         }
         Relationships: [
@@ -110,6 +113,13 @@ export type Database = {
             columns: ["community_id"]
             isOneToOne: false
             referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_messages_reply_to_id_fkey"
+            columns: ["reply_to_id"]
+            isOneToOne: false
+            referencedRelation: "community_messages"
             referencedColumns: ["id"]
           },
         ]
