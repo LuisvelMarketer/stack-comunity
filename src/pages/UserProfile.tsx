@@ -377,6 +377,24 @@ export default function UserProfile() {
                   </div>
                 </div>
               </div>
+              
+              {/* Badges */}
+              {profile.badges && profile.badges.length > 0 && (
+                <div className="mt-6 pt-6 border-t">
+                  <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
+                    <Award className="h-4 w-4" />
+                    Insignias
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {profile.badges.map((badge: any, index: number) => (
+                      <Badge key={index} variant="secondary" className="py-1.5 px-3">
+                        {badge.icon && <span className="mr-1">{badge.icon}</span>}
+                        {badge.name || badge}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
