@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Send, MessageSquare, SmilePlus, Reply, X } from "lucide-react";
+import { Send, MessageSquare, SmilePlus, Reply, X, Paperclip, Image, FileText, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -21,6 +21,9 @@ interface Message {
   user_name: string | null;
   user_avatar: string | null;
   reply_to_id: string | null;
+  file_url: string | null;
+  file_type: string | null;
+  file_name: string | null;
   reply_to?: {
     content: string;
     user_name: string | null;
@@ -45,9 +48,13 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadMessages();
@@ -88,6 +95,9 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
             user_name: profile?.full_name || null,
             user_avatar: profile?.avatar_url || null,
             reply_to_id: (payload.new.reply_to_id as string) || null,
+            file_url: (payload.new.file_url as string) || null,
+            file_type: (payload.new.file_type as string) || null,
+            file_name: (payload.new.file_name as string) || null,
             reply_to: replyTo,
           };
 
@@ -146,7 +156,7 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
     try {
       const { data: messagesData, error } = await supabase
         .from("community_messages")
-        .select("id, content, created_at, user_id, reply_to_id")
+        .select("id, content, created_at, user_id, reply_to_id, file_url, file_type, file_name")
         .eq("community_id", communityId)
         .order("created_at", { ascending: true })
         .limit(100);
@@ -167,7 +177,6 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
 
       const profileMap = new Map(profiles?.map((p) => [p.id, p]) || []);
 
-      // First pass: create messages without reply_to
       const messageMap = new Map<string, Message>();
       messagesData.forEach((m) => {
         messageMap.set(m.id, {
@@ -178,11 +187,13 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
           user_name: profileMap.get(m.user_id)?.full_name || null,
           user_avatar: profileMap.get(m.user_id)?.avatar_url || null,
           reply_to_id: m.reply_to_id,
+          file_url: m.file_url,
+          file_type: m.file_type,
+          file_name: m.file_name,
           reply_to: null,
         });
       });
 
-      // Second pass: populate reply_to
       const formattedMessages: Message[] = messagesData.map((m) => {
         const msg = messageMap.get(m.id)!;
         if (m.reply_to_id) {
@@ -282,12 +293,7 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
             [messageId]: current
               .map((r) =>
                 r.emoji === emoji
-                  ? {
-                      ...r,
-                      count: r.count - 1,
-                      users: r.users.filter((u) => u !== user.id),
-                      hasReacted: false,
-                    }
+                  ? { ...r, count: r.count - 1, users: r.users.filter((u) => u !== user.id), hasReacted: false }
                   : r
               )
               .filter((r) => r.count > 0),
@@ -299,22 +305,14 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
               ...prev,
               [messageId]: current.map((r) =>
                 r.emoji === emoji
-                  ? {
-                      ...r,
-                      count: r.count + 1,
-                      users: [...r.users, user.id],
-                      hasReacted: true,
-                    }
+                  ? { ...r, count: r.count + 1, users: [...r.users, user.id], hasReacted: true }
                   : r
               ),
             };
           } else {
             return {
               ...prev,
-              [messageId]: [
-                ...current,
-                { emoji, count: 1, users: [user.id], hasReacted: true },
-              ],
+              [messageId]: [...current, { emoji, count: 1, users: [user.id], hasReacted: true }],
             };
           }
         }
@@ -324,27 +322,90 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
     }
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert("El archivo es muy grande. Máximo 10MB.");
+      return;
+    }
+
+    setSelectedFile(file);
+
+    if (file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = (e) => setFilePreview(e.target?.result as string);
+      reader.readAsDataURL(file);
+    } else {
+      setFilePreview(null);
+    }
+  };
+
+  const clearFile = () => {
+    setSelectedFile(null);
+    setFilePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const uploadFile = async (file: File): Promise<{ url: string; type: string; name: string } | null> => {
+    if (!user) return null;
+
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+
+    const { error } = await supabase.storage.from("chat-files").upload(fileName, file);
+
+    if (error) {
+      console.error("Upload error:", error);
+      return null;
+    }
+
+    const { data: urlData } = supabase.storage.from("chat-files").getPublicUrl(fileName);
+
+    return {
+      url: urlData.publicUrl,
+      type: file.type.startsWith("image/") ? "image" : "file",
+      name: file.name,
+    };
+  };
+
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !user || sending) return;
+    if ((!newMessage.trim() && !selectedFile) || !user || sending) return;
 
     setSending(true);
+    setUploading(!!selectedFile);
+
     try {
+      let fileData = null;
+      if (selectedFile) {
+        fileData = await uploadFile(selectedFile);
+      }
+
       const { error } = await supabase.from("community_messages").insert({
         community_id: communityId,
         user_id: user.id,
-        content: newMessage.trim(),
+        content: newMessage.trim() || (fileData ? fileData.name : ""),
         reply_to_id: replyingTo?.id || null,
+        file_url: fileData?.url || null,
+        file_type: fileData?.type || null,
+        file_name: fileData?.name || null,
       });
 
       if (error) throw error;
+
       setNewMessage("");
       setReplyingTo(null);
+      clearFile();
       inputRef.current?.focus();
     } catch (error) {
       console.error("Error sending message:", error);
     } finally {
       setSending(false);
+      setUploading(false);
     }
   };
 
@@ -361,6 +422,8 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
     if (text.length <= maxLength) return text;
     return text.slice(0, maxLength) + "...";
   };
+
+  const isImageFile = (type: string | null) => type === "image";
 
   if (loading) {
     return (
@@ -394,70 +457,55 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
                   className={`flex gap-3 ${isOwnMessage(message) ? "flex-row-reverse" : ""}`}
                 >
                   <Avatar className="h-8 w-8 shrink-0">
-                    {message.user_avatar && (
-                      <AvatarImage src={message.user_avatar} />
-                    )}
+                    {message.user_avatar && <AvatarImage src={message.user_avatar} />}
                     <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                       {getInitials(message.user_name)}
                     </AvatarFallback>
                   </Avatar>
-                  <div
-                    className={`flex flex-col max-w-[70%] ${
-                      isOwnMessage(message) ? "items-end" : "items-start"
-                    }`}
-                  >
+                  <div className={`flex flex-col max-w-[70%] ${isOwnMessage(message) ? "items-end" : "items-start"}`}>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-medium">
-                        {message.user_name || "Usuario"}
-                      </span>
+                      <span className="text-sm font-medium">{message.user_name || "Usuario"}</span>
                       <span className="text-xs text-muted-foreground">
-                        {formatDistanceToNow(new Date(message.created_at), {
-                          addSuffix: true,
-                          locale: es,
-                        })}
+                        {formatDistanceToNow(new Date(message.created_at), { addSuffix: true, locale: es })}
                       </span>
                     </div>
                     <div className="group relative">
-                      {/* Reply preview */}
                       {message.reply_to && (
-                        <div
-                          className={`mb-1 px-3 py-1.5 rounded-lg border-l-2 border-primary/50 bg-muted/50 text-xs ${
-                            isOwnMessage(message) ? "text-right" : "text-left"
-                          }`}
-                        >
-                          <span className="font-medium text-primary/70">
-                            {message.reply_to.user_name || "Usuario"}
-                          </span>
-                          <p className="text-muted-foreground truncate">
-                            {truncateText(message.reply_to.content)}
-                          </p>
+                        <div className={`mb-1 px-3 py-1.5 rounded-lg border-l-2 border-primary/50 bg-muted/50 text-xs ${isOwnMessage(message) ? "text-right" : "text-left"}`}>
+                          <span className="font-medium text-primary/70">{message.reply_to.user_name || "Usuario"}</span>
+                          <p className="text-muted-foreground truncate">{truncateText(message.reply_to.content)}</p>
                         </div>
                       )}
 
-                      <div
-                        className={`rounded-2xl px-4 py-2 ${
-                          isOwnMessage(message)
-                            ? "bg-primary text-primary-foreground rounded-tr-sm"
-                            : "bg-muted rounded-tl-sm"
-                        }`}
-                      >
-                        <p className="text-sm whitespace-pre-wrap break-words">
-                          {message.content}
-                        </p>
+                      <div className={`rounded-2xl overflow-hidden ${isOwnMessage(message) ? "bg-primary text-primary-foreground rounded-tr-sm" : "bg-muted rounded-tl-sm"}`}>
+                        {message.file_url && isImageFile(message.file_type) && (
+                          <a href={message.file_url} target="_blank" rel="noopener noreferrer">
+                            <img src={message.file_url} alt={message.file_name || "imagen"} className="max-w-full max-h-64 object-cover" />
+                          </a>
+                        )}
+                        {message.file_url && !isImageFile(message.file_type) && (
+                          <a
+                            href={message.file_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`flex items-center gap-2 px-4 py-2 ${isOwnMessage(message) ? "hover:bg-primary-foreground/10" : "hover:bg-muted-foreground/10"}`}
+                          >
+                            <FileText className="h-5 w-5" />
+                            <span className="text-sm underline">{message.file_name}</span>
+                          </a>
+                        )}
+                        {message.content && (!message.file_url || message.content !== message.file_name) && (
+                          <p className="text-sm whitespace-pre-wrap break-words px-4 py-2">{message.content}</p>
+                        )}
                       </div>
 
-                      {/* Reactions display */}
                       {reactions[message.id]?.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-1">
                           {reactions[message.id].map((reaction) => (
                             <button
                               key={reaction.emoji}
                               onClick={() => toggleReaction(message.id, reaction.emoji)}
-                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs transition-colors ${
-                                reaction.hasReacted
-                                  ? "bg-primary/20 border border-primary/30"
-                                  : "bg-muted hover:bg-muted/80"
-                              }`}
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs transition-colors ${reaction.hasReacted ? "bg-primary/20 border border-primary/30" : "bg-muted hover:bg-muted/80"}`}
                             >
                               <span>{reaction.emoji}</span>
                               <span className="text-muted-foreground">{reaction.count}</span>
@@ -466,17 +514,8 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
                         </div>
                       )}
 
-                      {/* Action buttons */}
-                      <div
-                        className={`absolute -bottom-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 ${
-                          isOwnMessage(message) ? "left-0" : "right-0"
-                        }`}
-                      >
-                        <button
-                          onClick={() => setReplyingTo(message)}
-                          className="p-1 rounded-full bg-card border shadow-sm hover:bg-muted"
-                          title="Responder"
-                        >
+                      <div className={`absolute -bottom-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 ${isOwnMessage(message) ? "left-0" : "right-0"}`}>
+                        <button onClick={() => setReplyingTo(message)} className="p-1 rounded-full bg-card border shadow-sm hover:bg-muted" title="Responder">
                           <Reply className="h-4 w-4 text-muted-foreground" />
                         </button>
                         <Popover>
@@ -488,11 +527,7 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
                           <PopoverContent className="w-auto p-2" side="top">
                             <div className="flex gap-1">
                               {EMOJI_OPTIONS.map((emoji) => (
-                                <button
-                                  key={emoji}
-                                  onClick={() => toggleReaction(message.id, emoji)}
-                                  className="p-1.5 hover:bg-muted rounded transition-colors text-lg"
-                                >
+                                <button key={emoji} onClick={() => toggleReaction(message.id, emoji)} className="p-1.5 hover:bg-muted rounded transition-colors text-lg">
                                   {emoji}
                                 </button>
                               ))}
@@ -508,27 +543,43 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
           )}
         </ScrollArea>
 
-        {/* Reply indicator */}
         {replyingTo && (
           <div className="px-4 py-2 border-t bg-muted/30 flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm">
               <Reply className="h-4 w-4 text-primary" />
               <span className="text-muted-foreground">Respondiendo a</span>
               <span className="font-medium">{replyingTo.user_name || "Usuario"}</span>
-              <span className="text-muted-foreground truncate max-w-[200px]">
-                {truncateText(replyingTo.content, 30)}
-              </span>
+              <span className="text-muted-foreground truncate max-w-[200px]">{truncateText(replyingTo.content, 30)}</span>
             </div>
-            <button
-              onClick={() => setReplyingTo(null)}
-              className="p-1 hover:bg-muted rounded"
-            >
+            <button onClick={() => setReplyingTo(null)} className="p-1 hover:bg-muted rounded">
+              <X className="h-4 w-4 text-muted-foreground" />
+            </button>
+          </div>
+        )}
+
+        {selectedFile && (
+          <div className="px-4 py-2 border-t bg-muted/30 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {filePreview ? (
+                <img src={filePreview} alt="preview" className="h-12 w-12 object-cover rounded" />
+              ) : (
+                <div className="h-12 w-12 bg-muted rounded flex items-center justify-center">
+                  <FileText className="h-6 w-6 text-muted-foreground" />
+                </div>
+              )}
+              <span className="text-sm truncate max-w-[200px]">{selectedFile.name}</span>
+            </div>
+            <button onClick={clearFile} className="p-1 hover:bg-muted rounded">
               <X className="h-4 w-4 text-muted-foreground" />
             </button>
           </div>
         )}
 
         <form onSubmit={sendMessage} className="p-4 border-t flex gap-2">
+          <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept="image/*,.pdf,.doc,.docx,.txt" />
+          <Button type="button" variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} disabled={sending}>
+            <Paperclip className="h-4 w-4" />
+          </Button>
           <Input
             ref={inputRef}
             value={newMessage}
@@ -537,8 +588,8 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
             disabled={sending}
             className="flex-1"
           />
-          <Button type="submit" size="icon" disabled={sending || !newMessage.trim()}>
-            <Send className="h-4 w-4" />
+          <Button type="submit" size="icon" disabled={sending || (!newMessage.trim() && !selectedFile)}>
+            {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>
         </form>
       </CardContent>
