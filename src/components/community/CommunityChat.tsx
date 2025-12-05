@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Send, MessageSquare, SmilePlus, Reply, X, Paperclip, FileText, Loader2, Mic, Square, Play } from "lucide-react";
+import { Send, MessageSquare, SmilePlus, Reply, X, Paperclip, FileText, Loader2, Mic, Square, Pencil, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -56,6 +56,8 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
   const [recordingTime, setRecordingTime] = useState(0);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioPreviewUrl, setAudioPreviewUrl] = useState<string | null>(null);
+  const [editingMessage, setEditingMessage] = useState<Message | null>(null);
+  const [editContent, setEditContent] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -504,6 +506,54 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
   const isImageFile = (type: string | null) => type === "image";
   const isAudioFile = (type: string | null) => type === "audio";
 
+  const deleteMessage = async (messageId: string) => {
+    if (!confirm("¿Estás seguro de que quieres eliminar este mensaje?")) return;
+    
+    try {
+      const { error } = await supabase
+        .from("community_messages")
+        .delete()
+        .eq("id", messageId);
+
+      if (error) throw error;
+      setMessages((prev) => prev.filter((m) => m.id !== messageId));
+    } catch (error) {
+      console.error("Error deleting message:", error);
+    }
+  };
+
+  const startEditing = (message: Message) => {
+    setEditingMessage(message);
+    setEditContent(message.content);
+  };
+
+  const cancelEditing = () => {
+    setEditingMessage(null);
+    setEditContent("");
+  };
+
+  const saveEdit = async () => {
+    if (!editingMessage || !editContent.trim()) return;
+
+    try {
+      const { error } = await supabase
+        .from("community_messages")
+        .update({ content: editContent.trim() })
+        .eq("id", editingMessage.id);
+
+      if (error) throw error;
+
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === editingMessage.id ? { ...m, content: editContent.trim() } : m
+        )
+      );
+      cancelEditing();
+    } catch (error) {
+      console.error("Error updating message:", error);
+    }
+  };
+
   if (loading) {
     return (
       <Card className="h-[600px] flex items-center justify-center">
@@ -623,6 +673,16 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
                             </div>
                           </PopoverContent>
                         </Popover>
+                        {isOwnMessage(message) && !message.file_url && (
+                          <button onClick={() => startEditing(message)} className="p-1 rounded-full bg-card border shadow-sm hover:bg-muted" title="Editar">
+                            <Pencil className="h-4 w-4 text-muted-foreground" />
+                          </button>
+                        )}
+                        {isOwnMessage(message) && (
+                          <button onClick={() => deleteMessage(message.id)} className="p-1 rounded-full bg-card border shadow-sm hover:bg-destructive/10 hover:border-destructive/30" title="Eliminar">
+                            <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -688,6 +748,29 @@ export const CommunityChat = ({ communityId }: CommunityChatProps) => {
               <Square className="h-4 w-4 mr-1" />
               Detener
             </Button>
+          </div>
+        )}
+
+        {editingMessage && (
+          <div className="px-4 py-2 border-t bg-primary/5 flex flex-col gap-2">
+            <div className="flex items-center gap-2 text-sm">
+              <Pencil className="h-4 w-4 text-primary" />
+              <span className="text-muted-foreground">Editando mensaje</span>
+            </div>
+            <div className="flex gap-2">
+              <Input
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                className="flex-1"
+                autoFocus
+              />
+              <Button type="button" size="sm" onClick={saveEdit} disabled={!editContent.trim()}>
+                Guardar
+              </Button>
+              <Button type="button" variant="ghost" size="sm" onClick={cancelEditing}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         )}
 
