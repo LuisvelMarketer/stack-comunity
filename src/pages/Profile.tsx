@@ -11,9 +11,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Upload, Loader2, Trophy, Award, Users } from "lucide-react";
+import { ArrowLeft, Upload, Loader2, Trophy, Award, Users, Sun, Moon, Monitor } from "lucide-react";
 import { UserMenu } from "@/components/UserMenu";
+import { useThemePreference } from "@/hooks/useThemePreference";
 
 type FollowListType = "followers" | "following" | null;
 
@@ -42,6 +44,7 @@ export default function Profile() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { theme, setTheme } = useThemePreference();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -505,6 +508,66 @@ export default function Profile() {
                   }
                 />
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Theme Selector */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Apariencia</CardTitle>
+              <CardDescription>
+                Personaliza el tema de la aplicación
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <RadioGroup
+                value={theme || "system"}
+                onValueChange={setTheme}
+                className="grid grid-cols-3 gap-4"
+              >
+                <div>
+                  <RadioGroupItem
+                    value="light"
+                    id="theme-light"
+                    className="peer sr-only"
+                  />
+                  <Label
+                    htmlFor="theme-light"
+                    className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                  >
+                    <Sun className="mb-3 h-6 w-6" />
+                    <span className="text-sm font-medium">Claro</span>
+                  </Label>
+                </div>
+                <div>
+                  <RadioGroupItem
+                    value="dark"
+                    id="theme-dark"
+                    className="peer sr-only"
+                  />
+                  <Label
+                    htmlFor="theme-dark"
+                    className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                  >
+                    <Moon className="mb-3 h-6 w-6" />
+                    <span className="text-sm font-medium">Oscuro</span>
+                  </Label>
+                </div>
+                <div>
+                  <RadioGroupItem
+                    value="system"
+                    id="theme-system"
+                    className="peer sr-only"
+                  />
+                  <Label
+                    htmlFor="theme-system"
+                    className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                  >
+                    <Monitor className="mb-3 h-6 w-6" />
+                    <span className="text-sm font-medium">Sistema</span>
+                  </Label>
+                </div>
+              </RadioGroup>
             </CardContent>
           </Card>
 
