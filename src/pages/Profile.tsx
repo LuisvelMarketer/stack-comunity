@@ -9,9 +9,19 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Upload, Loader2, Trophy, Award } from "lucide-react";
+import { ArrowLeft, Upload, Loader2, Trophy, Award, Users } from "lucide-react";
 import { UserMenu } from "@/components/UserMenu";
+
+type FollowListType = "followers" | "following" | null;
+
+interface FollowUser {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+}
 
 interface Profile {
   full_name: string | null;
@@ -19,6 +29,8 @@ interface Profile {
   points: number;
   level: number;
   badges: any[];
+  followers_count: number;
+  following_count: number;
   preferences: {
     email_notifications: boolean;
     course_updates: boolean;
@@ -39,12 +51,17 @@ export default function Profile() {
     points: 0,
     level: 1,
     badges: [],
+    followers_count: 0,
+    following_count: 0,
     preferences: {
       email_notifications: true,
       course_updates: true,
       comment_replies: true,
     },
   });
+  const [followListType, setFollowListType] = useState<FollowListType>(null);
+  const [followList, setFollowList] = useState<FollowUser[]>([]);
+  const [followListLoading, setFollowListLoading] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -57,7 +74,7 @@ export default function Profile() {
       setLoading(true);
       const { data, error } = await supabase
         .from("profiles")
-        .select("full_name, avatar_url, points, level, badges, preferences")
+        .select("full_name, avatar_url, points, level, badges, preferences, followers_count, following_count")
         .eq("id", user?.id)
         .single();
 
@@ -70,6 +87,8 @@ export default function Profile() {
           points: data.points || 0,
           level: data.level || 1,
           badges: Array.isArray(data.badges) ? data.badges : [],
+          followers_count: data.followers_count || 0,
+          following_count: data.following_count || 0,
           preferences: {
             email_notifications:
               (data.preferences as any)?.email_notifications ?? true,
@@ -88,6 +107,45 @@ export default function Profile() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchFollowList = async (type: FollowListType) => {
+    if (!type || !user) return;
+    setFollowListLoading(true);
+    setFollowList([]);
+    try {
+      if (type === "followers") {
+        const { data, error } = await supabase
+          .from("user_follows")
+          .select("follower_id, profiles:follower_id(id, full_name, avatar_url)")
+          .eq("following_id", user.id);
+        if (error) throw error;
+        setFollowList(data?.map((d: any) => d.profiles).filter(Boolean) || []);
+      } else {
+        const { data, error } = await supabase
+          .from("user_follows")
+          .select("following_id, profiles:following_id(id, full_name, avatar_url)")
+          .eq("follower_id", user.id);
+        if (error) throw error;
+        setFollowList(data?.map((d: any) => d.profiles).filter(Boolean) || []);
+      }
+    } catch (error) {
+      console.error("Error fetching follow list:", error);
+    } finally {
+      setFollowListLoading(false);
+    }
+  };
+
+  const openFollowList = (type: FollowListType) => {
+    setFollowListType(type);
+    fetchFollowList(type);
+  };
+
+  const getUserInitials = (name: string | null) => {
+    if (name) {
+      return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+    }
+    return "U";
   };
 
   const handleSaveProfile = async () => {
@@ -277,6 +335,34 @@ export default function Profile() {
             </CardContent>
           </Card>
 
+          {/* Followers/Following Stats */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Seguidores y Siguiendo
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-center gap-8">
+                <button
+                  onClick={() => openFollowList("followers")}
+                  className="text-center hover:bg-muted p-4 rounded-lg transition-colors"
+                >
+                  <p className="text-3xl font-bold">{profile.followers_count}</p>
+                  <p className="text-sm text-muted-foreground">Seguidores</p>
+                </button>
+                <button
+                  onClick={() => openFollowList("following")}
+                  className="text-center hover:bg-muted p-4 rounded-lg transition-colors"
+                >
+                  <p className="text-3xl font-bold">{profile.following_count}</p>
+                  <p className="text-sm text-muted-foreground">Siguiendo</p>
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Gamification Stats */}
           <Card>
             <CardHeader>
@@ -441,6 +527,49 @@ export default function Profile() {
           </div>
         </div>
       </main>
+
+      {/* Follow List Dialog */}
+      <Dialog open={!!followListType} onOpenChange={() => setFollowListType(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {followListType === "followers" ? "Seguidores" : "Siguiendo"}
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[400px]">
+            {followListLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : followList.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">
+                {followListType === "followers" ? "Sin seguidores" : "No sigues a nadie"}
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {followList.map((u) => (
+                  <div
+                    key={u.id}
+                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted cursor-pointer"
+                    onClick={() => {
+                      setFollowListType(null);
+                      navigate(`/user/${u.id}`);
+                    }}
+                  >
+                    <Avatar className="h-10 w-10">
+                      {u.avatar_url && <AvatarImage src={u.avatar_url} />}
+                      <AvatarFallback className="bg-primary text-primary-foreground">
+                        {getUserInitials(u.full_name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="font-medium">{u.full_name || "Usuario"}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
