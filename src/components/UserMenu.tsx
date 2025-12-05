@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, LogOut, Settings, LayoutDashboard, Shield } from "lucide-react";
+import { User, LogOut, Settings, LayoutDashboard, Shield, MessageCircle } from "lucide-react";
 import { NotificationCenter } from "@/components/NotificationCenter";
 
 interface UserMenuProps {
@@ -26,12 +26,80 @@ export const UserMenu = ({ showAdminLink = false }: UserMenuProps) => {
     full_name: null,
     avatar_url: null,
   });
+  const [unreadMessages, setUnreadMessages] = useState(0);
 
   useEffect(() => {
     if (user) {
       fetchProfile();
+      fetchUnreadMessages();
+      
+      // Subscribe to new messages
+      const channel = supabase
+        .channel('unread-messages')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'direct_messages'
+          },
+          (payload) => {
+            // Check if message is for current user and not sent by them
+            if (payload.new.sender_id !== user.id) {
+              setUnreadMessages(prev => prev + 1);
+            }
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'direct_messages',
+            filter: `read=eq.true`
+          },
+          () => {
+            fetchUnreadMessages();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [user]);
+
+  const fetchUnreadMessages = async () => {
+    if (!user) return;
+    
+    try {
+      // Get all conversations where user is a participant
+      const { data: conversations } = await supabase
+        .from("conversations")
+        .select("id")
+        .or(`participant_1.eq.${user.id},participant_2.eq.${user.id}`);
+
+      if (!conversations || conversations.length === 0) {
+        setUnreadMessages(0);
+        return;
+      }
+
+      const conversationIds = conversations.map(c => c.id);
+
+      // Count unread messages not sent by current user
+      const { count } = await supabase
+        .from("direct_messages")
+        .select("id", { count: "exact", head: true })
+        .in("conversation_id", conversationIds)
+        .eq("read", false)
+        .neq("sender_id", user.id);
+
+      setUnreadMessages(count || 0);
+    } catch (error) {
+      console.error("Error fetching unread messages:", error);
+    }
+  };
 
   const fetchProfile = async () => {
     if (!user) return;
@@ -68,6 +136,19 @@ export const UserMenu = ({ showAdminLink = false }: UserMenuProps) => {
 
   return (
     <div className="flex items-center gap-2">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="relative"
+        onClick={() => navigate("/messages")}
+      >
+        <MessageCircle className="h-5 w-5" />
+        {unreadMessages > 0 && (
+          <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center">
+            {unreadMessages > 9 ? "9+" : unreadMessages}
+          </span>
+        )}
+      </Button>
       <NotificationCenter />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
