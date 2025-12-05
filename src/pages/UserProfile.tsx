@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Trophy, Award, MapPin, FileText, MessageSquare, Heart } from "lucide-react";
+import { ArrowLeft, Trophy, Award, MapPin, FileText, MessageSquare, Heart, Users } from "lucide-react";
 import { UserMenu } from "@/components/UserMenu";
 import { MentionText } from "@/components/social/MentionText";
 import { formatDistanceToNow } from "date-fns";
@@ -39,6 +39,14 @@ interface RecentComment {
   post_id: string;
 }
 
+interface UserCommunity {
+  id: string;
+  name: string;
+  slug: string;
+  image_url: string | null;
+  member_count: number;
+}
+
 export default function UserProfile() {
   const { userId } = useParams<{ userId: string }>();
   const { user } = useAuth();
@@ -47,6 +55,7 @@ export default function UserProfile() {
   const [profile, setProfile] = useState<UserProfileData | null>(null);
   const [recentPosts, setRecentPosts] = useState<RecentPost[]>([]);
   const [recentComments, setRecentComments] = useState<RecentComment[]>([]);
+  const [communities, setCommunities] = useState<UserCommunity[]>([]);
 
   useEffect(() => {
     // If viewing own profile, redirect to /profile
@@ -59,6 +68,7 @@ export default function UserProfile() {
       fetchProfile();
       fetchRecentPosts();
       fetchRecentComments();
+      fetchUserCommunities();
     }
   }, [userId, user?.id]);
 
@@ -113,6 +123,33 @@ export default function UserProfile() {
       setRecentComments(data || []);
     } catch (error) {
       console.error("Error fetching recent comments:", error);
+    }
+  };
+
+  const fetchUserCommunities = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("community_members")
+        .select(`
+          community_id,
+          communities:community_id (
+            id,
+            name,
+            slug,
+            image_url,
+            member_count
+          )
+        `)
+        .eq("user_id", userId);
+
+      if (error) throw error;
+      
+      const userCommunities = data
+        ?.map((item: any) => item.communities)
+        .filter(Boolean) || [];
+      setCommunities(userCommunities);
+    } catch (error) {
+      console.error("Error fetching user communities:", error);
     }
   };
 
@@ -213,38 +250,46 @@ export default function UserProfile() {
             </CardContent>
           </Card>
 
-          {/* Stats */}
+          {/* User Communities */}
           <Card>
             <CardHeader>
-              <CardTitle>Estadísticas y Logros</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Comunidades
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
-                  <Trophy className="h-8 w-8 text-primary" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Puntos</p>
-                    <p className="text-2xl font-bold">{profile.points}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
-                  <Award className="h-8 w-8 text-accent" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Nivel</p>
-                    <p className="text-2xl font-bold">{profile.level}</p>
-                  </div>
-                </div>
-              </div>
-              {profile.badges && profile.badges.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-medium mb-3">Insignias</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {profile.badges.map((badge: any, index: number) => (
-                      <Badge key={index} variant="secondary">
-                        {badge.name}
-                      </Badge>
-                    ))}
-                  </div>
+            <CardContent>
+              {communities.length === 0 ? (
+                <p className="text-muted-foreground text-center py-4">
+                  No pertenece a ninguna comunidad
+                </p>
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {communities.map((community) => (
+                    <div
+                      key={community.id}
+                      onClick={() => navigate(`/communities/${community.slug}`)}
+                      className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted transition-colors"
+                    >
+                      {community.image_url ? (
+                        <img
+                          src={community.image_url}
+                          alt={community.name}
+                          className="h-10 w-10 rounded-lg object-cover"
+                        />
+                      ) : (
+                        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <Users className="h-5 w-5 text-primary" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{community.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {community.member_count} miembros
+                        </p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </CardContent>
