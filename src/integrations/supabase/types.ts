@@ -498,6 +498,8 @@ export type Database = {
           badges: Json | null
           bio: string | null
           created_at: string
+          followers_count: number
+          following_count: number
           full_name: string | null
           id: string
           interests: string | null
@@ -513,6 +515,8 @@ export type Database = {
           badges?: Json | null
           bio?: string | null
           created_at?: string
+          followers_count?: number
+          following_count?: number
           full_name?: string | null
           id: string
           interests?: string | null
@@ -528,6 +532,8 @@ export type Database = {
           badges?: Json | null
           bio?: string | null
           created_at?: string
+          followers_count?: number
+          following_count?: number
           full_name?: string | null
           id?: string
           interests?: string | null
@@ -537,6 +543,27 @@ export type Database = {
           points?: number
           preferences?: Json | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      user_follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+          id?: string
         }
         Relationships: []
       }

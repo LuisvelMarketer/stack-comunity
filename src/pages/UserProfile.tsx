@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Trophy, Award, MapPin, FileText, MessageSquare, Heart, Users, Sparkles, Calendar } from "lucide-react";
+import { ArrowLeft, Trophy, Award, MapPin, FileText, MessageSquare, Heart, Users, Sparkles, Calendar, UserPlus, UserMinus } from "lucide-react";
 import { UserMenu } from "@/components/UserMenu";
 import { MentionText } from "@/components/social/MentionText";
 import { formatDistanceToNow, format } from "date-fns";
@@ -27,6 +27,8 @@ interface UserProfileData {
   level: number;
   badges: any[];
   created_at: string;
+  followers_count: number;
+  following_count: number;
 }
 
 interface RecentPost {
@@ -74,6 +76,8 @@ export default function UserProfile() {
   const [communitySort, setCommunitySort] = useState<"joined" | "name">("joined");
   const [totalPosts, setTotalPosts] = useState(0);
   const [totalComments, setTotalComments] = useState(0);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
 
   const sortedCommunities = [...communities].sort((a, b) => {
     if (communitySort === "name") {
@@ -95,6 +99,7 @@ export default function UserProfile() {
       fetchRecentComments(0, false);
       fetchUserCommunities();
       fetchTotalCounts();
+      fetchFollowStatus();
     }
   }, [userId, user?.id]);
 
@@ -103,7 +108,7 @@ export default function UserProfile() {
       setLoading(true);
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, full_name, avatar_url, bio, location, interests, points, level, badges, created_at")
+        .select("id, full_name, avatar_url, bio, location, interests, points, level, badges, created_at, followers_count, following_count")
         .eq("id", userId)
         .single();
 
@@ -117,6 +122,61 @@ export default function UserProfile() {
       setProfile(null);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchFollowStatus = async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from("user_follows")
+        .select("id")
+        .eq("follower_id", user.id)
+        .eq("following_id", userId)
+        .maybeSingle();
+
+      if (error) throw error;
+      setIsFollowing(!!data);
+    } catch (error) {
+      console.error("Error fetching follow status:", error);
+    }
+  };
+
+  const toggleFollow = async () => {
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+
+    setFollowLoading(true);
+    try {
+      if (isFollowing) {
+        const { error } = await supabase
+          .from("user_follows")
+          .delete()
+          .eq("follower_id", user.id)
+          .eq("following_id", userId);
+
+        if (error) throw error;
+        setIsFollowing(false);
+        if (profile) {
+          setProfile({ ...profile, followers_count: profile.followers_count - 1 });
+        }
+      } else {
+        const { error } = await supabase
+          .from("user_follows")
+          .insert({ follower_id: user.id, following_id: userId });
+
+        if (error) throw error;
+        setIsFollowing(true);
+        if (profile) {
+          setProfile({ ...profile, followers_count: profile.followers_count + 1 });
+        }
+      }
+    } catch (error) {
+      console.error("Error toggling follow:", error);
+    } finally {
+      setFollowLoading(false);
     }
   };
 
@@ -309,9 +369,34 @@ export default function UserProfile() {
                   </AvatarFallback>
                 </Avatar>
                 <div className="text-center sm:text-left flex-1">
-                  <h2 className="text-2xl font-bold">
-                    {profile.full_name || "Usuario"}
-                  </h2>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                    <h2 className="text-2xl font-bold">
+                      {profile.full_name || "Usuario"}
+                    </h2>
+                    <Button
+                      variant={isFollowing ? "outline" : "default"}
+                      size="sm"
+                      onClick={toggleFollow}
+                      disabled={followLoading}
+                      className="w-fit mx-auto sm:mx-0"
+                    >
+                      {isFollowing ? (
+                        <>
+                          <UserMinus className="h-4 w-4 mr-1" />
+                          Dejar de seguir
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus className="h-4 w-4 mr-1" />
+                          Seguir
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  <div className="flex items-center justify-center sm:justify-start gap-4 mt-2 text-sm">
+                    <span><strong>{profile.followers_count}</strong> seguidores</span>
+                    <span><strong>{profile.following_count}</strong> siguiendo</span>
+                  </div>
                   {profile.location && (
                     <p className="text-muted-foreground flex items-center justify-center sm:justify-start gap-1 mt-1">
                       <MapPin className="h-4 w-4" />
