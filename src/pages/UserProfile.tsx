@@ -32,6 +32,13 @@ interface RecentPost {
   comments_count: number;
 }
 
+interface RecentComment {
+  id: string;
+  content: string;
+  created_at: string;
+  post_id: string;
+}
+
 export default function UserProfile() {
   const { userId } = useParams<{ userId: string }>();
   const { user } = useAuth();
@@ -39,6 +46,7 @@ export default function UserProfile() {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<UserProfileData | null>(null);
   const [recentPosts, setRecentPosts] = useState<RecentPost[]>([]);
+  const [recentComments, setRecentComments] = useState<RecentComment[]>([]);
 
   useEffect(() => {
     // If viewing own profile, redirect to /profile
@@ -49,7 +57,8 @@ export default function UserProfile() {
     
     if (userId) {
       fetchProfile();
-      fetchRecentActivity();
+      fetchRecentPosts();
+      fetchRecentComments();
     }
   }, [userId, user?.id]);
 
@@ -75,7 +84,7 @@ export default function UserProfile() {
     }
   };
 
-  const fetchRecentActivity = async () => {
+  const fetchRecentPosts = async () => {
     try {
       const { data, error } = await supabase
         .from("posts")
@@ -87,7 +96,23 @@ export default function UserProfile() {
       if (error) throw error;
       setRecentPosts(data || []);
     } catch (error) {
-      console.error("Error fetching recent activity:", error);
+      console.error("Error fetching recent posts:", error);
+    }
+  };
+
+  const fetchRecentComments = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("post_comments")
+        .select("id, content, created_at, post_id")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(5);
+
+      if (error) throw error;
+      setRecentComments(data || []);
+    } catch (error) {
+      console.error("Error fetching recent comments:", error);
     }
   };
 
@@ -225,15 +250,18 @@ export default function UserProfile() {
             </CardContent>
           </Card>
 
-          {/* Recent Activity */}
+          {/* Recent Posts */}
           <Card>
             <CardHeader>
-              <CardTitle>Actividad Reciente</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Publicaciones Recientes
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {recentPosts.length === 0 ? (
                 <p className="text-muted-foreground text-center py-4">
-                  Sin actividad reciente
+                  Sin publicaciones recientes
                 </p>
               ) : (
                 <div className="space-y-4">
@@ -262,6 +290,44 @@ export default function UserProfile() {
                             {post.comments_count}
                           </span>
                         </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Recent Comments */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5" />
+                Comentarios Recientes
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {recentComments.length === 0 ? (
+                <p className="text-muted-foreground text-center py-4">
+                  Sin comentarios recientes
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {recentComments.map((comment) => (
+                    <div
+                      key={comment.id}
+                      className="p-3 bg-muted/50 rounded-lg space-y-2"
+                    >
+                      <p className="text-sm line-clamp-2">
+                        <MentionText content={comment.content} />
+                      </p>
+                      <div className="flex items-center text-xs text-muted-foreground">
+                        <span>
+                          {formatDistanceToNow(new Date(comment.created_at), {
+                            addSuffix: true,
+                            locale: es,
+                          })}
+                        </span>
                       </div>
                     </div>
                   ))}
