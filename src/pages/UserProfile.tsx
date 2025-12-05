@@ -6,8 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Trophy, Award, MapPin, FileText } from "lucide-react";
+import { ArrowLeft, Trophy, Award, MapPin, FileText, MessageSquare, Heart } from "lucide-react";
 import { UserMenu } from "@/components/UserMenu";
+import { MentionText } from "@/components/social/MentionText";
+import { formatDistanceToNow } from "date-fns";
+import { es } from "date-fns/locale";
 
 interface UserProfileData {
   id: string;
@@ -21,12 +24,21 @@ interface UserProfileData {
   created_at: string;
 }
 
+interface RecentPost {
+  id: string;
+  content: string;
+  created_at: string;
+  likes_count: number;
+  comments_count: number;
+}
+
 export default function UserProfile() {
   const { userId } = useParams<{ userId: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<UserProfileData | null>(null);
+  const [recentPosts, setRecentPosts] = useState<RecentPost[]>([]);
 
   useEffect(() => {
     // If viewing own profile, redirect to /profile
@@ -37,6 +49,7 @@ export default function UserProfile() {
     
     if (userId) {
       fetchProfile();
+      fetchRecentActivity();
     }
   }, [userId, user?.id]);
 
@@ -59,6 +72,22 @@ export default function UserProfile() {
       setProfile(null);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRecentActivity = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("posts")
+        .select("id, content, created_at, likes_count, comments_count")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(5);
+
+      if (error) throw error;
+      setRecentPosts(data || []);
+    } catch (error) {
+      console.error("Error fetching recent activity:", error);
     }
   };
 
@@ -191,6 +220,51 @@ export default function UserProfile() {
                       </Badge>
                     ))}
                   </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Recent Activity */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Actividad Reciente</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {recentPosts.length === 0 ? (
+                <p className="text-muted-foreground text-center py-4">
+                  Sin actividad reciente
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {recentPosts.map((post) => (
+                    <div
+                      key={post.id}
+                      className="p-3 bg-muted/50 rounded-lg space-y-2"
+                    >
+                      <p className="text-sm line-clamp-2">
+                        <MentionText content={post.content} />
+                      </p>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>
+                          {formatDistanceToNow(new Date(post.created_at), {
+                            addSuffix: true,
+                            locale: es,
+                          })}
+                        </span>
+                        <div className="flex items-center gap-3">
+                          <span className="flex items-center gap-1">
+                            <Heart className="h-3 w-3" />
+                            {post.likes_count}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <MessageSquare className="h-3 w-3" />
+                            {post.comments_count}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </CardContent>
