@@ -6,11 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Trophy, Award, MapPin, FileText, MessageSquare, Heart, Users } from "lucide-react";
 import { UserMenu } from "@/components/UserMenu";
 import { MentionText } from "@/components/social/MentionText";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
+
+type ActivityFilter = "all" | "posts" | "comments";
 
 interface UserProfileData {
   id: string;
@@ -57,6 +60,7 @@ export default function UserProfile() {
   const [recentPosts, setRecentPosts] = useState<RecentPost[]>([]);
   const [recentComments, setRecentComments] = useState<RecentComment[]>([]);
   const [communities, setCommunities] = useState<UserCommunity[]>([]);
+  const [activityFilter, setActivityFilter] = useState<ActivityFilter>("all");
 
   useEffect(() => {
     // If viewing own profile, redirect to /profile
@@ -302,89 +306,113 @@ export default function UserProfile() {
             </CardContent>
           </Card>
 
-          {/* Recent Posts */}
+          {/* Recent Activity */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Publicaciones Recientes
-              </CardTitle>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <CardTitle>Actividad Reciente</CardTitle>
+                <Tabs value={activityFilter} onValueChange={(v) => setActivityFilter(v as ActivityFilter)}>
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="all" className="text-xs">Todo</TabsTrigger>
+                    <TabsTrigger value="posts" className="text-xs">
+                      <FileText className="h-3 w-3 mr-1" />
+                      Posts
+                    </TabsTrigger>
+                    <TabsTrigger value="comments" className="text-xs">
+                      <MessageSquare className="h-3 w-3 mr-1" />
+                      Comentarios
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
             </CardHeader>
             <CardContent>
-              {recentPosts.length === 0 ? (
-                <p className="text-muted-foreground text-center py-4">
-                  Sin publicaciones recientes
-                </p>
-              ) : (
-                <div className="space-y-4">
-                  {recentPosts.map((post) => (
-                    <div
-                      key={post.id}
-                      className="p-3 bg-muted/50 rounded-lg space-y-2"
-                    >
-                      <p className="text-sm line-clamp-2">
-                        <MentionText content={post.content} />
+              <div className="space-y-4">
+                {/* Posts */}
+                {(activityFilter === "all" || activityFilter === "posts") && (
+                  <>
+                    {recentPosts.length === 0 && activityFilter === "posts" ? (
+                      <p className="text-muted-foreground text-center py-4">
+                        Sin publicaciones recientes
                       </p>
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>
-                          {formatDistanceToNow(new Date(post.created_at), {
-                            addSuffix: true,
-                            locale: es,
-                          })}
-                        </span>
-                        <div className="flex items-center gap-3">
-                          <span className="flex items-center gap-1">
-                            <Heart className="h-3 w-3" />
-                            {post.likes_count}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <MessageSquare className="h-3 w-3" />
-                            {post.comments_count}
-                          </span>
+                    ) : (
+                      recentPosts.map((post) => (
+                        <div
+                          key={`post-${post.id}`}
+                          className="p-3 bg-muted/50 rounded-lg space-y-2"
+                        >
+                          <div className="flex items-center gap-2 text-xs text-primary">
+                            <FileText className="h-3 w-3" />
+                            <span>Publicación</span>
+                          </div>
+                          <p className="text-sm line-clamp-2">
+                            <MentionText content={post.content} />
+                          </p>
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>
+                              {formatDistanceToNow(new Date(post.created_at), {
+                                addSuffix: true,
+                                locale: es,
+                              })}
+                            </span>
+                            <div className="flex items-center gap-3">
+                              <span className="flex items-center gap-1">
+                                <Heart className="h-3 w-3" />
+                                {post.likes_count}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <MessageSquare className="h-3 w-3" />
+                                {post.comments_count}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                      ))
+                    )}
+                  </>
+                )}
 
-          {/* Recent Comments */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                Comentarios Recientes
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {recentComments.length === 0 ? (
-                <p className="text-muted-foreground text-center py-4">
-                  Sin comentarios recientes
-                </p>
-              ) : (
-                <div className="space-y-4">
-                  {recentComments.map((comment) => (
-                    <div
-                      key={comment.id}
-                      className="p-3 bg-muted/50 rounded-lg space-y-2"
-                    >
-                      <p className="text-sm line-clamp-2">
-                        <MentionText content={comment.content} />
+                {/* Comments */}
+                {(activityFilter === "all" || activityFilter === "comments") && (
+                  <>
+                    {recentComments.length === 0 && activityFilter === "comments" ? (
+                      <p className="text-muted-foreground text-center py-4">
+                        Sin comentarios recientes
                       </p>
-                      <div className="flex items-center text-xs text-muted-foreground">
-                        <span>
-                          {formatDistanceToNow(new Date(comment.created_at), {
-                            addSuffix: true,
-                            locale: es,
-                          })}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ) : (
+                      recentComments.map((comment) => (
+                        <div
+                          key={`comment-${comment.id}`}
+                          className="p-3 bg-muted/50 rounded-lg space-y-2"
+                        >
+                          <div className="flex items-center gap-2 text-xs text-secondary-foreground">
+                            <MessageSquare className="h-3 w-3" />
+                            <span>Comentario</span>
+                          </div>
+                          <p className="text-sm line-clamp-2">
+                            <MentionText content={comment.content} />
+                          </p>
+                          <div className="flex items-center text-xs text-muted-foreground">
+                            <span>
+                              {formatDistanceToNow(new Date(comment.created_at), {
+                                addSuffix: true,
+                                locale: es,
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </>
+                )}
+
+                {/* Empty state for all */}
+                {activityFilter === "all" && recentPosts.length === 0 && recentComments.length === 0 && (
+                  <p className="text-muted-foreground text-center py-4">
+                    Sin actividad reciente
+                  </p>
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>
