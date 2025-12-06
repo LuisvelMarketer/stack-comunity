@@ -8,6 +8,7 @@ import { Calendar, MapPin, Users, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { CalendarAddButton } from "@/components/ui/calendar-add-button";
 
 interface Event {
   id: string;
@@ -182,12 +183,20 @@ export function EventsList({ communityId }: EventsListProps) {
                   {event.attendee_count} asistentes
                   {event.max_attendees && ` / ${event.max_attendees}`}
                 </Badge>
-                <Button
-                  variant={event.is_attending ? "outline" : "default"}
-                  onClick={() => handleRSVP(event.id, event.is_attending || false)}
-                >
-                  {event.is_attending ? "Cancelar Asistencia" : "Confirmar Asistencia"}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <CalendarAddButton
+                    title={event.title}
+                    description={event.description}
+                    location={event.location}
+                    startDate={new Date(event.event_date)}
+                  />
+                  <Button
+                    variant={event.is_attending ? "outline" : "default"}
+                    onClick={() => handleRSVP(event.id, event.is_attending || false)}
+                  >
+                    {event.is_attending ? "Cancelar Asistencia" : "Confirmar Asistencia"}
+                  </Button>
+                </div>
               </div>
             </div>
           </CardContent>
