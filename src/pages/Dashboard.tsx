@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { UserMenu } from "@/components/UserMenu";
 import { SocialFeed } from "@/components/social/SocialFeed";
@@ -10,13 +10,28 @@ import { UpcomingEvents } from "@/components/social/UpcomingEvents";
 import { MyCommunities } from "@/components/social/MyCommunities";
 import { UserProgress } from "@/components/social/UserProgress";
 import { ContinueLearning } from "@/components/social/ContinueLearning";
+import { SubscriptionCard } from "@/components/SubscriptionCard";
 import { Home, Users, BookOpen, Calendar, Search } from "lucide-react";
 import { NotificationCenter } from "@/components/NotificationCenter";
+import { toast } from "sonner";
 
 const Dashboard = () => {
   const { user } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Handle subscription return
+  useEffect(() => {
+    const subscription = searchParams.get('subscription');
+    if (subscription === 'success') {
+      toast.success('¡Suscripción activada! Ya tienes acceso Premium.');
+      setSearchParams({});
+    } else if (subscription === 'cancelled') {
+      toast.info('Proceso de suscripción cancelado.');
+      setSearchParams({});
+    }
+  }, [searchParams, setSearchParams]);
 
   useEffect(() => {
     checkAdminRole();
@@ -99,6 +114,7 @@ const Dashboard = () => {
 
           {/* Right Sidebar - 3 columns */}
           <div className="lg:col-span-3 space-y-4">
+            <SubscriptionCard />
             <UpcomingEvents />
             <ContinueLearning />
             <Leaderboard />
