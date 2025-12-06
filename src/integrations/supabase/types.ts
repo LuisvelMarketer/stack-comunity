@@ -482,6 +482,65 @@ export type Database = {
           },
         ]
       }
+      live_sessions: {
+        Row: {
+          community_id: string
+          created_at: string
+          created_by: string
+          description: string | null
+          ended_at: string | null
+          id: string
+          platform: string
+          scheduled_at: string
+          started_at: string | null
+          status: string
+          stream_url: string
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          community_id: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          ended_at?: string | null
+          id?: string
+          platform?: string
+          scheduled_at: string
+          started_at?: string | null
+          status?: string
+          stream_url: string
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          community_id?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          ended_at?: string | null
+          id?: string
+          platform?: string
+          scheduled_at?: string
+          started_at?: string | null
+          status?: string
+          stream_url?: string
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_sessions_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       membership_tiers: {
         Row: {
           created_at: string | null
