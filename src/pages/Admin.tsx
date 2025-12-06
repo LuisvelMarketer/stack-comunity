@@ -1,15 +1,15 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, FileText, MessageCircle } from "lucide-react";
+import { BookOpen, FileText, MessageCircle, Calendar, Video } from "lucide-react";
 import { UserMenu } from "@/components/UserMenu";
 import { CoursesManager } from "@/components/admin/CoursesManager";
 import { ModulesManager } from "@/components/admin/ModulesManager";
 import { QuizzesManager } from "@/components/admin/QuizzesManager";
 import { CommentsManager } from "@/components/admin/CommentsManager";
+import { EventsManager } from "@/components/admin/EventsManager";
+import { LivesManager } from "@/components/admin/LivesManager";
 
 export default function Admin() {
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("courses");
 
   return (
@@ -25,22 +25,30 @@ export default function Admin() {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
+          <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
             <TabsTrigger value="courses" className="gap-2">
               <BookOpen className="h-4 w-4" />
-              Cursos
+              <span className="hidden sm:inline">Cursos</span>
             </TabsTrigger>
             <TabsTrigger value="modules" className="gap-2">
               <FileText className="h-4 w-4" />
-              Módulos
+              <span className="hidden sm:inline">Módulos</span>
             </TabsTrigger>
             <TabsTrigger value="quizzes" className="gap-2">
               <FileText className="h-4 w-4" />
-              Quizzes
+              <span className="hidden sm:inline">Quizzes</span>
             </TabsTrigger>
             <TabsTrigger value="comments" className="gap-2">
               <MessageCircle className="h-4 w-4" />
-              Comentarios
+              <span className="hidden sm:inline">Comentarios</span>
+            </TabsTrigger>
+            <TabsTrigger value="events" className="gap-2">
+              <Calendar className="h-4 w-4" />
+              <span className="hidden sm:inline">Eventos</span>
+            </TabsTrigger>
+            <TabsTrigger value="lives" className="gap-2">
+              <Video className="h-4 w-4" />
+              <span className="hidden sm:inline">Lives</span>
             </TabsTrigger>
           </TabsList>
 
@@ -58,6 +66,14 @@ export default function Admin() {
 
           <TabsContent value="comments">
             <CommentsManager />
+          </TabsContent>
+
+          <TabsContent value="events">
+            <EventsManager />
+          </TabsContent>
+
+          <TabsContent value="lives">
+            <LivesManager />
           </TabsContent>
         </Tabs>
       </main>
