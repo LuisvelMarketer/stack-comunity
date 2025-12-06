@@ -445,6 +445,9 @@ export type Database = {
           id: string
           location: string | null
           max_attendees: number | null
+          parent_event_id: string | null
+          recurrence_end_date: string | null
+          recurrence_type: string | null
           title: string
           updated_at: string
         }
@@ -457,6 +460,9 @@ export type Database = {
           id?: string
           location?: string | null
           max_attendees?: number | null
+          parent_event_id?: string | null
+          recurrence_end_date?: string | null
+          recurrence_type?: string | null
           title: string
           updated_at?: string
         }
@@ -469,6 +475,9 @@ export type Database = {
           id?: string
           location?: string | null
           max_attendees?: number | null
+          parent_event_id?: string | null
+          recurrence_end_date?: string | null
+          recurrence_type?: string | null
           title?: string
           updated_at?: string
         }
@@ -478,6 +487,13 @@ export type Database = {
             columns: ["community_id"]
             isOneToOne: false
             referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_parent_event_id_fkey"
+            columns: ["parent_event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
             referencedColumns: ["id"]
           },
         ]
