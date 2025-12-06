@@ -83,9 +83,9 @@ const Dashboard = () => {
                   <BookOpen className="w-4 h-4 mr-2" />
                   Cursos
                 </Button>
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" onClick={() => navigate("/calendar")}>
                   <Calendar className="w-4 h-4 mr-2" />
-                  Eventos
+                  Calendario
                 </Button>
               </div>
             </div>
