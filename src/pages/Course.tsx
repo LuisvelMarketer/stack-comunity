@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { Quiz } from "@/components/Quiz";
 import { ModuleComments } from "@/components/ModuleComments";
+import { CourseCertificate } from "@/components/CourseCertificate";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Module {
@@ -237,6 +238,13 @@ export default function Course() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Certificate Section */}
+            <CourseCertificate 
+              courseId={course.id} 
+              courseTitle={course.title}
+              progressPercent={progressPercent}
+            />
 
             <Card>
               <CardHeader>
