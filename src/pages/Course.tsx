@@ -2,16 +2,19 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useSubscription } from "@/hooks/useSubscription";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, CheckCircle2, Circle, Play, FileText, MessageCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Circle, Play, FileText, MessageCircle, Lock, Crown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { Quiz } from "@/components/Quiz";
 import { ModuleComments } from "@/components/ModuleComments";
 import { CourseCertificate } from "@/components/CourseCertificate";
+import { LockedContent } from "@/components/LockedContent";
+import { PremiumBadge } from "@/components/PremiumBadge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Module {
@@ -37,11 +40,17 @@ export default function Course() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { isPremium, loading: subscriptionLoading } = useSubscription();
   const [course, setCourse] = useState<Course | null>(null);
   const [modules, setModules] = useState<Module[]>([]);
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [loading, setLoading] = useState(true);
   const [progressPercent, setProgressPercent] = useState(0);
+
+  // Check if current module is accessible (free or user has premium)
+  const isModuleAccessible = (module: Module) => {
+    return module.is_free || isPremium;
+  };
 
   useEffect(() => {
     if (courseId) {
@@ -251,37 +260,49 @@ export default function Course() {
                 <CardTitle>Módulos del Curso</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                {modules.map((module, index) => (
-                  <button
-                    key={module.id}
-                    onClick={() => setSelectedModule(module)}
-                    className={`w-full p-4 rounded-lg border transition-all text-left ${
-                      selectedModule?.id === module.id
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/50"
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="mt-1">
-                        {module.completed ? (
-                          <CheckCircle2 className="h-5 w-5 text-primary" />
-                        ) : (
-                          <Circle className="h-5 w-5 text-muted-foreground" />
-                        )}
+                {modules.map((module, index) => {
+                  const accessible = isModuleAccessible(module);
+                  return (
+                    <button
+                      key={module.id}
+                      onClick={() => setSelectedModule(module)}
+                      className={`w-full p-4 rounded-lg border transition-all text-left ${
+                        selectedModule?.id === module.id
+                          ? "border-primary bg-primary/5"
+                          : accessible
+                          ? "border-border hover:border-primary/50"
+                          : "border-amber-500/30 bg-amber-500/5 hover:border-amber-500/50"
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="mt-1">
+                          {!accessible ? (
+                            <Lock className="h-5 w-5 text-amber-500" />
+                          ) : module.completed ? (
+                            <CheckCircle2 className="h-5 w-5 text-primary" />
+                          ) : (
+                            <Circle className="h-5 w-5 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <p className="font-medium text-sm">
+                              {index + 1}. {module.title}
+                            </p>
+                            {!module.is_free && (
+                              <Crown className="h-3 w-3 text-amber-500" />
+                            )}
+                          </div>
+                          {module.description && (
+                            <p className="text-xs text-muted-foreground line-clamp-2">
+                              {module.description}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm mb-1">
-                          {index + 1}. {module.title}
-                        </p>
-                        {module.description && (
-                          <p className="text-xs text-muted-foreground line-clamp-2">
-                            {module.description}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </button>
-                ))}
+                    </button>
+                  );
+                })}
               </CardContent>
             </Card>
           </div>
@@ -289,89 +310,99 @@ export default function Course() {
           {/* Module Content */}
           <div className="lg:col-span-2">
             {selectedModule ? (
-              <Card>
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-2xl mb-2">
-                        {selectedModule.title}
-                      </CardTitle>
-                      <CardDescription>{selectedModule.description}</CardDescription>
+              isModuleAccessible(selectedModule) ? (
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <CardTitle className="text-2xl">
+                            {selectedModule.title}
+                          </CardTitle>
+                          {!selectedModule.is_free && <PremiumBadge />}
+                        </div>
+                        <CardDescription>{selectedModule.description}</CardDescription>
+                      </div>
+                      <Button
+                        variant={selectedModule.completed ? "outline" : "default"}
+                        onClick={() =>
+                          toggleModuleCompletion(
+                            selectedModule.id,
+                            selectedModule.completed
+                          )
+                        }
+                      >
+                        {selectedModule.completed ? (
+                          <>
+                            <CheckCircle2 className="mr-2 h-4 w-4" />
+                            Completado
+                          </>
+                        ) : (
+                          <>
+                            <Circle className="mr-2 h-4 w-4" />
+                            Marcar como completado
+                          </>
+                        )}
+                      </Button>
                     </div>
-                    <Button
-                      variant={selectedModule.completed ? "outline" : "default"}
-                      onClick={() =>
-                        toggleModuleCompletion(
-                          selectedModule.id,
-                          selectedModule.completed
-                        )
-                      }
-                    >
-                      {selectedModule.completed ? (
-                        <>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <Tabs defaultValue="content" className="w-full">
+                      <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="content">
+                          <FileText className="mr-2 h-4 w-4" />
+                          Contenido
+                        </TabsTrigger>
+                        <TabsTrigger value="quiz">
                           <CheckCircle2 className="mr-2 h-4 w-4" />
-                          Completado
-                        </>
-                      ) : (
-                        <>
-                          <Circle className="mr-2 h-4 w-4" />
-                          Marcar como completado
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <Tabs defaultValue="content" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3">
-                      <TabsTrigger value="content">
-                        <FileText className="mr-2 h-4 w-4" />
-                        Contenido
-                      </TabsTrigger>
-                      <TabsTrigger value="quiz">
-                        <CheckCircle2 className="mr-2 h-4 w-4" />
-                        Quiz
-                      </TabsTrigger>
-                      <TabsTrigger value="comments">
-                        <MessageCircle className="mr-2 h-4 w-4" />
-                        Discusión
-                      </TabsTrigger>
-                    </TabsList>
+                          Quiz
+                        </TabsTrigger>
+                        <TabsTrigger value="comments">
+                          <MessageCircle className="mr-2 h-4 w-4" />
+                          Discusión
+                        </TabsTrigger>
+                      </TabsList>
 
-                    <TabsContent value="content" className="space-y-6 mt-6">
-                      {selectedModule.video_url && (
-                        <div className="aspect-video bg-muted rounded-lg overflow-hidden shadow-elegant">
-                          <iframe
-                            src={selectedModule.video_url}
-                            className="w-full h-full"
-                            allowFullScreen
-                            title={selectedModule.title}
-                          />
-                        </div>
-                      )}
-                      {selectedModule.content && (
-                        <div className="mt-6">
-                          <MarkdownRenderer content={selectedModule.content} />
-                        </div>
-                      )}
-                      {!selectedModule.video_url && !selectedModule.content && (
-                        <div className="text-center py-12 text-muted-foreground">
-                          <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                          <p>No hay contenido disponible para este módulo</p>
-                        </div>
-                      )}
-                    </TabsContent>
+                      <TabsContent value="content" className="space-y-6 mt-6">
+                        {selectedModule.video_url && (
+                          <div className="aspect-video bg-muted rounded-lg overflow-hidden shadow-elegant">
+                            <iframe
+                              src={selectedModule.video_url}
+                              className="w-full h-full"
+                              allowFullScreen
+                              title={selectedModule.title}
+                            />
+                          </div>
+                        )}
+                        {selectedModule.content && (
+                          <div className="mt-6">
+                            <MarkdownRenderer content={selectedModule.content} />
+                          </div>
+                        )}
+                        {!selectedModule.video_url && !selectedModule.content && (
+                          <div className="text-center py-12 text-muted-foreground">
+                            <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                            <p>No hay contenido disponible para este módulo</p>
+                          </div>
+                        )}
+                      </TabsContent>
 
-                    <TabsContent value="quiz" className="mt-6">
-                      <Quiz moduleId={selectedModule.id} />
-                    </TabsContent>
+                      <TabsContent value="quiz" className="mt-6">
+                        <Quiz moduleId={selectedModule.id} />
+                      </TabsContent>
 
-                    <TabsContent value="comments" className="mt-6">
-                      <ModuleComments moduleId={selectedModule.id} />
-                    </TabsContent>
-                  </Tabs>
-                </CardContent>
-              </Card>
+                      <TabsContent value="comments" className="mt-6">
+                        <ModuleComments moduleId={selectedModule.id} />
+                      </TabsContent>
+                    </Tabs>
+                  </CardContent>
+                </Card>
+              ) : (
+                <LockedContent
+                  title={selectedModule.title}
+                  description="Este módulo está disponible exclusivamente para miembros Premium. Suscríbete para desbloquear todo el contenido."
+                />
+              )
             ) : (
               <Card className="h-full flex items-center justify-center">
                 <CardContent className="text-center py-12">
