@@ -22,6 +22,12 @@ serve(async (req) => {
     Deno.env.get("SUPABASE_ANON_KEY") ?? ""
   );
 
+  const supabaseAdmin = createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    { auth: { persistSession: false } }
+  );
+
   try {
     logStep("Function started");
     
@@ -66,6 +72,26 @@ serve(async (req) => {
     });
 
     logStep("Checkout session created", { sessionId: session.id });
+
+    // Process referral commission if user was referred
+    const subscriptionAmount = 29.99; // Premium subscription price
+    try {
+      const response = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/process-referral-commission`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`
+        },
+        body: JSON.stringify({
+          user_id: user.id,
+          subscription_amount: subscriptionAmount
+        })
+      });
+      const commissionResult = await response.json();
+      logStep("Commission processing result", commissionResult);
+    } catch (commissionError) {
+      logStep("Commission processing error (non-blocking)", { error: String(commissionError) });
+    }
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
