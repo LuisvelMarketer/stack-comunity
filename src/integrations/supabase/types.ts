@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      affiliates: {
+        Row: {
+          commission_rate: number
+          created_at: string
+          id: string
+          pending_earnings: number
+          referral_code: string
+          total_earnings: number
+          total_referrals: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          commission_rate?: number
+          created_at?: string
+          id?: string
+          pending_earnings?: number
+          referral_code: string
+          total_earnings?: number
+          total_referrals?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          commission_rate?: number
+          created_at?: string
+          id?: string
+          pending_earnings?: number
+          referral_code?: string
+          total_earnings?: number
+          total_referrals?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       certificates: {
         Row: {
           certificate_number: string
@@ -48,6 +84,54 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commissions: {
+        Row: {
+          affiliate_id: string
+          amount: number
+          created_at: string
+          id: string
+          paid_at: string | null
+          referral_id: string
+          status: string
+          subscription_amount: number
+        }
+        Insert: {
+          affiliate_id: string
+          amount: number
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          referral_id: string
+          status?: string
+          subscription_amount: number
+        }
+        Update: {
+          affiliate_id?: string
+          amount?: number
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          referral_id?: string
+          status?: string
+          subscription_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commissions_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commissions_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "referrals"
             referencedColumns: ["id"]
           },
         ]
@@ -830,6 +914,41 @@ export type Database = {
         }
         Relationships: []
       }
+      referrals: {
+        Row: {
+          affiliate_id: string
+          converted_at: string | null
+          created_at: string
+          id: string
+          referred_user_id: string
+          status: string
+        }
+        Insert: {
+          affiliate_id: string
+          converted_at?: string | null
+          created_at?: string
+          id?: string
+          referred_user_id: string
+          status?: string
+        }
+        Update: {
+          affiliate_id?: string
+          converted_at?: string | null
+          created_at?: string
+          id?: string
+          referred_user_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_follows: {
         Row: {
           created_at: string
@@ -1001,6 +1120,7 @@ export type Database = {
     }
     Functions: {
       generate_certificate_number: { Args: never; Returns: string }
+      generate_referral_code: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

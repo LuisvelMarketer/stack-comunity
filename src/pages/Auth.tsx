@@ -1,12 +1,15 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Gift } from "lucide-react";
 import { z } from "zod";
 
 // Lista de contraseñas comunes a rechazar
@@ -53,9 +56,33 @@ const Auth = () => {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [isResetting, setIsResetting] = useState(false);
+  const [searchParams] = useSearchParams();
+  const referralCode = searchParams.get('ref');
   const { signIn, signUp, resetPassword, signInWithGoogle, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Store referral code in localStorage when present
+  useEffect(() => {
+    if (referralCode) {
+      localStorage.setItem('referral_code', referralCode.toUpperCase());
+    }
+  }, [referralCode]);
+
+  // Track referral after successful signup
+  const trackReferral = async (userId: string) => {
+    const storedReferralCode = localStorage.getItem('referral_code');
+    if (!storedReferralCode) return;
+
+    try {
+      await supabase.functions.invoke('track-referral', {
+        body: { referral_code: storedReferralCode, user_id: userId }
+      });
+      localStorage.removeItem('referral_code');
+    } catch (error) {
+      console.error('Error tracking referral:', error);
+    }
+  };
 
   // Redirect if already logged in
   if (user) {
@@ -96,6 +123,12 @@ const Auth = () => {
     try {
       const validated = signUpSchema.parse({ fullName, email, password });
       await signUp(validated.email, validated.password, validated.fullName);
+      
+      // Get the newly created user and track referral
+      const { data: { user: newUser } } = await supabase.auth.getUser();
+      if (newUser) {
+        await trackReferral(newUser.id);
+      }
     } catch (error) {
       if (error instanceof z.ZodError) {
         const newErrors: Record<string, string> = {};
@@ -159,6 +192,12 @@ const Auth = () => {
           <CardDescription className="text-center">
             Aprende tecnología y desarrollo web
           </CardDescription>
+          {(referralCode || localStorage.getItem('referral_code')) && (
+            <Badge variant="secondary" className="w-fit mx-auto mt-2 bg-green-500/10 text-green-600 border-green-500/30">
+              <Gift className="h-3 w-3 mr-1" />
+              Invitado por un amigo
+            </Badge>
+          )}
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="signin" className="w-full" onValueChange={() => setErrors({})}>

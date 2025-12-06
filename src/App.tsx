@@ -18,6 +18,7 @@ import CommunityDetail from "./pages/CommunityDetail";
 import ResetPassword from "./pages/ResetPassword";
 import Onboarding from "./pages/Onboarding";
 import Messages from "./pages/Messages";
+import Affiliate from "./pages/Affiliate";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -110,6 +111,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Messages />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/affiliate"
+              element={
+                <ProtectedRoute>
+                  <Affiliate />
                 </ProtectedRoute>
               }
             />
