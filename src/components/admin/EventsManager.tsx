@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Plus, Pencil, Trash2, Calendar, MapPin, Users } from "lucide-react";
+import { Plus, Pencil, Trash2, Calendar, MapPin, Users, Repeat, RefreshCw } from "lucide-react";
 
 interface Event {
   id: string;
@@ -24,6 +24,9 @@ interface Event {
   community_id: string;
   created_by: string;
   created_at: string;
+  recurrence_type: string | null;
+  recurrence_end_date: string | null;
+  parent_event_id: string | null;
   communities?: { name: string };
 }
 
@@ -43,6 +46,8 @@ export function EventsManager() {
     location: "",
     max_attendees: "",
     community_id: "",
+    recurrence_type: "",
+    recurrence_end_date: "",
   });
 
   const { data: events, isLoading } = useQuery({
@@ -84,9 +89,16 @@ export function EventsManager() {
         max_attendees: data.max_attendees ? parseInt(data.max_attendees) : null,
         community_id: data.community_id,
         created_by: userData.user.id,
+        recurrence_type: data.recurrence_type || null,
+        recurrence_end_date: data.recurrence_end_date || null,
       });
 
       if (error) throw error;
+
+      // If recurring, generate future instances
+      if (data.recurrence_type) {
+        await supabase.functions.invoke("generate-recurring-events");
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-events"] });
@@ -109,6 +121,8 @@ export function EventsManager() {
           location: data.location.trim() || null,
           max_attendees: data.max_attendees ? parseInt(data.max_attendees) : null,
           community_id: data.community_id,
+          recurrence_type: data.recurrence_type || null,
+          recurrence_end_date: data.recurrence_end_date || null,
         })
         .eq("id", id);
 
@@ -146,6 +160,8 @@ export function EventsManager() {
       location: "",
       max_attendees: "",
       community_id: "",
+      recurrence_type: "",
+      recurrence_end_date: "",
     });
     setEditingEvent(null);
     setIsDialogOpen(false);
@@ -160,8 +176,33 @@ export function EventsManager() {
       location: event.location || "",
       max_attendees: event.max_attendees?.toString() || "",
       community_id: event.community_id,
+      recurrence_type: event.recurrence_type || "",
+      recurrence_end_date: event.recurrence_end_date?.slice(0, 16) || "",
     });
     setIsDialogOpen(true);
+  };
+
+  const generateRecurringMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.functions.invoke("generate-recurring-events");
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-events"] });
+      toast.success("Eventos recurrentes generados");
+    },
+    onError: (error) => {
+      toast.error("Error al generar eventos: " + error.message);
+    },
+  });
+
+  const getRecurrenceLabel = (type: string | null) => {
+    switch (type) {
+      case "daily": return "Diario";
+      case "weekly": return "Semanal";
+      case "monthly": return "Mensual";
+      default: return null;
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -182,99 +223,146 @@ export function EventsManager() {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
         <CardTitle className="flex items-center gap-2">
           <Calendar className="h-5 w-5" />
           Gestión de Eventos
         </CardTitle>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => resetForm()}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nuevo Evento
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>
-                {editingEvent ? "Editar Evento" : "Crear Nuevo Evento"}
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="text-sm font-medium">Título *</label>
-                <Input
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="Nombre del evento"
-                  maxLength={100}
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Descripción</label>
-                <Textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Descripción del evento"
-                  maxLength={500}
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Comunidad *</label>
-                <Select
-                  value={formData.community_id}
-                  onValueChange={(value) => setFormData({ ...formData, community_id: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecciona una comunidad" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {communities?.map((community) => (
-                      <SelectItem key={community.id} value={community.id}>
-                        {community.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Fecha y Hora *</label>
-                <Input
-                  type="datetime-local"
-                  value={formData.event_date}
-                  onChange={(e) => setFormData({ ...formData, event_date: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Ubicación</label>
-                <Input
-                  value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  placeholder="Ubicación del evento"
-                  maxLength={200}
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Máximo de asistentes</label>
-                <Input
-                  type="number"
-                  value={formData.max_attendees}
-                  onChange={(e) => setFormData({ ...formData, max_attendees: e.target.value })}
-                  placeholder="Sin límite"
-                  min="1"
-                />
-              </div>
-              <div className="flex gap-2 justify-end">
-                <Button type="button" variant="outline" onClick={resetForm}>
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                  {editingEvent ? "Actualizar" : "Crear"}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => generateRecurringMutation.mutate()}
+            disabled={generateRecurringMutation.isPending}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${generateRecurringMutation.isPending ? 'animate-spin' : ''}`} />
+            Generar Recurrentes
+          </Button>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={() => resetForm()}>
+                <Plus className="h-4 w-4 mr-2" />
+                Nuevo Evento
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>
+                  {editingEvent ? "Editar Evento" : "Crear Nuevo Evento"}
+                </DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium">Título *</label>
+                  <Input
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    placeholder="Nombre del evento"
+                    maxLength={100}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Descripción</label>
+                  <Textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Descripción del evento"
+                    maxLength={500}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Comunidad *</label>
+                  <Select
+                    value={formData.community_id}
+                    onValueChange={(value) => setFormData({ ...formData, community_id: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona una comunidad" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {communities?.map((community) => (
+                        <SelectItem key={community.id} value={community.id}>
+                          {community.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Fecha y Hora *</label>
+                  <Input
+                    type="datetime-local"
+                    value={formData.event_date}
+                    onChange={(e) => setFormData({ ...formData, event_date: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Ubicación</label>
+                  <Input
+                    value={formData.location}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    placeholder="Ubicación del evento"
+                    maxLength={200}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Máximo de asistentes</label>
+                  <Input
+                    type="number"
+                    value={formData.max_attendees}
+                    onChange={(e) => setFormData({ ...formData, max_attendees: e.target.value })}
+                    placeholder="Sin límite"
+                    min="1"
+                  />
+                </div>
+                
+                <div className="border-t pt-4 mt-4">
+                  <h4 className="text-sm font-medium flex items-center gap-2 mb-3">
+                    <Repeat className="h-4 w-4" />
+                    Recurrencia (opcional)
+                  </h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium">Tipo de repetición</label>
+                      <Select
+                        value={formData.recurrence_type}
+                        onValueChange={(value) => setFormData({ ...formData, recurrence_type: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sin repetición" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">Sin repetición</SelectItem>
+                          <SelectItem value="daily">Diario</SelectItem>
+                          <SelectItem value="weekly">Semanal</SelectItem>
+                          <SelectItem value="monthly">Mensual</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {formData.recurrence_type && (
+                      <div>
+                        <label className="text-sm font-medium">Hasta</label>
+                        <Input
+                          type="datetime-local"
+                          value={formData.recurrence_end_date}
+                          onChange={(e) => setFormData({ ...formData, recurrence_end_date: e.target.value })}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex gap-2 justify-end">
+                  <Button type="button" variant="outline" onClick={resetForm}>
+                    Cancelar
+                  </Button>
+                  <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+                    {editingEvent ? "Actualizar" : "Crear"}
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -289,38 +377,34 @@ export function EventsManager() {
                   <TableHead>Título</TableHead>
                   <TableHead>Comunidad</TableHead>
                   <TableHead>Fecha</TableHead>
-                  <TableHead>Ubicación</TableHead>
-                  <TableHead>Capacidad</TableHead>
+                  <TableHead>Recurrencia</TableHead>
                   <TableHead>Estado</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {events?.map((event) => (
-                  <TableRow key={event.id}>
-                    <TableCell className="font-medium">{event.title}</TableCell>
+                  <TableRow key={event.id} className={event.parent_event_id ? "opacity-70" : ""}>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        {event.title}
+                        {event.parent_event_id && (
+                          <Badge variant="outline" className="text-xs">Instancia</Badge>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>{event.communities?.name}</TableCell>
                     <TableCell>
                       {format(new Date(event.event_date), "dd MMM yyyy HH:mm", { locale: es })}
                     </TableCell>
                     <TableCell>
-                      {event.location ? (
-                        <span className="flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
-                          {event.location}
-                        </span>
+                      {event.recurrence_type && !event.parent_event_id ? (
+                        <Badge variant="secondary" className="flex items-center gap-1 w-fit">
+                          <Repeat className="h-3 w-3" />
+                          {getRecurrenceLabel(event.recurrence_type)}
+                        </Badge>
                       ) : (
                         <span className="text-muted-foreground">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {event.max_attendees ? (
-                        <span className="flex items-center gap-1">
-                          <Users className="h-3 w-3" />
-                          {event.max_attendees}
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground">Ilimitado</span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -337,7 +421,10 @@ export function EventsManager() {
                           size="sm"
                           variant="destructive"
                           onClick={() => {
-                            if (confirm("¿Eliminar este evento?")) {
+                            const msg = event.recurrence_type && !event.parent_event_id 
+                              ? "¿Eliminar este evento y todas sus instancias futuras?"
+                              : "¿Eliminar este evento?";
+                            if (confirm(msg)) {
                               deleteMutation.mutate(event.id);
                             }
                           }}
