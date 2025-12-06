@@ -7,12 +7,13 @@ import { UserMenu } from "@/components/UserMenu";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Users, BookOpen, MessageSquare, ArrowLeft, Circle } from "lucide-react";
+import { Calendar, Users, BookOpen, MessageSquare, ArrowLeft, Circle, Video } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { EventsList } from "@/components/community/EventsList";
 import { MembersList } from "@/components/community/MembersList";
 import { OnlineUsers } from "@/components/community/OnlineUsers";
 import { CommunityChat } from "@/components/community/CommunityChat";
+import { LiveSessions } from "@/components/community/LiveSessions";
 
 interface Community {
   id: string;
@@ -28,10 +29,29 @@ export default function CommunityDetail() {
   const { slug } = useParams();
   const [community, setCommunity] = useState<Community | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { onlineUsers, onlineCount } = useOnlinePresence(community?.id);
+
+  useEffect(() => {
+    loadCommunity();
+    checkAdminRole();
+  }, [slug, user]);
+
+  const checkAdminRole = async () => {
+    if (!user) return;
+    try {
+      const { data } = await supabase.rpc("has_role", {
+        _user_id: user.id,
+        _role: "admin",
+      });
+      setIsAdmin(!!data);
+    } catch (error) {
+      console.error("Error checking admin role:", error);
+    }
+  };
 
   useEffect(() => {
     loadCommunity();
@@ -214,8 +234,12 @@ export default function CommunityDetail() {
           </div>
         </div>
 
-        <Tabs defaultValue="events" className="mb-8">
-          <TabsList className="grid w-full grid-cols-4">
+        <Tabs defaultValue="lives" className="mb-8">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="lives" className="flex items-center gap-2">
+              <Video className="h-4 w-4" />
+              Lives
+            </TabsTrigger>
             <TabsTrigger value="events" className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
               Eventos
@@ -233,6 +257,10 @@ export default function CommunityDetail() {
               Chat
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="lives" className="mt-6">
+            <LiveSessions communityId={community.id} isAdmin={isAdmin} />
+          </TabsContent>
 
           <TabsContent value="events" className="mt-6">
             {community.is_member ? (
