@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Gift } from "lucide-react";
 import { z } from "zod";
+import { PasswordStrengthIndicator } from "@/components/PasswordStrengthIndicator";
 
 // Lista de contraseñas comunes a rechazar
 const COMMON_PASSWORDS = [
@@ -418,13 +419,12 @@ const Auth = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    className={errors.password ? "border-destructive" : ""}
                   />
                   {errors.password && (
                     <p className="text-sm text-destructive">{errors.password}</p>
                   )}
-                  <p className="text-xs text-muted-foreground">
-                    Mínimo 8 caracteres, incluye mayúsculas y números
-                  </p>
+                  <PasswordStrengthIndicator password={password} />
                 </div>
                   <Button type="submit" className="w-full">
                     Crear Cuenta
