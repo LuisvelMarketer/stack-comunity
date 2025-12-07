@@ -56,8 +56,12 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          join_date_filter: string | null
+          level_filter: string | null
           recipients_count: number
+          scheduled_at: string | null
           sender_id: string
+          status: string
           title: string
         }
         Insert: {
@@ -65,8 +69,12 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          join_date_filter?: string | null
+          level_filter?: string | null
           recipients_count?: number
+          scheduled_at?: string | null
           sender_id: string
+          status?: string
           title: string
         }
         Update: {
@@ -74,8 +82,12 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          join_date_filter?: string | null
+          level_filter?: string | null
           recipients_count?: number
+          scheduled_at?: string | null
           sender_id?: string
+          status?: string
           title?: string
         }
         Relationships: [
