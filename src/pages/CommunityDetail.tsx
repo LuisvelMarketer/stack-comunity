@@ -226,8 +226,8 @@ export default function CommunityDetail() {
         )}
       </div>
 
-      <main className="container mx-auto px-4 -mt-32 relative z-10">
-        <div className="bg-card rounded-lg p-6 shadow-lg mb-8">
+      <main className="container mx-auto px-4 -mt-16 relative z-10">
+        <div className="bg-card/80 backdrop-blur-md rounded-lg p-6 shadow-lg mb-8 border border-border/50">
           <div className="flex items-center gap-2 mb-4">
             <Button
               variant="ghost"
