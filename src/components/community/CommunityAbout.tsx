@@ -133,10 +133,6 @@ export function CommunityAbout({ community }: CommunityAboutProps) {
                 </span>
               </div>
             )}
-              <span className="font-medium">
-                {format(new Date(community.created_at), "MMMM yyyy", { locale: es })}
-              </span>
-            </div>
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground flex items-center gap-2">
                 <Star className="h-4 w-4" />
