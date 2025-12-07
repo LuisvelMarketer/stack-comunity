@@ -366,7 +366,25 @@ export default function Course() {
             {selectedModule ? (
               isModuleAccessible(selectedModule) ? (
                 <Card>
-                  <CardHeader>
+                  <CardHeader className="space-y-4">
+                    {/* Course Progress Header */}
+                    <div className="flex items-center gap-4 p-3 bg-primary/5 rounded-lg border border-primary/10">
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-sm font-medium text-foreground">
+                            Progreso del curso
+                          </span>
+                          <span className="text-sm font-bold text-primary">
+                            {Math.round(progressPercent)}%
+                          </span>
+                        </div>
+                        <Progress value={progressPercent} className="h-2.5" />
+                      </div>
+                      <div className="text-xs text-muted-foreground whitespace-nowrap">
+                        {modules.filter((m) => m.completed).length}/{modules.length} módulos
+                      </div>
+                    </div>
+
                     <div className="flex items-start justify-between">
                       <div>
                         <div className="flex items-center gap-2 mb-2">
