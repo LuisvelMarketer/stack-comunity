@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Trophy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { UserAvatar, getInitials } from "@/components/UserAvatar";
 
 interface Member {
   user_id: string;
@@ -62,16 +61,6 @@ export function MembersList({ communityId }: MembersListProps) {
     }
   };
 
-  const getInitials = (name: string | null) => {
-    if (!name) return "?";
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -94,24 +83,19 @@ export function MembersList({ communityId }: MembersListProps) {
         <Card key={member.user_id} className="hover:shadow-md transition-shadow">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <Avatar className="h-12 w-12">
-                <AvatarImage src={member.profile?.avatar_url || undefined} />
-                <AvatarFallback>
-                  {getInitials(member.profile?.full_name)}
-                </AvatarFallback>
-              </Avatar>
+              <UserAvatar
+                src={member.profile?.avatar_url}
+                fallback={getInitials(member.profile?.full_name)}
+                level={member.profile?.level || 1}
+                size="lg"
+              />
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold truncate">
                   {member.profile?.full_name || "Usuario"}
                 </h3>
-                <div className="flex items-center gap-2 mt-1">
-                  <Badge variant="secondary" className="text-xs">
-                    Nivel {member.profile?.level || 1}
-                  </Badge>
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Trophy className="h-3 w-3" />
-                    {member.profile?.points || 0}
-                  </div>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                  <Trophy className="h-3 w-3" />
+                  {member.profile?.points || 0} pts
                 </div>
               </div>
             </div>
