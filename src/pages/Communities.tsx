@@ -12,8 +12,20 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Search, Users, ArrowLeft, ChevronRight, Star, 
-  TrendingUp, Clock
+  TrendingUp, Clock, Tag, X
 } from "lucide-react";
+
+const CATEGORIES = [
+  { value: "all", label: "Todas" },
+  { value: "desarrollo", label: "Desarrollo" },
+  { value: "marketing", label: "Marketing" },
+  { value: "diseno", label: "Diseño" },
+  { value: "negocios", label: "Negocios" },
+  { value: "productividad", label: "Productividad" },
+  { value: "finanzas", label: "Finanzas" },
+  { value: "salud", label: "Salud" },
+  { value: "otros", label: "Otros" },
+];
 
 interface Community {
   id: string;
@@ -26,6 +38,8 @@ interface Community {
   price_monthly: number | null;
   created_at: string;
   is_member?: boolean;
+  category: string | null;
+  tags: string[] | null;
 }
 
 export default function Communities() {
@@ -37,10 +51,22 @@ export default function Communities() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "free" | "paid">("all");
   const [sort, setSort] = useState<"popular" | "newest">("popular");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [allTags, setAllTags] = useState<string[]>([]);
 
   useEffect(() => {
     fetchCommunities();
   }, [user]);
+
+  useEffect(() => {
+    // Extract unique tags from all communities
+    const tags = new Set<string>();
+    communities.forEach(c => {
+      c.tags?.forEach(tag => tags.add(tag));
+    });
+    setAllTags(Array.from(tags).sort());
+  }, [communities]);
 
   useEffect(() => {
     let result = [...communities];
@@ -48,7 +74,8 @@ export default function Communities() {
     if (searchQuery) {
       result = result.filter(c => 
         c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        c.description?.toLowerCase().includes(searchQuery.toLowerCase())
+        c.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
       );
     }
 
@@ -58,6 +85,16 @@ export default function Communities() {
       result = result.filter(c => c.is_paid);
     }
 
+    if (categoryFilter !== "all") {
+      result = result.filter(c => c.category === categoryFilter);
+    }
+
+    if (selectedTags.length > 0) {
+      result = result.filter(c => 
+        selectedTags.some(tag => c.tags?.includes(tag))
+      );
+    }
+
     if (sort === "popular") {
       result.sort((a, b) => b.member_count - a.member_count);
     } else {
@@ -65,7 +102,13 @@ export default function Communities() {
     }
 
     setFilteredCommunities(result);
-  }, [communities, searchQuery, filter, sort]);
+  }, [communities, searchQuery, filter, sort, categoryFilter, selectedTags]);
+
+  const toggleTag = (tag: string) => {
+    setSelectedTags(prev => 
+      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+    );
+  };
 
   const fetchCommunities = async () => {
     try {
@@ -135,41 +178,85 @@ export default function Communities() {
 
       <main className="container mx-auto px-4 py-8">
         {/* Search and Filters */}
-        <div className="flex flex-col md:flex-row gap-4 mb-8">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input
-              placeholder="Buscar comunidades..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-12"
-            />
+        <div className="flex flex-col gap-4 mb-8">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Input
+                placeholder="Buscar comunidades o tags..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 h-12"
+              />
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              <Tabs value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
+                <TabsList>
+                  <TabsTrigger value="all">Todas</TabsTrigger>
+                  <TabsTrigger value="free">Gratis</TabsTrigger>
+                  <TabsTrigger value="paid">De pago</TabsTrigger>
+                </TabsList>
+              </Tabs>
+              <Button
+                variant={sort === "popular" ? "default" : "outline"}
+                size="icon"
+                onClick={() => setSort("popular")}
+                title="Más populares"
+              >
+                <TrendingUp className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={sort === "newest" ? "default" : "outline"}
+                size="icon"
+                onClick={() => setSort("newest")}
+                title="Más recientes"
+              >
+                <Clock className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <Tabs value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
-              <TabsList>
-                <TabsTrigger value="all">Todas</TabsTrigger>
-                <TabsTrigger value="free">Gratis</TabsTrigger>
-                <TabsTrigger value="paid">De pago</TabsTrigger>
-              </TabsList>
-            </Tabs>
-            <Button
-              variant={sort === "popular" ? "default" : "outline"}
-              size="icon"
-              onClick={() => setSort("popular")}
-              title="Más populares"
-            >
-              <TrendingUp className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={sort === "newest" ? "default" : "outline"}
-              size="icon"
-              onClick={() => setSort("newest")}
-              title="Más recientes"
-            >
-              <Clock className="h-4 w-4" />
-            </Button>
+
+          {/* Category Filter */}
+          <div className="flex gap-2 flex-wrap">
+            {CATEGORIES.map(cat => (
+              <Button
+                key={cat.value}
+                variant={categoryFilter === cat.value ? "default" : "outline"}
+                size="sm"
+                onClick={() => setCategoryFilter(cat.value)}
+              >
+                {cat.label}
+              </Button>
+            ))}
           </div>
+
+          {/* Tags Filter */}
+          {allTags.length > 0 && (
+            <div className="flex gap-2 flex-wrap items-center">
+              <Tag className="h-4 w-4 text-muted-foreground" />
+              {allTags.map(tag => (
+                <Badge
+                  key={tag}
+                  variant={selectedTags.includes(tag) ? "default" : "outline"}
+                  className="cursor-pointer hover:bg-primary/80"
+                  onClick={() => toggleTag(tag)}
+                >
+                  {tag}
+                  {selectedTags.includes(tag) && <X className="h-3 w-3 ml-1" />}
+                </Badge>
+              ))}
+              {selectedTags.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedTags([])}
+                  className="text-muted-foreground"
+                >
+                  Limpiar filtros
+                </Button>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Featured Community */}
@@ -292,9 +379,24 @@ export default function Communities() {
                       </Badge>
                     )}
                   </div>
-                  <p className="text-sm text-muted-foreground line-clamp-2 mb-4 min-h-[40px]">
+                  <p className="text-sm text-muted-foreground line-clamp-2 mb-3 min-h-[40px]">
                     {community.description || "Una comunidad de aprendizaje increíble"}
                   </p>
+                  {/* Tags */}
+                  {community.tags && community.tags.length > 0 && (
+                    <div className="flex gap-1 flex-wrap mb-3">
+                      {community.tags.slice(0, 3).map(tag => (
+                        <Badge key={tag} variant="secondary" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
+                      {community.tags.length > 3 && (
+                        <Badge variant="secondary" className="text-xs">
+                          +{community.tags.length - 3}
+                        </Badge>
+                      )}
+                    </div>
+                  )}
                   <div className="flex items-center justify-between">
                     {community.is_paid ? (
                       <Badge>${community.price_monthly}/mes</Badge>

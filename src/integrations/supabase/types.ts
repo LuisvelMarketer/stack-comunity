@@ -239,6 +239,7 @@ export type Database = {
       }
       communities: {
         Row: {
+          category: string | null
           created_at: string
           created_by: string | null
           description: string | null
@@ -251,9 +252,11 @@ export type Database = {
           slug: string
           stripe_price_id: string | null
           stripe_product_id: string | null
+          tags: string[] | null
           updated_at: string
         }
         Insert: {
+          category?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -266,9 +269,11 @@ export type Database = {
           slug: string
           stripe_price_id?: string | null
           stripe_product_id?: string | null
+          tags?: string[] | null
           updated_at?: string
         }
         Update: {
+          category?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -281,6 +286,7 @@ export type Database = {
           slug?: string
           stripe_price_id?: string | null
           stripe_product_id?: string | null
+          tags?: string[] | null
           updated_at?: string
         }
         Relationships: []
