@@ -8,8 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Send, Bell, Loader2, History, Users, Filter } from "lucide-react";
-import { format, subDays, subMonths } from "date-fns";
+import { Switch } from "@/components/ui/switch";
+import { Send, Bell, Loader2, History, Users, Filter, Clock, Calendar } from "lucide-react";
+import { format, subDays, subMonths, addMinutes } from "date-fns";
 import { es } from "date-fns/locale";
 
 interface BroadcastNotificationProps {
@@ -23,6 +24,8 @@ interface BroadcastHistory {
   content: string;
   recipients_count: number;
   created_at: string;
+  scheduled_at: string | null;
+  status: string;
 }
 
 export function BroadcastNotification({ communityId, communityName }: BroadcastNotificationProps) {
@@ -40,6 +43,11 @@ export function BroadcastNotification({ communityId, communityName }: BroadcastN
   const [estimatedRecipients, setEstimatedRecipients] = useState<number | null>(null);
   const [loadingEstimate, setLoadingEstimate] = useState(false);
 
+  // Scheduling
+  const [isScheduled, setIsScheduled] = useState(false);
+  const [scheduledDate, setScheduledDate] = useState("");
+  const [scheduledTime, setScheduledTime] = useState("");
+
   useEffect(() => {
     loadHistory();
   }, [communityId]);
@@ -48,11 +56,20 @@ export function BroadcastNotification({ communityId, communityName }: BroadcastN
     estimateRecipients();
   }, [levelFilter, joinDateFilter, communityId]);
 
+  // Set default date/time when scheduling is enabled
+  useEffect(() => {
+    if (isScheduled && !scheduledDate) {
+      const tomorrow = addMinutes(new Date(), 60);
+      setScheduledDate(format(tomorrow, "yyyy-MM-dd"));
+      setScheduledTime(format(tomorrow, "HH:mm"));
+    }
+  }, [isScheduled]);
+
   const loadHistory = async () => {
     setLoadingHistory(true);
     const { data, error } = await supabase
       .from("broadcast_notifications")
-      .select("id, title, content, recipients_count, created_at")
+      .select("id, title, content, recipients_count, created_at, scheduled_at, status")
       .eq("community_id", communityId)
       .order("created_at", { ascending: false })
       .limit(20);
@@ -64,7 +81,6 @@ export function BroadcastNotification({ communityId, communityName }: BroadcastN
   };
 
   const getFilteredMembers = async () => {
-    // Get all member user_ids except the owner
     const { data: members, error: membersError } = await supabase
       .from("community_members")
       .select("user_id, joined_at")
@@ -75,7 +91,6 @@ export function BroadcastNotification({ communityId, communityName }: BroadcastN
 
     let filteredMembers = members;
 
-    // Apply join date filter
     if (joinDateFilter !== "all") {
       const now = new Date();
       let cutoffDate: Date;
@@ -102,7 +117,6 @@ export function BroadcastNotification({ communityId, communityName }: BroadcastN
       );
     }
 
-    // Apply level filter if not "all"
     if (levelFilter !== "all") {
       const userIds = filteredMembers.map((m) => m.user_id);
       
@@ -146,57 +160,97 @@ export function BroadcastNotification({ communityId, communityName }: BroadcastN
       return;
     }
 
+    if (isScheduled && (!scheduledDate || !scheduledTime)) {
+      toast({
+        title: "Fecha requerida",
+        description: "Por favor selecciona fecha y hora para programar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSending(true);
 
     try {
-      const filteredMembers = await getFilteredMembers();
+      if (isScheduled) {
+        // Save scheduled notification
+        const scheduledAt = new Date(`${scheduledDate}T${scheduledTime}`).toISOString();
+        
+        const { error: insertError } = await supabase
+          .from("broadcast_notifications")
+          .insert({
+            community_id: communityId,
+            sender_id: user.id,
+            title: title,
+            content: content,
+            recipients_count: estimatedRecipients || 0,
+            status: "scheduled",
+            scheduled_at: scheduledAt,
+            level_filter: levelFilter,
+            join_date_filter: joinDateFilter,
+          });
 
-      if (filteredMembers.length === 0) {
+        if (insertError) throw insertError;
+
         toast({
-          title: "Sin destinatarios",
-          description: "No hay miembros que cumplan con los filtros seleccionados.",
-          variant: "destructive",
+          title: "Notificación programada",
+          description: `Se enviará el ${format(new Date(scheduledAt), "dd MMM yyyy 'a las' HH:mm", { locale: es })}.`,
         });
-        setSending(false);
-        return;
+      } else {
+        // Send immediately
+        const filteredMembers = await getFilteredMembers();
+
+        if (filteredMembers.length === 0) {
+          toast({
+            title: "Sin destinatarios",
+            description: "No hay miembros que cumplan con los filtros seleccionados.",
+            variant: "destructive",
+          });
+          setSending(false);
+          return;
+        }
+
+        const notifications = filteredMembers.map((member) => ({
+          user_id: member.user_id,
+          type: "community_broadcast",
+          title: `${communityName}: ${title}`,
+          content: content,
+          link: `/community/${communityId}`,
+        }));
+
+        const { error: insertError } = await supabase
+          .from("notifications")
+          .insert(notifications);
+
+        if (insertError) throw insertError;
+
+        await supabase
+          .from("broadcast_notifications")
+          .insert({
+            community_id: communityId,
+            sender_id: user.id,
+            title: title,
+            content: content,
+            recipients_count: filteredMembers.length,
+            status: "sent",
+            level_filter: levelFilter,
+            join_date_filter: joinDateFilter,
+          });
+
+        toast({
+          title: "Notificación enviada",
+          description: `Se envió la notificación a ${filteredMembers.length} miembro(s).`,
+        });
       }
 
-      // Create notifications for filtered members
-      const notifications = filteredMembers.map((member) => ({
-        user_id: member.user_id,
-        type: "community_broadcast",
-        title: `${communityName}: ${title}`,
-        content: content,
-        link: `/community/${communityId}`,
-      }));
-
-      const { error: insertError } = await supabase
-        .from("notifications")
-        .insert(notifications);
-
-      if (insertError) throw insertError;
-
-      // Save to broadcast history
-      await supabase
-        .from("broadcast_notifications")
-        .insert({
-          community_id: communityId,
-          sender_id: user.id,
-          title: title,
-          content: content,
-          recipients_count: filteredMembers.length,
-        });
-
-      toast({
-        title: "Notificación enviada",
-        description: `Se envió la notificación a ${filteredMembers.length} miembro(s).`,
-      });
-
-      // Clear form and reload
+      // Clear form
       setTitle("");
       setContent("");
       setLevelFilter("all");
       setJoinDateFilter("all");
+      setIsScheduled(false);
+      setScheduledDate("");
+      setScheduledTime("");
       loadHistory();
     } catch (error: any) {
       toast({
@@ -207,6 +261,44 @@ export function BroadcastNotification({ communityId, communityName }: BroadcastN
     } finally {
       setSending(false);
     }
+  };
+
+  const handleCancelScheduled = async (id: string) => {
+    const { error } = await supabase
+      .from("broadcast_notifications")
+      .delete()
+      .eq("id", id)
+      .eq("status", "scheduled");
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo cancelar la notificación.",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Cancelada",
+        description: "La notificación programada fue cancelada.",
+      });
+      loadHistory();
+    }
+  };
+
+  const getStatusBadge = (status: string, scheduledAt: string | null) => {
+    if (status === "scheduled" && scheduledAt) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+          <Clock className="h-3 w-3" />
+          Programada
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+        Enviada
+      </span>
+    );
   };
 
   return (
@@ -303,6 +395,42 @@ export function BroadcastNotification({ communityId, communityName }: BroadcastN
             </div>
           </div>
 
+          {/* Scheduling */}
+          <div className="border border-border rounded-lg p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <Calendar className="h-4 w-4" />
+                Programar envío
+              </div>
+              <Switch
+                checked={isScheduled}
+                onCheckedChange={setIsScheduled}
+              />
+            </div>
+
+            {isScheduled && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Fecha</Label>
+                  <Input
+                    type="date"
+                    value={scheduledDate}
+                    onChange={(e) => setScheduledDate(e.target.value)}
+                    min={format(new Date(), "yyyy-MM-dd")}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Hora</Label>
+                  <Input
+                    type="time"
+                    value={scheduledTime}
+                    onChange={(e) => setScheduledTime(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
           <Button 
             onClick={handleSend} 
             disabled={sending || !title.trim() || !content.trim() || estimatedRecipients === 0}
@@ -310,10 +438,16 @@ export function BroadcastNotification({ communityId, communityName }: BroadcastN
           >
             {sending ? (
               <Loader2 className="h-4 w-4 animate-spin" />
+            ) : isScheduled ? (
+              <Clock className="h-4 w-4" />
             ) : (
               <Send className="h-4 w-4" />
             )}
-            {sending ? "Enviando..." : `Enviar a ${estimatedRecipients || 0} miembro(s)`}
+            {sending 
+              ? "Procesando..." 
+              : isScheduled 
+                ? "Programar notificación" 
+                : `Enviar a ${estimatedRecipients || 0} miembro(s)`}
           </Button>
         </CardContent>
       </Card>
@@ -326,7 +460,7 @@ export function BroadcastNotification({ communityId, communityName }: BroadcastN
             Historial de Notificaciones
           </CardTitle>
           <CardDescription>
-            Últimas 20 notificaciones enviadas a tu comunidad
+            Últimas 20 notificaciones enviadas o programadas
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -346,15 +480,36 @@ export function BroadcastNotification({ communityId, communityName }: BroadcastN
                   className="border border-border rounded-lg p-4 space-y-2"
                 >
                   <div className="flex items-start justify-between gap-4">
-                    <h4 className="font-medium">{broadcast.title}</h4>
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-medium">{broadcast.title}</h4>
+                      {getStatusBadge(broadcast.status, broadcast.scheduled_at)}
+                    </div>
                     <span className="text-xs text-muted-foreground whitespace-nowrap">
-                      {format(new Date(broadcast.created_at), "dd MMM yyyy, HH:mm", { locale: es })}
+                      {broadcast.status === "scheduled" && broadcast.scheduled_at
+                        ? `Programada: ${format(new Date(broadcast.scheduled_at), "dd MMM yyyy, HH:mm", { locale: es })}`
+                        : format(new Date(broadcast.created_at), "dd MMM yyyy, HH:mm", { locale: es })}
                     </span>
                   </div>
                   <p className="text-sm text-muted-foreground">{broadcast.content}</p>
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Users className="h-3 w-3" />
-                    <span>Enviado a {broadcast.recipients_count} miembro(s)</span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Users className="h-3 w-3" />
+                      <span>
+                        {broadcast.status === "scheduled" 
+                          ? `Estimado: ${broadcast.recipients_count} miembro(s)`
+                          : `Enviado a ${broadcast.recipients_count} miembro(s)`}
+                      </span>
+                    </div>
+                    {broadcast.status === "scheduled" && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => handleCancelScheduled(broadcast.id)}
+                      >
+                        Cancelar
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}
