@@ -195,15 +195,24 @@ export default function CommunityDetail() {
 
       <main className="container mx-auto px-4 -mt-32 relative z-10">
         <div className="bg-card rounded-lg p-6 shadow-lg mb-8">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate("/communities")}
-            className="mb-4"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Volver
-          </Button>
+          <div className="flex items-center gap-2 mb-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/dashboard")}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Dashboard
+            </Button>
+            <span className="text-muted-foreground">/</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/communities")}
+            >
+              Comunidades
+            </Button>
+          </div>
 
           <div className="flex items-start justify-between">
             <div className="flex-1">
