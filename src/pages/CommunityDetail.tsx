@@ -14,6 +14,7 @@ import { MembersList } from "@/components/community/MembersList";
 import { OnlineUsers } from "@/components/community/OnlineUsers";
 import { CommunityChat } from "@/components/community/CommunityChat";
 import { LiveSessions } from "@/components/community/LiveSessions";
+import { CommunityCourses } from "@/components/community/CommunityCourses";
 
 interface Community {
   id: string;
@@ -273,9 +274,10 @@ export default function CommunityDetail() {
           </TabsContent>
 
           <TabsContent value="courses" className="mt-6">
-            <div className="text-center py-12 text-muted-foreground">
-              Próximamente: Cursos específicos de la comunidad
-            </div>
+            <CommunityCourses 
+              communityId={community.id} 
+              isMember={!!community.is_member} 
+            />
           </TabsContent>
 
           <TabsContent value="members" className="mt-6">
