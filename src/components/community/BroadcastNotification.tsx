@@ -7,8 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Send, Bell, Loader2, History, Users } from "lucide-react";
-import { format } from "date-fns";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Send, Bell, Loader2, History, Users, Filter } from "lucide-react";
+import { format, subDays, subMonths } from "date-fns";
 import { es } from "date-fns/locale";
 
 interface BroadcastNotificationProps {
@@ -32,10 +33,20 @@ export function BroadcastNotification({ communityId, communityName }: BroadcastN
   const [sending, setSending] = useState(false);
   const [history, setHistory] = useState<BroadcastHistory[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  
+  // Segmentation filters
+  const [levelFilter, setLevelFilter] = useState<string>("all");
+  const [joinDateFilter, setJoinDateFilter] = useState<string>("all");
+  const [estimatedRecipients, setEstimatedRecipients] = useState<number | null>(null);
+  const [loadingEstimate, setLoadingEstimate] = useState(false);
 
   useEffect(() => {
     loadHistory();
   }, [communityId]);
+
+  useEffect(() => {
+    estimateRecipients();
+  }, [levelFilter, joinDateFilter, communityId]);
 
   const loadHistory = async () => {
     setLoadingHistory(true);
@@ -52,6 +63,79 @@ export function BroadcastNotification({ communityId, communityName }: BroadcastN
     setLoadingHistory(false);
   };
 
+  const getFilteredMembers = async () => {
+    // Get all member user_ids except the owner
+    const { data: members, error: membersError } = await supabase
+      .from("community_members")
+      .select("user_id, joined_at")
+      .eq("community_id", communityId)
+      .eq("is_owner", false);
+
+    if (membersError || !members) return [];
+
+    let filteredMembers = members;
+
+    // Apply join date filter
+    if (joinDateFilter !== "all") {
+      const now = new Date();
+      let cutoffDate: Date;
+
+      switch (joinDateFilter) {
+        case "7days":
+          cutoffDate = subDays(now, 7);
+          break;
+        case "30days":
+          cutoffDate = subDays(now, 30);
+          break;
+        case "3months":
+          cutoffDate = subMonths(now, 3);
+          break;
+        case "6months":
+          cutoffDate = subMonths(now, 6);
+          break;
+        default:
+          cutoffDate = new Date(0);
+      }
+
+      filteredMembers = filteredMembers.filter(
+        (m) => new Date(m.joined_at) >= cutoffDate
+      );
+    }
+
+    // Apply level filter if not "all"
+    if (levelFilter !== "all") {
+      const userIds = filteredMembers.map((m) => m.user_id);
+      
+      if (userIds.length === 0) return [];
+
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, level")
+        .in("id", userIds);
+
+      if (profiles) {
+        const targetLevel = parseInt(levelFilter);
+        const levelUserIds = new Set(
+          profiles
+            .filter((p) => p.level >= targetLevel)
+            .map((p) => p.id)
+        );
+        filteredMembers = filteredMembers.filter((m) =>
+          levelUserIds.has(m.user_id)
+        );
+      }
+    }
+
+    return filteredMembers;
+  };
+
+  const estimateRecipients = async () => {
+    setLoadingEstimate(true);
+    const members = await getFilteredMembers();
+    setEstimatedRecipients(members.length);
+    setLoadingEstimate(false);
+  };
+
   const handleSend = async () => {
     if (!title.trim() || !content.trim() || !user) {
       toast({
@@ -65,27 +149,20 @@ export function BroadcastNotification({ communityId, communityName }: BroadcastN
     setSending(true);
 
     try {
-      // Get all member user_ids except the owner
-      const { data: members, error: membersError } = await supabase
-        .from("community_members")
-        .select("user_id")
-        .eq("community_id", communityId)
-        .eq("is_owner", false);
+      const filteredMembers = await getFilteredMembers();
 
-      if (membersError) throw membersError;
-
-      if (!members || members.length === 0) {
+      if (filteredMembers.length === 0) {
         toast({
-          title: "Sin miembros",
-          description: "No hay miembros a quienes enviar la notificación.",
+          title: "Sin destinatarios",
+          description: "No hay miembros que cumplan con los filtros seleccionados.",
           variant: "destructive",
         });
         setSending(false);
         return;
       }
 
-      // Create notifications for all members
-      const notifications = members.map((member) => ({
+      // Create notifications for filtered members
+      const notifications = filteredMembers.map((member) => ({
         user_id: member.user_id,
         type: "community_broadcast",
         title: `${communityName}: ${title}`,
@@ -107,17 +184,19 @@ export function BroadcastNotification({ communityId, communityName }: BroadcastN
           sender_id: user.id,
           title: title,
           content: content,
-          recipients_count: members.length,
+          recipients_count: filteredMembers.length,
         });
 
       toast({
         title: "Notificación enviada",
-        description: `Se envió la notificación a ${members.length} miembro(s).`,
+        description: `Se envió la notificación a ${filteredMembers.length} miembro(s).`,
       });
 
-      // Clear form and reload history
+      // Clear form and reload
       setTitle("");
       setContent("");
+      setLevelFilter("all");
+      setJoinDateFilter("all");
       loadHistory();
     } catch (error: any) {
       toast({
@@ -140,7 +219,7 @@ export function BroadcastNotification({ communityId, communityName }: BroadcastN
             Enviar Notificación Masiva
           </CardTitle>
           <CardDescription>
-            Envía una notificación a todos los miembros de tu comunidad
+            Envía una notificación a los miembros de tu comunidad
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -168,9 +247,65 @@ export function BroadcastNotification({ communityId, communityName }: BroadcastN
               {content.length}/500 caracteres
             </p>
           </div>
+
+          {/* Segmentation Filters */}
+          <div className="border border-border rounded-lg p-4 space-y-4">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Filter className="h-4 w-4" />
+              Segmentación (opcional)
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Nivel mínimo</Label>
+                <Select value={levelFilter} onValueChange={setLevelFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todos los niveles" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos los niveles</SelectItem>
+                    <SelectItem value="2">Nivel 2+</SelectItem>
+                    <SelectItem value="3">Nivel 3+</SelectItem>
+                    <SelectItem value="5">Nivel 5+</SelectItem>
+                    <SelectItem value="10">Nivel 10+</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Fecha de ingreso</Label>
+                <Select value={joinDateFilter} onValueChange={setJoinDateFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Cualquier fecha" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Cualquier fecha</SelectItem>
+                    <SelectItem value="7days">Últimos 7 días</SelectItem>
+                    <SelectItem value="30days">Últimos 30 días</SelectItem>
+                    <SelectItem value="3months">Últimos 3 meses</SelectItem>
+                    <SelectItem value="6months">Últimos 6 meses</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Users className="h-4 w-4" />
+              {loadingEstimate ? (
+                <span>Calculando...</span>
+              ) : (
+                <span>
+                  {estimatedRecipients === 0
+                    ? "No hay destinatarios con estos filtros"
+                    : `${estimatedRecipients} miembro(s) recibirán esta notificación`}
+                </span>
+              )}
+            </div>
+          </div>
+
           <Button 
             onClick={handleSend} 
-            disabled={sending || !title.trim() || !content.trim()}
+            disabled={sending || !title.trim() || !content.trim() || estimatedRecipients === 0}
             className="gap-2"
           >
             {sending ? (
@@ -178,7 +313,7 @@ export function BroadcastNotification({ communityId, communityName }: BroadcastN
             ) : (
               <Send className="h-4 w-4" />
             )}
-            {sending ? "Enviando..." : "Enviar a todos los miembros"}
+            {sending ? "Enviando..." : `Enviar a ${estimatedRecipients || 0} miembro(s)`}
           </Button>
         </CardContent>
       </Card>
