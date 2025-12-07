@@ -9,7 +9,16 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Send, Bell, Loader2, History, Users, Filter, Clock, Calendar } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Send, Bell, Loader2, History, Users, Filter, Clock, Calendar, FileText, Plus, Trash2, Save } from "lucide-react";
 import { format, subDays, subMonths, addMinutes } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -26,6 +35,13 @@ interface BroadcastHistory {
   created_at: string;
   scheduled_at: string | null;
   status: string;
+}
+
+interface Template {
+  id: string;
+  name: string;
+  title: string;
+  content: string;
 }
 
 export function BroadcastNotification({ communityId, communityName }: BroadcastNotificationProps) {
@@ -48,15 +64,22 @@ export function BroadcastNotification({ communityId, communityName }: BroadcastN
   const [scheduledDate, setScheduledDate] = useState("");
   const [scheduledTime, setScheduledTime] = useState("");
 
+  // Templates
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [loadingTemplates, setLoadingTemplates] = useState(true);
+  const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
+  const [templateName, setTemplateName] = useState("");
+  const [savingTemplate, setSavingTemplate] = useState(false);
+
   useEffect(() => {
     loadHistory();
+    loadTemplates();
   }, [communityId]);
 
   useEffect(() => {
     estimateRecipients();
   }, [levelFilter, joinDateFilter, communityId]);
 
-  // Set default date/time when scheduling is enabled
   useEffect(() => {
     if (isScheduled && !scheduledDate) {
       const tomorrow = addMinutes(new Date(), 60);
@@ -78,6 +101,20 @@ export function BroadcastNotification({ communityId, communityName }: BroadcastN
       setHistory(data);
     }
     setLoadingHistory(false);
+  };
+
+  const loadTemplates = async () => {
+    setLoadingTemplates(true);
+    const { data, error } = await supabase
+      .from("notification_templates")
+      .select("id, name, title, content")
+      .eq("community_id", communityId)
+      .order("created_at", { ascending: false });
+
+    if (!error && data) {
+      setTemplates(data);
+    }
+    setLoadingTemplates(false);
   };
 
   const getFilteredMembers = async () => {
@@ -150,6 +187,77 @@ export function BroadcastNotification({ communityId, communityName }: BroadcastN
     setLoadingEstimate(false);
   };
 
+  const handleSelectTemplate = (templateId: string) => {
+    const template = templates.find((t) => t.id === templateId);
+    if (template) {
+      setTitle(template.title);
+      setContent(template.content);
+      toast({
+        title: "Plantilla aplicada",
+        description: `Se aplicó la plantilla "${template.name}".`,
+      });
+    }
+  };
+
+  const handleSaveTemplate = async () => {
+    if (!templateName.trim() || !title.trim() || !content.trim()) {
+      toast({
+        title: "Campos requeridos",
+        description: "Completa el nombre, título y contenido de la plantilla.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSavingTemplate(true);
+    const { error } = await supabase
+      .from("notification_templates")
+      .insert({
+        community_id: communityId,
+        name: templateName.trim(),
+        title: title.trim(),
+        content: content.trim(),
+      });
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo guardar la plantilla.",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Plantilla guardada",
+        description: "La plantilla se guardó correctamente.",
+      });
+      setTemplateName("");
+      setSaveTemplateOpen(false);
+      loadTemplates();
+    }
+    setSavingTemplate(false);
+  };
+
+  const handleDeleteTemplate = async (templateId: string) => {
+    const { error } = await supabase
+      .from("notification_templates")
+      .delete()
+      .eq("id", templateId);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar la plantilla.",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Plantilla eliminada",
+        description: "La plantilla se eliminó correctamente.",
+      });
+      loadTemplates();
+    }
+  };
+
   const handleSend = async () => {
     if (!title.trim() || !content.trim() || !user) {
       toast({
@@ -173,7 +281,6 @@ export function BroadcastNotification({ communityId, communityName }: BroadcastN
 
     try {
       if (isScheduled) {
-        // Save scheduled notification
         const scheduledAt = new Date(`${scheduledDate}T${scheduledTime}`).toISOString();
         
         const { error: insertError } = await supabase
@@ -197,7 +304,6 @@ export function BroadcastNotification({ communityId, communityName }: BroadcastN
           description: `Se enviará el ${format(new Date(scheduledAt), "dd MMM yyyy 'a las' HH:mm", { locale: es })}.`,
         });
       } else {
-        // Send immediately
         const filteredMembers = await getFilteredMembers();
 
         if (filteredMembers.length === 0) {
@@ -243,7 +349,6 @@ export function BroadcastNotification({ communityId, communityName }: BroadcastN
         });
       }
 
-      // Clear form
       setTitle("");
       setContent("");
       setLevelFilter("all");
@@ -315,6 +420,96 @@ export function BroadcastNotification({ communityId, communityName }: BroadcastN
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Templates Section */}
+          <div className="border border-border rounded-lg p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <FileText className="h-4 w-4" />
+                Plantillas
+              </div>
+              <Dialog open={saveTemplateOpen} onOpenChange={setSaveTemplateOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="gap-1"
+                    disabled={!title.trim() || !content.trim()}
+                  >
+                    <Save className="h-3 w-3" />
+                    Guardar como plantilla
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Guardar plantilla</DialogTitle>
+                    <DialogDescription>
+                      Guarda el contenido actual como una plantilla reutilizable.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label>Nombre de la plantilla</Label>
+                      <Input
+                        placeholder="Ej: Bienvenida nuevos miembros"
+                        value={templateName}
+                        onChange={(e) => setTemplateName(e.target.value)}
+                        maxLength={50}
+                      />
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      <p><strong>Título:</strong> {title}</p>
+                      <p className="mt-1"><strong>Contenido:</strong> {content.substring(0, 100)}{content.length > 100 ? "..." : ""}</p>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setSaveTemplateOpen(false)}>
+                      Cancelar
+                    </Button>
+                    <Button onClick={handleSaveTemplate} disabled={savingTemplate || !templateName.trim()}>
+                      {savingTemplate ? <Loader2 className="h-4 w-4 animate-spin" /> : "Guardar"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            {loadingTemplates ? (
+              <div className="flex justify-center py-2">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              </div>
+            ) : templates.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No tienes plantillas guardadas. Crea una notificación y guárdala como plantilla.
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {templates.map((template) => (
+                  <div 
+                    key={template.id}
+                    className="flex items-center gap-1 bg-secondary rounded-md"
+                  >
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 px-3"
+                      onClick={() => handleSelectTemplate(template.id)}
+                    >
+                      {template.name}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                      onClick={() => handleDeleteTemplate(template.id)}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="notification-title">Título</Label>
             <Input

@@ -828,6 +828,41 @@ export type Database = {
           },
         ]
       }
+      notification_templates: {
+        Row: {
+          community_id: string
+          content: string
+          created_at: string
+          id: string
+          name: string
+          title: string
+        }
+        Insert: {
+          community_id: string
+          content: string
+          created_at?: string
+          id?: string
+          name: string
+          title: string
+        }
+        Update: {
+          community_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          name?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_templates_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           content: string
