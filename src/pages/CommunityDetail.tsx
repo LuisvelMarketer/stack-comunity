@@ -206,12 +206,8 @@ export default function CommunityDetail() {
         </div>
       </nav>
 
-      <div className="relative h-64 overflow-hidden">
-        <img
-          src={community.image_url}
-          alt={community.name}
-          className="w-full h-full object-cover"
-        />
+      <div className="relative h-48 overflow-hidden bg-gradient-to-br from-primary/20 via-accent/10 to-secondary/20">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
       </div>
 
@@ -237,26 +233,35 @@ export default function CommunityDetail() {
           </div>
 
           <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <h1 className="text-4xl font-bold mb-2">{community.name}</h1>
-              <p className="text-muted-foreground mb-4">{community.description}</p>
-              <div className="flex items-center gap-4">
-                <Badge variant="secondary" className="flex items-center gap-1">
-                  <Users className="h-3 w-3" />
-                  {community.member_count} miembros
-                </Badge>
-                {community.is_paid && community.price_monthly && community.price_monthly > 0 && (
-                  <Badge className="flex items-center gap-1 bg-gradient-to-r from-amber-500 to-orange-500">
-                    <Crown className="h-3 w-3" />
-                    ${community.price_monthly}/mes
+            <div className="flex items-start gap-6">
+              {community.image_url && (
+                <img 
+                  src={community.image_url} 
+                  alt={community.name}
+                  className="w-20 h-20 rounded-xl object-contain bg-card shadow-lg border"
+                />
+              )}
+              <div className="flex-1">
+                <h1 className="text-4xl font-bold mb-2">{community.name}</h1>
+                <p className="text-muted-foreground mb-4">{community.description}</p>
+                <div className="flex items-center gap-4">
+                  <Badge variant="secondary" className="flex items-center gap-1">
+                    <Users className="h-3 w-3" />
+                    {community.member_count} miembros
                   </Badge>
-                )}
-                {onlineCount > 0 && (
-                  <Badge variant="outline" className="flex items-center gap-1 text-green-600 border-green-600/30">
-                    <Circle className="h-2 w-2 fill-green-500 text-green-500" />
-                    {onlineCount} en línea
-                  </Badge>
-                )}
+                  {community.is_paid && community.price_monthly && community.price_monthly > 0 && (
+                    <Badge className="flex items-center gap-1 bg-gradient-to-r from-amber-500 to-orange-500">
+                      <Crown className="h-3 w-3" />
+                      ${community.price_monthly}/mes
+                    </Badge>
+                  )}
+                  {onlineCount > 0 && (
+                    <Badge variant="outline" className="flex items-center gap-1 text-green-600 border-green-600/30">
+                      <Circle className="h-2 w-2 fill-green-500 text-green-500" />
+                      {onlineCount} en línea
+                    </Badge>
+                  )}
+                </div>
               </div>
             </div>
             <div className="flex flex-col gap-2">
