@@ -30,13 +30,32 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Users, Settings, BookOpen, Trash2, Save, Bell, DollarSign } from "lucide-react";
+import { ArrowLeft, Users, Settings, BookOpen, Trash2, Save, Bell, DollarSign, Tag, X, Plus } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { CommunityPricingManager } from "@/components/community/CommunityPricingManager";
 import { CommunityCoursesManager } from "@/components/community/CommunityCoursesManager";
 import { BroadcastNotification } from "@/components/community/BroadcastNotification";
 import { UserMenu } from "@/components/UserMenu";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+
+const CATEGORIES = [
+  { value: "", label: "Sin categoría" },
+  { value: "desarrollo", label: "Desarrollo" },
+  { value: "marketing", label: "Marketing" },
+  { value: "diseno", label: "Diseño" },
+  { value: "negocios", label: "Negocios" },
+  { value: "productividad", label: "Productividad" },
+  { value: "finanzas", label: "Finanzas" },
+  { value: "salud", label: "Salud" },
+  { value: "otros", label: "Otros" },
+];
 
 interface Community {
   id: string;
@@ -48,6 +67,8 @@ interface Community {
   price_monthly: number;
   is_paid: boolean;
   stripe_price_id: string | null;
+  category: string | null;
+  tags: string[] | null;
 }
 
 interface Member {
@@ -80,7 +101,10 @@ export default function CommunityManage() {
     name: "",
     description: "",
     slug: "",
+    category: "",
+    tags: [] as string[],
   });
+  const [newTag, setNewTag] = useState("");
 
   useEffect(() => {
     if (communityId && user) {
@@ -135,6 +159,8 @@ export default function CommunityManage() {
       name: communityData.name,
       description: communityData.description || "",
       slug: communityData.slug,
+      category: communityData.category || "",
+      tags: communityData.tags || [],
     });
 
     // Load members with their profiles
@@ -175,6 +201,8 @@ export default function CommunityManage() {
         name: editForm.name.trim(),
         description: editForm.description.trim() || null,
         slug: editForm.slug.trim(),
+        category: editForm.category || null,
+        tags: editForm.tags,
       })
       .eq("id", communityId);
 
@@ -441,6 +469,84 @@ export default function CommunityManage() {
                     rows={4}
                   />
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-category">Categoría</Label>
+                  <Select
+                    value={editForm.category}
+                    onValueChange={(value) => setEditForm({ ...editForm, category: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona una categoría" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CATEGORIES.map(cat => (
+                        <SelectItem key={cat.value} value={cat.value}>
+                          {cat.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Tags</Label>
+                  <div className="flex gap-2 flex-wrap mb-2">
+                    {editForm.tags.map(tag => (
+                      <Badge key={tag} variant="secondary" className="gap-1">
+                        {tag}
+                        <button
+                          onClick={() => setEditForm({
+                            ...editForm,
+                            tags: editForm.tags.filter(t => t !== tag)
+                          })}
+                          className="ml-1 hover:text-destructive"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Añadir tag..."
+                      value={newTag}
+                      onChange={(e) => setNewTag(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && newTag.trim()) {
+                          e.preventDefault();
+                          if (!editForm.tags.includes(newTag.trim())) {
+                            setEditForm({
+                              ...editForm,
+                              tags: [...editForm.tags, newTag.trim()]
+                            });
+                          }
+                          setNewTag("");
+                        }
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        if (newTag.trim() && !editForm.tags.includes(newTag.trim())) {
+                          setEditForm({
+                            ...editForm,
+                            tags: [...editForm.tags, newTag.trim()]
+                          });
+                          setNewTag("");
+                        }
+                      }}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Presiona Enter o el botón + para añadir tags
+                  </p>
+                </div>
+
                 <Button onClick={handleSave} disabled={saving} className="gap-2">
                   <Save className="h-4 w-4" />
                   {saving ? "Guardando..." : "Guardar cambios"}
