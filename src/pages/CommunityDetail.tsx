@@ -8,7 +8,7 @@ import { UserMenu } from "@/components/UserMenu";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Users, BookOpen, MessageSquare, ArrowLeft, Circle, Video, Trophy, Crown, Loader2 } from "lucide-react";
+import { Calendar, Users, BookOpen, MessageSquare, ArrowLeft, Circle, Video, Trophy, Crown, Loader2, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { EventsList } from "@/components/community/EventsList";
 import { MembersList } from "@/components/community/MembersList";
@@ -17,6 +17,7 @@ import { CommunityChat } from "@/components/community/CommunityChat";
 import { LiveSessions } from "@/components/community/LiveSessions";
 import { CommunityCourses } from "@/components/community/CommunityCourses";
 import { CommunityAchievementsLeaderboard } from "@/components/community/CommunityAchievementsLeaderboard";
+import { CommunityAbout } from "@/components/community/CommunityAbout";
 import { toast as sonnerToast } from "sonner";
 
 interface Community {
@@ -302,8 +303,12 @@ export default function CommunityDetail() {
           </div>
         </div>
 
-        <Tabs defaultValue="lives" className="mb-8">
-          <TabsList className="grid w-full grid-cols-6">
+        <Tabs defaultValue="about" className="mb-8">
+          <TabsList className="grid w-full grid-cols-7">
+            <TabsTrigger value="about" className="flex items-center gap-2">
+              <Info className="h-4 w-4" />
+              Acerca de
+            </TabsTrigger>
             <TabsTrigger value="lives" className="flex items-center gap-2">
               <Video className="h-4 w-4" />
               Lives
@@ -329,6 +334,10 @@ export default function CommunityDetail() {
               Chat
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="about" className="mt-6">
+            <CommunityAbout community={community} />
+          </TabsContent>
 
           <TabsContent value="lives" className="mt-6">
             <LiveSessions communityId={community.id} isAdmin={isAdmin} />
