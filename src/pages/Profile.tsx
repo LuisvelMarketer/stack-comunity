@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Upload, Loader2, Trophy, Award, Users, Sun, Moon, Monitor } from "lucide-react";
 import { UserMenu } from "@/components/UserMenu";
 import { useThemePreference } from "@/hooks/useThemePreference";
+import { UserAchievements } from "@/components/UserAchievements";
 
 type FollowListType = "followers" | "following" | null;
 
@@ -399,6 +400,9 @@ export default function Profile() {
                     ))}
                   </div>
                 </div>
+              )}
+              {user && (
+                <UserAchievements userId={user.id} />
               )}
             </CardContent>
           </Card>

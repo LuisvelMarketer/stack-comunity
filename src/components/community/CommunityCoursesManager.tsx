@@ -34,8 +34,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { BookOpen, Plus, Edit, Trash2, Eye, EyeOff, FileText } from "lucide-react";
+import { BookOpen, Plus, Edit, Trash2, Eye, EyeOff, FileText, Trophy } from "lucide-react";
 import { CommunityModulesManager } from "./CommunityModulesManager";
+import { AchievementsManager } from "./AchievementsManager";
 
 interface Course {
   id: string;
@@ -59,6 +60,7 @@ export function CommunityCoursesManager({ communityId }: CommunityCoursesManager
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [saving, setSaving] = useState(false);
   const [managingModules, setManagingModules] = useState<Course | null>(null);
+  const [managingAchievements, setManagingAchievements] = useState<Course | null>(null);
 
   const [form, setForm] = useState({
     title: "",
@@ -252,6 +254,19 @@ export function CommunityCoursesManager({ communityId }: CommunityCoursesManager
     );
   }
 
+  // Show achievements manager if a course is selected
+  if (managingAchievements) {
+    return (
+      <div className="space-y-4">
+        <Button variant="ghost" onClick={() => setManagingAchievements(null)} className="gap-2">
+          <FileText className="h-4 w-4" />
+          Volver a Cursos
+        </Button>
+        <AchievementsManager courseId={managingAchievements.id} />
+      </div>
+    );
+  }
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -372,6 +387,14 @@ export function CommunityCoursesManager({ communityId }: CommunityCoursesManager
                         title="Gestionar módulos"
                       >
                         <FileText className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setManagingAchievements(course)}
+                        title="Gestionar logros"
+                      >
+                        <Trophy className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
