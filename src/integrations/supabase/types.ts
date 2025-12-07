@@ -239,6 +239,7 @@ export type Database = {
       }
       communities: {
         Row: {
+          banner_url: string | null
           category: string | null
           created_at: string
           created_by: string | null
@@ -256,6 +257,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          banner_url?: string | null
           category?: string | null
           created_at?: string
           created_by?: string | null
@@ -273,6 +275,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          banner_url?: string | null
           category?: string | null
           created_at?: string
           created_by?: string | null

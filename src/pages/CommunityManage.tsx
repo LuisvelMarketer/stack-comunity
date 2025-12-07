@@ -30,7 +30,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Users, Settings, BookOpen, Trash2, Save, Bell, DollarSign, Tag, X, Plus, Images } from "lucide-react";
+import { ArrowLeft, Users, Settings, BookOpen, Trash2, Save, Bell, DollarSign, Tag, X, Plus, Images, Upload, ImageIcon } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -64,6 +64,7 @@ interface Community {
   slug: string;
   description: string | null;
   image_url: string | null;
+  banner_url: string | null;
   member_count: number;
   price_monthly: number;
   is_paid: boolean;
@@ -97,6 +98,8 @@ export default function CommunityManage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
   
   const [editForm, setEditForm] = useState({
     name: "",
@@ -261,6 +264,51 @@ export default function CommunityManage() {
       .join("")
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  const handleImageUpload = async (file: File, type: 'logo' | 'banner') => {
+    if (!communityId || !user) return;
+
+    const setUploading = type === 'logo' ? setUploadingLogo : setUploadingBanner;
+    setUploading(true);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${communityId}/${type}-${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('community-gallery')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('community-gallery')
+        .getPublicUrl(fileName);
+
+      const updateField = type === 'logo' ? 'image_url' : 'banner_url';
+      const { error: updateError } = await supabase
+        .from('communities')
+        .update({ [updateField]: publicUrl })
+        .eq('id', communityId);
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: type === 'logo' ? "Logo actualizado" : "Banner actualizado",
+        description: "La imagen se ha subido correctamente.",
+      });
+
+      loadCommunityData();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo subir la imagen.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
   };
 
   if (loading) {
@@ -497,6 +545,92 @@ export default function CommunityManage() {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+
+                {/* Logo Upload */}
+                <div className="space-y-2">
+                  <Label>Logo de la comunidad</Label>
+                  <div className="flex items-center gap-4">
+                    {community.image_url ? (
+                      <img 
+                        src={community.image_url} 
+                        alt="Logo" 
+                        className="w-20 h-20 rounded-xl object-contain bg-muted border"
+                      />
+                    ) : (
+                      <div className="w-20 h-20 rounded-xl bg-muted border flex items-center justify-center">
+                        <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        id="logo-upload"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleImageUpload(file, 'logo');
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={uploadingLogo}
+                        onClick={() => document.getElementById('logo-upload')?.click()}
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        {uploadingLogo ? "Subiendo..." : "Subir logo"}
+                      </Button>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Recomendado: 200x200px, PNG o JPG
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Banner Upload */}
+                <div className="space-y-2">
+                  <Label>Banner de la comunidad</Label>
+                  <div className="space-y-3">
+                    {community.banner_url ? (
+                      <img 
+                        src={community.banner_url} 
+                        alt="Banner" 
+                        className="w-full h-32 rounded-xl object-cover border"
+                      />
+                    ) : (
+                      <div className="w-full h-32 rounded-xl bg-muted border flex items-center justify-center">
+                        <ImageIcon className="h-10 w-10 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        id="banner-upload"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleImageUpload(file, 'banner');
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={uploadingBanner}
+                        onClick={() => document.getElementById('banner-upload')?.click()}
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        {uploadingBanner ? "Subiendo..." : "Subir banner"}
+                      </Button>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Recomendado: 1200x300px, PNG o JPG
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
