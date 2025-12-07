@@ -30,7 +30,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Users, Settings, BookOpen, Trash2, Save, Bell, DollarSign, Tag, X, Plus } from "lucide-react";
+import { ArrowLeft, Users, Settings, BookOpen, Trash2, Save, Bell, DollarSign, Tag, X, Plus, Images } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -41,6 +41,7 @@ import {
 import { CommunityPricingManager } from "@/components/community/CommunityPricingManager";
 import { CommunityCoursesManager } from "@/components/community/CommunityCoursesManager";
 import { BroadcastNotification } from "@/components/community/BroadcastNotification";
+import { CommunityGalleryManager } from "@/components/community/CommunityGalleryManager";
 import { UserMenu } from "@/components/UserMenu";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -304,6 +305,10 @@ export default function CommunityManage() {
               <BookOpen className="h-4 w-4" />
               Cursos
             </TabsTrigger>
+            <TabsTrigger value="gallery" className="gap-2">
+              <Images className="h-4 w-4" />
+              Galería
+            </TabsTrigger>
             <TabsTrigger value="notifications" className="gap-2">
               <Bell className="h-4 w-4" />
               Notificaciones
@@ -410,6 +415,11 @@ export default function CommunityManage() {
           {/* Courses Tab */}
           <TabsContent value="courses">
             <CommunityCoursesManager communityId={communityId!} />
+          </TabsContent>
+
+          {/* Gallery Tab */}
+          <TabsContent value="gallery">
+            <CommunityGalleryManager communityId={communityId!} />
           </TabsContent>
 
           {/* Notifications Tab */}

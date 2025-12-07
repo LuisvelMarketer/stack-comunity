@@ -291,6 +291,44 @@ export type Database = {
         }
         Relationships: []
       }
+      community_gallery: {
+        Row: {
+          caption: string | null
+          community_id: string
+          created_at: string
+          id: string
+          image_url: string
+          order_index: number
+          uploaded_by: string
+        }
+        Insert: {
+          caption?: string | null
+          community_id: string
+          created_at?: string
+          id?: string
+          image_url: string
+          order_index?: number
+          uploaded_by: string
+        }
+        Update: {
+          caption?: string | null
+          community_id?: string
+          created_at?: string
+          id?: string
+          image_url?: string
+          order_index?: number
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_gallery_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       community_members: {
         Row: {
           community_id: string
