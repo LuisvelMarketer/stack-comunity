@@ -34,7 +34,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { BookOpen, Plus, Edit, Trash2, Eye, EyeOff } from "lucide-react";
+import { BookOpen, Plus, Edit, Trash2, Eye, EyeOff, FileText } from "lucide-react";
+import { CommunityModulesManager } from "./CommunityModulesManager";
 
 interface Course {
   id: string;
@@ -57,6 +58,7 @@ export function CommunityCoursesManager({ communityId }: CommunityCoursesManager
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [saving, setSaving] = useState(false);
+  const [managingModules, setManagingModules] = useState<Course | null>(null);
 
   const [form, setForm] = useState({
     title: "",
@@ -239,6 +241,17 @@ export function CommunityCoursesManager({ communityId }: CommunityCoursesManager
     );
   }
 
+  // Show modules manager if a course is selected
+  if (managingModules) {
+    return (
+      <CommunityModulesManager
+        courseId={managingModules.id}
+        courseTitle={managingModules.title}
+        onBack={() => setManagingModules(null)}
+      />
+    );
+  }
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -351,7 +364,15 @@ export function CommunityCoursesManager({ communityId }: CommunityCoursesManager
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setManagingModules(course)}
+                        title="Gestionar módulos"
+                      >
+                        <FileText className="h-4 w-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="icon"
@@ -368,12 +389,13 @@ export function CommunityCoursesManager({ communityId }: CommunityCoursesManager
                         variant="ghost"
                         size="icon"
                         onClick={() => openEditDialog(course)}
+                        title="Editar curso"
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="text-destructive">
+                          <Button variant="ghost" size="icon" className="text-destructive" title="Eliminar">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </AlertDialogTrigger>
