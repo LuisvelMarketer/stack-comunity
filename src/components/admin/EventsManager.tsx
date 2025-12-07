@@ -324,21 +324,21 @@ export function EventsManager() {
                     <div>
                       <label className="text-sm font-medium">Tipo de repetición</label>
                       <Select
-                        value={formData.recurrence_type}
-                        onValueChange={(value) => setFormData({ ...formData, recurrence_type: value })}
+                        value={formData.recurrence_type || "none"}
+                        onValueChange={(value) => setFormData({ ...formData, recurrence_type: value === "none" ? "" : value })}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Sin repetición" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Sin repetición</SelectItem>
+                          <SelectItem value="none">Sin repetición</SelectItem>
                           <SelectItem value="daily">Diario</SelectItem>
                           <SelectItem value="weekly">Semanal</SelectItem>
                           <SelectItem value="monthly">Mensual</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
-                    {formData.recurrence_type && (
+                    {formData.recurrence_type && formData.recurrence_type !== "none" && (
                       <div>
                         <label className="text-sm font-medium">Hasta</label>
                         <Input
