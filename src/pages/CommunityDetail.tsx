@@ -27,6 +27,7 @@ interface Community {
   description: string;
   slug: string;
   image_url: string;
+  banner_url?: string | null;
   member_count: number;
   is_member?: boolean;
   price_monthly?: number;
@@ -206,9 +207,23 @@ export default function CommunityDetail() {
         </div>
       </nav>
 
-      <div className="relative h-48 overflow-hidden bg-gradient-to-br from-primary/20 via-accent/10 to-secondary/20">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
+      <div className="relative h-48 overflow-hidden">
+        {community.banner_url ? (
+          <>
+            <img
+              src={community.banner_url}
+              alt={`${community.name} banner`}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
+          </>
+        ) : (
+          <>
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-accent/10 to-secondary/20" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
+          </>
+        )}
       </div>
 
       <main className="container mx-auto px-4 -mt-32 relative z-10">
