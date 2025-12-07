@@ -11,11 +11,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User, LogOut, Settings, LayoutDashboard, Shield, MessageCircle, Gift, Users, CreditCard } from "lucide-react";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { UserAvatar } from "@/components/UserAvatar";
 
 interface UserMenuProps {
   showAdminLink?: boolean;
@@ -24,9 +24,10 @@ interface UserMenuProps {
 export const UserMenu = ({ showAdminLink = false }: UserMenuProps) => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null }>({
+  const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null; level: number }>({
     full_name: null,
     avatar_url: null,
+    level: 1,
   });
   const [unreadMessages, setUnreadMessages] = useState(0);
 
@@ -109,7 +110,7 @@ export const UserMenu = ({ showAdminLink = false }: UserMenuProps) => {
     try {
       const { data } = await supabase
         .from("profiles")
-        .select("full_name, avatar_url")
+        .select("full_name, avatar_url, level")
         .eq("id", user.id)
         .single();
 
@@ -156,15 +157,13 @@ export const UserMenu = ({ showAdminLink = false }: UserMenuProps) => {
       <NotificationCenter />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-            <Avatar className="h-10 w-10">
-              {profile.avatar_url && (
-                <AvatarImage src={profile.avatar_url} alt="Avatar" />
-              )}
-              <AvatarFallback className="bg-primary text-primary-foreground">
-                {getInitials()}
-              </AvatarFallback>
-            </Avatar>
+          <Button variant="ghost" className="relative h-12 w-12 rounded-full p-0">
+            <UserAvatar
+              src={profile.avatar_url}
+              fallback={getInitials()}
+              level={profile.level}
+              size="md"
+            />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent 

@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Trophy } from "lucide-react";
+import { UserAvatar, getInitials } from "@/components/UserAvatar";
 
 interface LeaderboardUser {
   id: string;
@@ -38,16 +38,6 @@ export const Leaderboard = () => {
     }
   };
 
-  const getInitials = (name: string | null) => {
-    if (!name) return "U";
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   const getMedalColor = (index: number) => {
     if (index === 0) return "text-yellow-500";
     if (index === 1) return "text-gray-400";
@@ -80,27 +70,22 @@ export const Leaderboard = () => {
           <div className="space-y-3">
             {topUsers.map((user, index) => (
               <div key={user.id} className="flex items-center gap-3">
-                <div className={`font-bold ${getMedalColor(index)}`}>
+                <div className={`font-bold w-5 ${getMedalColor(index)}`}>
                   {index + 1}
                 </div>
-                <Avatar className="h-10 w-10">
-                  <AvatarImage src={user.avatar_url || ""} />
-                  <AvatarFallback className="bg-primary text-primary-foreground">
-                    {getInitials(user.full_name)}
-                  </AvatarFallback>
-                </Avatar>
+                <UserAvatar
+                  src={user.avatar_url}
+                  fallback={getInitials(user.full_name)}
+                  level={user.level}
+                  size="md"
+                />
                 <div className="flex-1 min-w-0">
                   <p className="font-medium truncate">
                     {user.full_name || "Usuario"}
                   </p>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="text-xs">
-                      Nivel {user.level}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground">
-                      {user.points} pts
-                    </span>
-                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {user.points} pts
+                  </span>
                 </div>
               </div>
             ))}

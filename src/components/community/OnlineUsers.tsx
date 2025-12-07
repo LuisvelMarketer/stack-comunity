@@ -1,14 +1,15 @@
 import { useNavigate } from "react-router-dom";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Circle } from "lucide-react";
+import { UserAvatar, getInitials } from "@/components/UserAvatar";
 
 interface OnlineUser {
   id: string;
   full_name: string | null;
   avatar_url: string | null;
   online_at: string;
+  level?: number;
 }
 
 interface OnlineUsersProps {
@@ -18,13 +19,6 @@ interface OnlineUsersProps {
 
 export const OnlineUsers = ({ users, count }: OnlineUsersProps) => {
   const navigate = useNavigate();
-
-  const getInitials = (name: string | null) => {
-    if (name) {
-      return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
-    }
-    return "U";
-  };
 
   return (
     <Card>
@@ -52,13 +46,13 @@ export const OnlineUsers = ({ users, count }: OnlineUsersProps) => {
                 title={user.full_name || "Usuario"}
               >
                 <div className="relative">
-                  <Avatar className="h-8 w-8">
-                    {user.avatar_url && <AvatarImage src={user.avatar_url} />}
-                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                      {getInitials(user.full_name)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-card" />
+                  <UserAvatar
+                    src={user.avatar_url}
+                    fallback={getInitials(user.full_name)}
+                    level={user.level || 1}
+                    size="sm"
+                  />
+                  <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-card z-10" />
                 </div>
                 <span className="text-sm truncate max-w-[100px]">
                   {user.full_name || "Usuario"}
