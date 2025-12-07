@@ -47,7 +47,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
 const CATEGORIES = [
-  { value: "", label: "Sin categoría" },
+  { value: "none", label: "Sin categoría" },
   { value: "desarrollo", label: "Desarrollo" },
   { value: "marketing", label: "Marketing" },
   { value: "diseno", label: "Diseño" },
@@ -160,7 +160,7 @@ export default function CommunityManage() {
       name: communityData.name,
       description: communityData.description || "",
       slug: communityData.slug,
-      category: communityData.category || "",
+      category: communityData.category || "none",
       tags: communityData.tags || [],
     });
 
@@ -202,7 +202,7 @@ export default function CommunityManage() {
         name: editForm.name.trim(),
         description: editForm.description.trim() || null,
         slug: editForm.slug.trim(),
-        category: editForm.category || null,
+        category: editForm.category === "none" ? null : editForm.category,
         tags: editForm.tags,
       })
       .eq("id", communityId);
