@@ -22,6 +22,7 @@ import Affiliate from "./pages/Affiliate";
 import CalendarPage from "./pages/CalendarPage";
 import MyCommunities from "./pages/MyCommunities";
 import CommunityManage from "./pages/CommunityManage";
+import Subscriptions from "./pages/Subscriptions";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -154,6 +155,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <CommunityManage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/subscriptions"
+              element={
+                <ProtectedRoute>
+                  <Subscriptions />
                 </ProtectedRoute>
               }
             />
