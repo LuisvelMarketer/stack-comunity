@@ -176,6 +176,7 @@ export type Database = {
         Row: {
           community_id: string
           id: string
+          is_owner: boolean | null
           joined_at: string
           role: string
           user_id: string
@@ -183,6 +184,7 @@ export type Database = {
         Insert: {
           community_id: string
           id?: string
+          is_owner?: boolean | null
           joined_at?: string
           role?: string
           user_id: string
@@ -190,6 +192,7 @@ export type Database = {
         Update: {
           community_id?: string
           id?: string
+          is_owner?: boolean | null
           joined_at?: string
           role?: string
           user_id?: string
@@ -1205,7 +1208,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "user"
+      app_role: "admin" | "user" | "owner"
       subscription_status:
         | "active"
         | "canceled"
@@ -1341,7 +1344,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user"],
+      app_role: ["admin", "user", "owner"],
       subscription_status: [
         "active",
         "canceled",

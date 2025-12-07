@@ -20,6 +20,8 @@ import Onboarding from "./pages/Onboarding";
 import Messages from "./pages/Messages";
 import Affiliate from "./pages/Affiliate";
 import CalendarPage from "./pages/CalendarPage";
+import MyCommunities from "./pages/MyCommunities";
+import CommunityManage from "./pages/CommunityManage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -128,6 +130,22 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <CalendarPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-communities"
+              element={
+                <ProtectedRoute>
+                  <MyCommunities />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/community/:communityId/manage"
+              element={
+                <ProtectedRoute>
+                  <CommunityManage />
                 </ProtectedRoute>
               }
             />

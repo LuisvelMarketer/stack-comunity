@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, LogOut, Settings, LayoutDashboard, Shield, MessageCircle, Gift } from "lucide-react";
+import { User, LogOut, Settings, LayoutDashboard, Shield, MessageCircle, Gift, Users } from "lucide-react";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -219,6 +219,14 @@ export const UserMenu = ({ showAdminLink = false }: UserMenuProps) => {
           >
             <Gift className="mr-2 h-4 w-4" />
             <span>Programa de Afiliados</span>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem 
+            onClick={() => navigate("/my-communities")}
+            className="cursor-pointer"
+          >
+            <Users className="mr-2 h-4 w-4" />
+            <span>Mis Comunidades</span>
           </DropdownMenuItem>
 
           {showAdminLink && (
