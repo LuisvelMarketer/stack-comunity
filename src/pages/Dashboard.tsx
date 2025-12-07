@@ -11,6 +11,7 @@ import { MyCommunities } from "@/components/social/MyCommunities";
 import { UserProgress } from "@/components/social/UserProgress";
 import { ContinueLearning } from "@/components/social/ContinueLearning";
 import { ActiveCommunity } from "@/components/social/ActiveCommunity";
+import { SuggestedCommunities } from "@/components/social/SuggestedCommunities";
 import { UpcomingLives } from "@/components/social/UpcomingLives";
 import { Home, Users, BookOpen, Calendar, Search } from "lucide-react";
 import { NotificationCenter } from "@/components/NotificationCenter";
@@ -116,6 +117,7 @@ const Dashboard = () => {
           {/* Right Sidebar - 3 columns */}
           <div className="lg:col-span-3 space-y-4">
             <ActiveCommunity />
+            <SuggestedCommunities />
             <UpcomingLives />
             <UpcomingEvents />
             <ContinueLearning />
