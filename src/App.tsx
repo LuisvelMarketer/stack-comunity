@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Course from "./pages/Course";
+import Classroom from "./pages/Classroom";
 import Admin from "./pages/Admin";
 import Profile from "./pages/Profile";
 import UserProfile from "./pages/UserProfile";
@@ -58,12 +59,20 @@ const App = () => (
               path="/course/:courseId"
               element={
                 <ProtectedRoute>
-                  <Course />
+                  <Classroom />
                 </ProtectedRoute>
               }
             />
             <Route
               path="/courses/:courseId"
+              element={
+                <ProtectedRoute>
+                  <Classroom />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/course/:courseId/legacy"
               element={
                 <ProtectedRoute>
                   <Course />
