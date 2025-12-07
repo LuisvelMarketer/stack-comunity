@@ -7,7 +7,7 @@ import { UserMenu } from "@/components/UserMenu";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Users, BookOpen, MessageSquare, ArrowLeft, Circle, Video } from "lucide-react";
+import { Calendar, Users, BookOpen, MessageSquare, ArrowLeft, Circle, Video, Trophy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { EventsList } from "@/components/community/EventsList";
 import { MembersList } from "@/components/community/MembersList";
@@ -15,6 +15,7 @@ import { OnlineUsers } from "@/components/community/OnlineUsers";
 import { CommunityChat } from "@/components/community/CommunityChat";
 import { LiveSessions } from "@/components/community/LiveSessions";
 import { CommunityCourses } from "@/components/community/CommunityCourses";
+import { CommunityAchievementsLeaderboard } from "@/components/community/CommunityAchievementsLeaderboard";
 
 interface Community {
   id: string;
@@ -236,7 +237,7 @@ export default function CommunityDetail() {
         </div>
 
         <Tabs defaultValue="lives" className="mb-8">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="lives" className="flex items-center gap-2">
               <Video className="h-4 w-4" />
               Lives
@@ -248,6 +249,10 @@ export default function CommunityDetail() {
             <TabsTrigger value="courses" className="flex items-center gap-2">
               <BookOpen className="h-4 w-4" />
               Cursos
+            </TabsTrigger>
+            <TabsTrigger value="achievements" className="flex items-center gap-2">
+              <Trophy className="h-4 w-4" />
+              Logros
             </TabsTrigger>
             <TabsTrigger value="members" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
@@ -278,6 +283,10 @@ export default function CommunityDetail() {
               communityId={community.id} 
               isMember={!!community.is_member} 
             />
+          </TabsContent>
+
+          <TabsContent value="achievements" className="mt-6">
+            <CommunityAchievementsLeaderboard communityId={community.id} />
           </TabsContent>
 
           <TabsContent value="members" className="mt-6">
