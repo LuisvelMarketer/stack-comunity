@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useOnlinePresence } from "@/hooks/useOnlinePresence";
+import { useCommunitySubscription } from "@/hooks/useCommunitySubscription";
 import { UserMenu } from "@/components/UserMenu";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Users, BookOpen, MessageSquare, ArrowLeft, Circle, Video, Trophy } from "lucide-react";
+import { Calendar, Users, BookOpen, MessageSquare, ArrowLeft, Circle, Video, Trophy, Crown, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { EventsList } from "@/components/community/EventsList";
 import { MembersList } from "@/components/community/MembersList";
@@ -16,6 +17,7 @@ import { CommunityChat } from "@/components/community/CommunityChat";
 import { LiveSessions } from "@/components/community/LiveSessions";
 import { CommunityCourses } from "@/components/community/CommunityCourses";
 import { CommunityAchievementsLeaderboard } from "@/components/community/CommunityAchievementsLeaderboard";
+import { toast as sonnerToast } from "sonner";
 
 interface Community {
   id: string;
@@ -25,17 +27,35 @@ interface Community {
   image_url: string;
   member_count: number;
   is_member?: boolean;
+  price_monthly?: number;
+  is_paid?: boolean;
 }
 
 export default function CommunityDetail() {
   const { slug } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [community, setCommunity] = useState<Community | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [subscribing, setSubscribing] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { onlineUsers, onlineCount } = useOnlinePresence(community?.id);
+  const { isSubscribed, isFree, loading: subLoading, subscribe, checkSubscription } = useCommunitySubscription(community?.id);
+
+  // Handle subscription return
+  useEffect(() => {
+    const subscription = searchParams.get('subscription');
+    if (subscription === 'success') {
+      sonnerToast.success('¡Suscripción activada! Ya tienes acceso completo a la comunidad.');
+      checkSubscription();
+      setSearchParams({});
+    } else if (subscription === 'cancelled') {
+      sonnerToast.info('Proceso de suscripción cancelado.');
+      setSearchParams({});
+    }
+  }, [searchParams, setSearchParams, checkSubscription]);
 
   useEffect(() => {
     loadCommunity();
@@ -223,6 +243,12 @@ export default function CommunityDetail() {
                   <Users className="h-3 w-3" />
                   {community.member_count} miembros
                 </Badge>
+                {community.is_paid && community.price_monthly && community.price_monthly > 0 && (
+                  <Badge className="flex items-center gap-1 bg-gradient-to-r from-amber-500 to-orange-500">
+                    <Crown className="h-3 w-3" />
+                    ${community.price_monthly}/mes
+                  </Badge>
+                )}
                 {onlineCount > 0 && (
                   <Badge variant="outline" className="flex items-center gap-1 text-green-600 border-green-600/30">
                     <Circle className="h-2 w-2 fill-green-500 text-green-500" />
@@ -231,11 +257,42 @@ export default function CommunityDetail() {
                 )}
               </div>
             </div>
-            <div>
+            <div className="flex flex-col gap-2">
               {community.is_member ? (
                 <Button variant="outline" onClick={handleLeaveCommunity}>
                   Salir de la Comunidad
                 </Button>
+              ) : community.is_paid && !isSubscribed ? (
+                <div className="text-center">
+                  <Button 
+                    onClick={async () => {
+                      if (!user) {
+                        navigate("/auth");
+                        return;
+                      }
+                      setSubscribing(true);
+                      try {
+                        await subscribe();
+                      } catch (error) {
+                        console.error(error);
+                      } finally {
+                        setSubscribing(false);
+                      }
+                    }}
+                    disabled={subscribing || subLoading}
+                    className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+                  >
+                    {subscribing ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Crown className="mr-2 h-4 w-4" />
+                    )}
+                    Suscribirse por ${community.price_monthly}/mes
+                  </Button>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Acceso completo a todo el contenido
+                  </p>
+                </div>
               ) : (
                 <Button onClick={handleJoinCommunity}>
                   Unirse a la Comunidad

@@ -244,9 +244,13 @@ export type Database = {
           description: string | null
           id: string
           image_url: string | null
+          is_paid: boolean | null
           member_count: number
           name: string
+          price_monthly: number | null
           slug: string
+          stripe_price_id: string | null
+          stripe_product_id: string | null
           updated_at: string
         }
         Insert: {
@@ -255,9 +259,13 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          is_paid?: boolean | null
           member_count?: number
           name: string
+          price_monthly?: number | null
           slug: string
+          stripe_price_id?: string | null
+          stripe_product_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -266,9 +274,13 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          is_paid?: boolean | null
           member_count?: number
           name?: string
+          price_monthly?: number | null
           slug?: string
+          stripe_price_id?: string | null
+          stripe_product_id?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -364,6 +376,56 @@ export type Database = {
             columns: ["reply_to_id"]
             isOneToOne: false
             referencedRelation: "community_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean | null
+          community_id: string
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cancel_at_period_end?: boolean | null
+          community_id: string
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cancel_at_period_end?: boolean | null
+          community_id?: string
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_subscriptions_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
             referencedColumns: ["id"]
           },
         ]
