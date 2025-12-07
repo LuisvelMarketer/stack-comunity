@@ -340,6 +340,7 @@ export type Database = {
       }
       courses: {
         Row: {
+          community_id: string | null
           created_at: string
           description: string | null
           id: string
@@ -350,6 +351,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          community_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -360,6 +362,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          community_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -369,7 +372,15 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "courses_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       direct_messages: {
         Row: {

@@ -30,7 +30,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Users, Settings, Calendar, Video, Trash2, Save } from "lucide-react";
+import { ArrowLeft, Users, Settings, BookOpen, Trash2, Save } from "lucide-react";
+import { CommunityCoursesManager } from "@/components/community/CommunityCoursesManager";
 import { UserMenu } from "@/components/UserMenu";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -266,6 +267,10 @@ export default function CommunityManage() {
               <Users className="h-4 w-4" />
               Miembros ({members.length})
             </TabsTrigger>
+            <TabsTrigger value="courses" className="gap-2">
+              <BookOpen className="h-4 w-4" />
+              Cursos
+            </TabsTrigger>
             <TabsTrigger value="settings" className="gap-2">
               <Settings className="h-4 w-4" />
               Configuración
@@ -359,6 +364,11 @@ export default function CommunityManage() {
                 </Table>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Courses Tab */}
+          <TabsContent value="courses">
+            <CommunityCoursesManager communityId={communityId!} />
           </TabsContent>
 
           {/* Settings Tab */}
