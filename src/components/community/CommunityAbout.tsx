@@ -5,9 +5,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { 
-  Users, Calendar, BookOpen, Trophy, MessageCircle, 
+  Users, Calendar, BookOpen, MessageCircle, 
   Video, Star, Shield, Info, FileText
 } from "lucide-react";
+import { CreatorBadge } from "@/components/CreatorBadge";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -168,10 +169,7 @@ export function CommunityAbout({ community }: CommunityAboutProps) {
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
                   <h3 className="font-semibold text-lg">{owner.full_name || "Usuario"}</h3>
-                  <Badge variant="outline" className="text-xs">
-                    <Shield className="h-3 w-3 mr-1" />
-                    Owner
-                  </Badge>
+                  <CreatorBadge />
                 </div>
                 {owner.bio && (
                   <p className="text-muted-foreground text-sm line-clamp-3">{owner.bio}</p>
