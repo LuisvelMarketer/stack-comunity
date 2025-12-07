@@ -6,7 +6,7 @@ import { UserMenu } from "@/components/UserMenu";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Plus } from "lucide-react";
+import { Users, Plus, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Community {
@@ -115,6 +115,16 @@ export default function Communities() {
       </nav>
 
       <main className="container mx-auto px-4 py-8">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate("/dashboard")}
+          className="mb-6"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Volver al Dashboard
+        </Button>
+
         <div className="mb-8">
           <h2 className="text-3xl font-bold mb-2">Comunidades</h2>
           <p className="text-muted-foreground">
