@@ -50,6 +50,44 @@ export type Database = {
         }
         Relationships: []
       }
+      broadcast_notifications: {
+        Row: {
+          community_id: string
+          content: string
+          created_at: string
+          id: string
+          recipients_count: number
+          sender_id: string
+          title: string
+        }
+        Insert: {
+          community_id: string
+          content: string
+          created_at?: string
+          id?: string
+          recipients_count?: number
+          sender_id: string
+          title: string
+        }
+        Update: {
+          community_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          recipients_count?: number
+          sender_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "broadcast_notifications_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       certificates: {
         Row: {
           certificate_number: string
