@@ -18,6 +18,7 @@ import { PremiumBadge } from "@/components/PremiumBadge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { getEmbedUrl } from "@/lib/video-utils";
+import { ModuleAttachmentsView } from "@/components/ModuleAttachmentsView";
 
 interface Module {
   id: string;
@@ -433,6 +434,10 @@ export default function Course() {
                             <MarkdownRenderer content={selectedModule.content} />
                           </div>
                         )}
+
+                        {/* Module Attachments */}
+                        <ModuleAttachmentsView moduleId={selectedModule.id} />
+
                         {!selectedModule.video_url && !selectedModule.content && (
                           <div className="text-center py-12 text-muted-foreground">
                             <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />

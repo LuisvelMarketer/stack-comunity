@@ -26,7 +26,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, FileText, Plus, Edit, Trash2, GripVertical, Video } from "lucide-react";
+import { ArrowLeft, FileText, Plus, Edit, Trash2, GripVertical, Video, Paperclip } from "lucide-react";
+import { ModuleAttachmentsManager } from "./ModuleAttachmentsManager";
 
 interface Module {
   id: string;
@@ -393,6 +394,10 @@ export function CommunityModulesManager({ courseId, courseTitle, onBack }: Commu
                   )}
                 </div>
                 <div className="flex items-center gap-1">
+                  <ModuleAttachmentsManager
+                    moduleId={module.id}
+                    moduleName={module.title}
+                  />
                   <Button
                     variant="ghost"
                     size="icon"
