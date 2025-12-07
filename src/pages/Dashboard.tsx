@@ -118,10 +118,10 @@ const Dashboard = () => {
           <div className="lg:col-span-3 space-y-4">
             <ActiveCommunity />
             <SuggestedCommunities />
+            <Leaderboard />
             <UpcomingLives />
             <UpcomingEvents />
             <ContinueLearning />
-            <Leaderboard />
           </div>
         </div>
       </main>
