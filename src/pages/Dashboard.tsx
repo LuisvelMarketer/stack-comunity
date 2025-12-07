@@ -10,7 +10,7 @@ import { UpcomingEvents } from "@/components/social/UpcomingEvents";
 import { MyCommunities } from "@/components/social/MyCommunities";
 import { UserProgress } from "@/components/social/UserProgress";
 import { ContinueLearning } from "@/components/social/ContinueLearning";
-import { SubscriptionCard } from "@/components/SubscriptionCard";
+import { ActiveCommunity } from "@/components/social/ActiveCommunity";
 import { UpcomingLives } from "@/components/social/UpcomingLives";
 import { Home, Users, BookOpen, Calendar, Search } from "lucide-react";
 import { NotificationCenter } from "@/components/NotificationCenter";
@@ -115,7 +115,7 @@ const Dashboard = () => {
 
           {/* Right Sidebar - 3 columns */}
           <div className="lg:col-span-3 space-y-4">
-            <SubscriptionCard />
+            <ActiveCommunity />
             <UpcomingLives />
             <UpcomingEvents />
             <ContinueLearning />
