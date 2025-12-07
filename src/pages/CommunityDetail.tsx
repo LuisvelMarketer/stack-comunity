@@ -8,7 +8,7 @@ import { UserMenu } from "@/components/UserMenu";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Users, BookOpen, MessageSquare, ArrowLeft, Circle, Video, Trophy, Crown, Loader2, Info } from "lucide-react";
+import { Calendar, Users, BookOpen, MessageSquare, ArrowLeft, Circle, Video, Trophy, Crown, Loader2, Info, Images } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { EventsList } from "@/components/community/EventsList";
 import { MembersList } from "@/components/community/MembersList";
@@ -18,6 +18,7 @@ import { LiveSessions } from "@/components/community/LiveSessions";
 import { CommunityCourses } from "@/components/community/CommunityCourses";
 import { CommunityAchievementsLeaderboard } from "@/components/community/CommunityAchievementsLeaderboard";
 import { CommunityAbout } from "@/components/community/CommunityAbout";
+import { CommunityGallery } from "@/components/community/CommunityGallery";
 import { toast as sonnerToast } from "sonner";
 
 interface Community {
@@ -304,10 +305,14 @@ export default function CommunityDetail() {
         </div>
 
         <Tabs defaultValue="about" className="mb-8">
-          <TabsList className="grid w-full grid-cols-7">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="about" className="flex items-center gap-2">
               <Info className="h-4 w-4" />
               Acerca de
+            </TabsTrigger>
+            <TabsTrigger value="gallery" className="flex items-center gap-2">
+              <Images className="h-4 w-4" />
+              Galería
             </TabsTrigger>
             <TabsTrigger value="lives" className="flex items-center gap-2">
               <Video className="h-4 w-4" />
@@ -337,6 +342,10 @@ export default function CommunityDetail() {
 
           <TabsContent value="about" className="mt-6">
             <CommunityAbout community={community} />
+          </TabsContent>
+
+          <TabsContent value="gallery" className="mt-6">
+            <CommunityGallery communityId={community.id} />
           </TabsContent>
 
           <TabsContent value="lives" className="mt-6">
