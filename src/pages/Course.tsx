@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, CheckCircle2, Circle, Play, FileText, MessageCircle, Lock, Crown } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Circle, Play, FileText, MessageCircle, Lock, Crown, Users } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { Quiz } from "@/components/Quiz";
@@ -16,6 +16,8 @@ import { CourseCertificate } from "@/components/CourseCertificate";
 import { LockedContent } from "@/components/LockedContent";
 import { PremiumBadge } from "@/components/PremiumBadge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { getEmbedUrl } from "@/lib/video-utils";
 
 interface Module {
   id: string;
@@ -33,6 +35,13 @@ interface Course {
   title: string;
   description: string;
   thumbnail_url: string | null;
+  community_id: string | null;
+}
+
+interface Community {
+  id: string;
+  name: string;
+  slug: string;
 }
 
 export default function Course() {
@@ -42,13 +51,22 @@ export default function Course() {
   const { toast } = useToast();
   const { isPremium, loading: subscriptionLoading } = useSubscription();
   const [course, setCourse] = useState<Course | null>(null);
+  const [community, setCommunity] = useState<Community | null>(null);
+  const [isCommunityMember, setIsCommunityMember] = useState(false);
   const [modules, setModules] = useState<Module[]>([]);
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [loading, setLoading] = useState(true);
   const [progressPercent, setProgressPercent] = useState(0);
 
-  // Check if current module is accessible (free or user has premium)
+  // Check if current module is accessible
+  // For community courses: user must be a member
+  // For global courses: free modules or premium subscription
   const isModuleAccessible = (module: Module) => {
+    if (course?.community_id) {
+      // Community course - all modules accessible to members
+      return isCommunityMember;
+    }
+    // Global course - check free/premium
     return module.is_free || isPremium;
   };
 
@@ -72,12 +90,34 @@ export default function Course() {
       if (courseError) throw courseError;
       setCourse(courseData);
 
+      // If community course, fetch community info and check membership
+      if (courseData.community_id && user) {
+        const { data: communityData } = await supabase
+          .from("communities")
+          .select("id, name, slug")
+          .eq("id", courseData.community_id)
+          .single();
+
+        setCommunity(communityData);
+
+        const { data: membershipData } = await supabase
+          .from("community_members")
+          .select("id")
+          .eq("community_id", courseData.community_id)
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        setIsCommunityMember(!!membershipData);
+      }
+
       // Fetch modules
       const { data: modulesData, error: modulesError } = await supabase
         .from("course_modules")
         .select("*")
         .eq("course_id", courseId)
         .order("order_index");
+
+      if (modulesError) throw modulesError;
 
       if (modulesError) throw modulesError;
 
@@ -204,17 +244,30 @@ export default function Course() {
     );
   }
 
+  // Handle back navigation based on course type
+  const handleBack = () => {
+    if (community) {
+      navigate(`/communities/${community.slug}`);
+    } else {
+      navigate("/dashboard");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/dashboard")}
-          className="mb-6"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Volver
-        </Button>
+        <div className="flex items-center gap-4 mb-6">
+          <Button variant="ghost" onClick={handleBack}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Volver
+          </Button>
+          {community && (
+            <Badge variant="secondary" className="gap-1">
+              <Users className="h-3 w-3" />
+              {community.name}
+            </Badge>
+          )}
+        </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Course Info & Modules List */}
@@ -365,11 +418,12 @@ export default function Course() {
 
                       <TabsContent value="content" className="space-y-6 mt-6">
                         {selectedModule.video_url && (
-                          <div className="aspect-video bg-muted rounded-lg overflow-hidden shadow-elegant">
+                          <div className="aspect-video bg-black rounded-lg overflow-hidden shadow-elegant">
                             <iframe
-                              src={selectedModule.video_url}
+                              src={getEmbedUrl(selectedModule.video_url)}
                               className="w-full h-full"
                               allowFullScreen
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                               title={selectedModule.title}
                             />
                           </div>
