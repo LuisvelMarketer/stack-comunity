@@ -30,7 +30,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Users, Settings, BookOpen, Trash2, Save, Bell } from "lucide-react";
+import { ArrowLeft, Users, Settings, BookOpen, Trash2, Save, Bell, DollarSign } from "lucide-react";
+import { CommunityPricingManager } from "@/components/community/CommunityPricingManager";
 import { CommunityCoursesManager } from "@/components/community/CommunityCoursesManager";
 import { BroadcastNotification } from "@/components/community/BroadcastNotification";
 import { UserMenu } from "@/components/UserMenu";
@@ -44,6 +45,9 @@ interface Community {
   description: string | null;
   image_url: string | null;
   member_count: number;
+  price_monthly: number;
+  is_paid: boolean;
+  stripe_price_id: string | null;
 }
 
 interface Member {
@@ -276,6 +280,10 @@ export default function CommunityManage() {
               <Bell className="h-4 w-4" />
               Notificaciones
             </TabsTrigger>
+            <TabsTrigger value="pricing" className="gap-2">
+              <DollarSign className="h-4 w-4" />
+              Membresía
+            </TabsTrigger>
             <TabsTrigger value="settings" className="gap-2">
               <Settings className="h-4 w-4" />
               Configuración
@@ -381,6 +389,17 @@ export default function CommunityManage() {
             <BroadcastNotification 
               communityId={communityId!} 
               communityName={community.name}
+            />
+          </TabsContent>
+
+          {/* Pricing Tab */}
+          <TabsContent value="pricing">
+            <CommunityPricingManager
+              communityId={communityId!}
+              currentPrice={community.price_monthly || 0}
+              isPaid={community.is_paid || false}
+              stripePriceId={community.stripe_price_id}
+              onUpdate={loadCommunityData}
             />
           </TabsContent>
 
