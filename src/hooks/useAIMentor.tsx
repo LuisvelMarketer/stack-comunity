@@ -29,14 +29,15 @@ interface ProgressAnalysis {
 }
 
 export const useAIMentor = () => {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [suggestions, setSuggestions] = useState<AISuggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<ProgressAnalysis | null>(null);
 
   const fetchSuggestions = useCallback(async () => {
-    if (!user) return;
+    // Only fetch if we have both user and a valid session
+    if (!user || !session?.access_token) return;
 
     setLoading(true);
     try {
@@ -51,10 +52,10 @@ export const useAIMentor = () => {
     } finally {
       setLoading(false);
     }
-  }, [user]);
-
+  }, [user, session]);
   const analyzeProgress = useCallback(async (courseId?: string, moduleId?: string) => {
-    if (!user) return null;
+    // Only analyze if we have both user and a valid session
+    if (!user || !session?.access_token) return null;
 
     setAnalyzing(true);
     try {
@@ -97,10 +98,10 @@ export const useAIMentor = () => {
     } finally {
       setAnalyzing(false);
     }
-  }, [user]);
+  }, [user, session]);
 
   const dismissSuggestion = useCallback(async (suggestionId: string) => {
-    if (!user) return;
+    if (!user || !session?.access_token) return;
 
     try {
       await supabase.functions.invoke('ai-mentor', {
@@ -111,7 +112,7 @@ export const useAIMentor = () => {
     } catch (error) {
       console.error('Error dismissing suggestion:', error);
     }
-  }, [user]);
+  }, [user, session]);
 
   const logActivity = useCallback(async (
     activityType: string, 
@@ -119,7 +120,7 @@ export const useAIMentor = () => {
     moduleId?: string,
     metadata?: Record<string, any>
   ) => {
-    if (!user) return;
+    if (!user || !session?.access_token) return;
 
     try {
       await supabase.functions.invoke('ai-mentor', {
@@ -135,21 +136,23 @@ export const useAIMentor = () => {
     } catch (error) {
       console.error('Error logging activity:', error);
     }
-  }, [user]);
+  }, [user, session]);
 
   useEffect(() => {
-    fetchSuggestions();
-  }, [fetchSuggestions]);
+    if (session?.access_token) {
+      fetchSuggestions();
+    }
+  }, [fetchSuggestions, session]);
 
   // Auto-analyze on mount if user has been inactive
   useEffect(() => {
-    if (user && suggestions.length === 0) {
+    if (user && session?.access_token && suggestions.length === 0) {
       const timer = setTimeout(() => {
         analyzeProgress();
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [user, suggestions.length, analyzeProgress]);
+  }, [user, session, suggestions.length, analyzeProgress]);
 
   return {
     suggestions,
