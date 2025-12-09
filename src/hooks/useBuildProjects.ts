@@ -61,6 +61,7 @@ export interface ProjectFeedback {
   status: 'open' | 'in_progress' | 'resolved' | 'wont_fix';
   priority: 'low' | 'medium' | 'high' | 'critical';
   parent_id: string | null;
+  screenshot_url: string | null;
   created_at: string;
   profiles?: {
     id: string;
@@ -459,6 +460,7 @@ export function useProjectFeedback(projectId: string) {
     content: string; 
     category?: string;
     priority?: string;
+    screenshot_url?: string;
     feedbackType?: ProjectFeedback['feedback_type'];
     updateId?: string;
   }) => {
@@ -479,6 +481,7 @@ export function useProjectFeedback(projectId: string) {
           category: data.category || 'general',
           priority: data.priority || 'medium',
           status: 'open',
+          screenshot_url: data.screenshot_url || null,
         })
         .select()
         .single();

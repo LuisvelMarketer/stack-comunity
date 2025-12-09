@@ -1504,6 +1504,7 @@ export type Database = {
           parent_id: string | null
           priority: string | null
           project_id: string
+          screenshot_url: string | null
           status: string | null
           update_id: string | null
           user_id: string
@@ -1517,6 +1518,7 @@ export type Database = {
           parent_id?: string | null
           priority?: string | null
           project_id: string
+          screenshot_url?: string | null
           status?: string | null
           update_id?: string | null
           user_id: string
@@ -1530,6 +1532,7 @@ export type Database = {
           parent_id?: string | null
           priority?: string | null
           project_id?: string
+          screenshot_url?: string | null
           status?: string | null
           update_id?: string | null
           user_id?: string

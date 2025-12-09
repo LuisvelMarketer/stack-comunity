@@ -10,6 +10,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { 
   Bug, 
   Lightbulb, 
@@ -19,7 +24,9 @@ import {
   CheckCircle2,
   Clock,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  ImageIcon,
+  ZoomIn
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -56,6 +63,7 @@ interface FeedbackTicketProps {
     priority: string;
     created_at: string;
     user_id: string;
+    screenshot_url?: string | null;
     profiles?: {
       id: string;
       full_name: string | null;
@@ -126,6 +134,31 @@ export function FeedbackTicket({ feedback, isOwner, onStatusChange }: FeedbackTi
 
             {/* Content */}
             <p className="text-sm whitespace-pre-wrap">{feedback.content}</p>
+
+            {/* Screenshot */}
+            {feedback.screenshot_url && (
+              <Dialog>
+                <DialogTrigger asChild>
+                  <div className="mt-3 relative group cursor-pointer">
+                    <img 
+                      src={feedback.screenshot_url} 
+                      alt="Screenshot del bug"
+                      className="max-h-40 rounded-lg border object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                      <ZoomIn className="h-6 w-6 text-white" />
+                    </div>
+                  </div>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl p-2">
+                  <img 
+                    src={feedback.screenshot_url} 
+                    alt="Screenshot del bug"
+                    className="w-full h-auto rounded-lg"
+                  />
+                </DialogContent>
+              </Dialog>
+            )}
 
             {/* Footer */}
             <div className="flex items-center justify-between mt-3">
