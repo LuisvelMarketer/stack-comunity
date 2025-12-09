@@ -1,16 +1,28 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Bot, Send, X, Loader2, Sparkles, MessageCircle } from 'lucide-react';
+import { Bot, Send, X, Loader2, Sparkles, MessageCircle, Plus, History, Trash2, ChevronLeft } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { formatDistanceToNow } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
+}
+
+interface Conversation {
+  id: string;
+  title: string;
+  course_id: string | null;
+  module_id: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 interface AIMentorChatProps {
@@ -32,14 +44,136 @@ export const AIMentorChat: React.FC<AIMentorChatProps> = ({
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Load conversations list
+  const loadConversations = useCallback(async () => {
+    if (!user) return;
+    
+    setLoadingHistory(true);
+    try {
+      const { data, error } = await supabase
+        .from('ai_mentor_conversations')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('updated_at', { ascending: false })
+        .limit(20);
+
+      if (error) throw error;
+      setConversations(data || []);
+    } catch (error) {
+      console.error('Error loading conversations:', error);
+    } finally {
+      setLoadingHistory(false);
+    }
+  }, [user]);
+
+  // Load messages for a conversation
+  const loadConversation = useCallback(async (conversationId: string) => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('ai_mentor_messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+
+      setMessages(data?.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })) || []);
+      setCurrentConversationId(conversationId);
+      setShowHistory(false);
+    } catch (error) {
+      console.error('Error loading conversation:', error);
+    }
+  }, [user]);
+
+  // Create new conversation
+  const createConversation = useCallback(async (firstMessage: string): Promise<string | null> => {
+    if (!user) return null;
+
+    try {
+      const title = firstMessage.substring(0, 50) + (firstMessage.length > 50 ? '...' : '');
+      
+      const { data, error } = await supabase
+        .from('ai_mentor_conversations')
+        .insert({
+          user_id: user.id,
+          title,
+          course_id: courseId || null,
+          module_id: moduleId || null
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data.id;
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+      return null;
+    }
+  }, [user, courseId, moduleId]);
+
+  // Save message to database
+  const saveMessage = useCallback(async (conversationId: string, role: 'user' | 'assistant', content: string) => {
+    try {
+      await supabase
+        .from('ai_mentor_messages')
+        .insert({
+          conversation_id: conversationId,
+          role,
+          content
+        });
+
+      // Update conversation timestamp
+      await supabase
+        .from('ai_mentor_conversations')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', conversationId);
+    } catch (error) {
+      console.error('Error saving message:', error);
+    }
+  }, []);
+
+  // Delete conversation
+  const deleteConversation = async (conversationId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    try {
+      await supabase
+        .from('ai_mentor_conversations')
+        .delete()
+        .eq('id', conversationId);
+
+      setConversations(prev => prev.filter(c => c.id !== conversationId));
+      
+      if (currentConversationId === conversationId) {
+        startNewChat();
+      }
+    } catch (error) {
+      console.error('Error deleting conversation:', error);
+    }
+  };
+
+  // Start new chat
+  const startNewChat = () => {
+    setMessages([]);
+    setCurrentConversationId(null);
+    setShowHistory(false);
+  };
 
   useEffect(() => {
     if (isOpen && inputRef.current) {
       inputRef.current.focus();
+      loadConversations();
     }
-  }, [isOpen]);
+  }, [isOpen, loadConversations]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -48,16 +182,27 @@ export const AIMentorChat: React.FC<AIMentorChatProps> = ({
   }, [messages]);
 
   const sendMessage = async () => {
-    if (!input.trim() || isLoading) return;
+    if (!input.trim() || isLoading || !user) return;
 
     const userMessage: Message = { role: 'user', content: input.trim() };
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
 
+    let conversationId = currentConversationId;
     let assistantContent = '';
 
     try {
+      // Create conversation if needed
+      if (!conversationId) {
+        conversationId = await createConversation(userMessage.content);
+        if (!conversationId) throw new Error('Failed to create conversation');
+        setCurrentConversationId(conversationId);
+      }
+
+      // Save user message
+      await saveMessage(conversationId, 'user', userMessage.content);
+
       const response = await fetch(CHAT_URL, {
         method: 'POST',
         headers: {
@@ -66,7 +211,7 @@ export const AIMentorChat: React.FC<AIMentorChatProps> = ({
         },
         body: JSON.stringify({
           messages: [...messages, userMessage].map(m => ({ role: m.role, content: m.content })),
-          user_id: user?.id,
+          user_id: user.id,
           course_id: courseId,
           module_id: moduleId
         }),
@@ -85,7 +230,6 @@ export const AIMentorChat: React.FC<AIMentorChatProps> = ({
       const decoder = new TextDecoder();
       let textBuffer = '';
 
-      // Add empty assistant message that we'll update
       setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
 
       while (true) {
@@ -126,6 +270,12 @@ export const AIMentorChat: React.FC<AIMentorChatProps> = ({
           }
         }
       }
+
+      // Save assistant message
+      if (conversationId && assistantContent) {
+        await saveMessage(conversationId, 'assistant', assistantContent);
+      }
+
     } catch (error) {
       console.error('Chat error:', error);
       setMessages(prev => [
@@ -150,110 +300,177 @@ export const AIMentorChat: React.FC<AIMentorChatProps> = ({
   if (!isOpen) return null;
 
   return (
-    <Card className="fixed bottom-4 right-4 w-[400px] h-[600px] shadow-2xl z-50 flex flex-col border-primary/20">
+    <Card className="fixed bottom-4 right-4 w-[420px] h-[600px] shadow-2xl z-50 flex flex-col border-primary/20">
       <CardHeader className="flex-shrink-0 flex flex-row items-center justify-between py-3 px-4 bg-gradient-to-r from-primary/10 to-primary/5 border-b">
         <div className="flex items-center gap-2">
-          <div className="p-1.5 bg-primary rounded-lg">
-            <Sparkles className="h-4 w-4 text-primary-foreground" />
-          </div>
-          <CardTitle className="text-base font-semibold">AI Mentor</CardTitle>
+          {showHistory ? (
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowHistory(false)}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+          ) : (
+            <div className="p-1.5 bg-primary rounded-lg">
+              <Sparkles className="h-4 w-4 text-primary-foreground" />
+            </div>
+          )}
+          <CardTitle className="text-base font-semibold">
+            {showHistory ? 'Historial' : 'AI Mentor'}
+          </CardTitle>
         </div>
-        <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
-          <X className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-1">
+          {!showHistory && (
+            <>
+              <Button variant="ghost" size="icon" onClick={startNewChat} className="h-8 w-8" title="Nueva conversación">
+                <Plus className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={() => { setShowHistory(true); loadConversations(); }} className="h-8 w-8" title="Historial">
+                <History className="h-4 w-4" />
+              </Button>
+            </>
+          )}
+          <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
       </CardHeader>
 
       <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
-        <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-          {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-4">
-              <Bot className="h-12 w-12 mb-4 text-primary/50" />
-              <p className="font-medium text-foreground mb-2">¡Hola! Soy tu AI Mentor</p>
-              <p className="text-sm">
-                Pregúntame cualquier cosa sobre el curso, código, o conceptos de programación.
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2 justify-center">
-                {['¿Cómo funciona React?', '¿Qué es una API?', 'Explica async/await'].map((suggestion) => (
-                  <Button
-                    key={suggestion}
-                    variant="outline"
-                    size="sm"
-                    className="text-xs"
-                    onClick={() => {
-                      setInput(suggestion);
-                      inputRef.current?.focus();
-                    }}
+        {showHistory ? (
+          <ScrollArea className="flex-1 p-4">
+            {loadingHistory ? (
+              <div className="flex items-center justify-center h-full">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : conversations.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-4">
+                <History className="h-12 w-12 mb-4 text-muted-foreground/50" />
+                <p className="text-sm">No tienes conversaciones anteriores</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {conversations.map((conv) => (
+                  <div
+                    key={conv.id}
+                    onClick={() => loadConversation(conv.id)}
+                    className={cn(
+                      "p-3 rounded-lg cursor-pointer hover:bg-muted/80 transition-colors group",
+                      currentConversationId === conv.id ? 'bg-muted' : 'bg-muted/40'
+                    )}
                   >
-                    {suggestion}
-                  </Button>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{conv.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatDistanceToNow(new Date(conv.updated_at), { addSuffix: true, locale: es })}
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => deleteConversation(conv.id, e)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
                 ))}
               </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {messages.map((message, index) => (
-                <div
-                  key={index}
-                  className={cn(
-                    "flex gap-2",
-                    message.role === 'user' ? 'justify-end' : 'justify-start'
-                  )}
-                >
-                  {message.role === 'assistant' && (
-                    <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <Bot className="h-4 w-4 text-primary" />
-                    </div>
-                  )}
-                  <div
-                    className={cn(
-                      "max-w-[85%] rounded-lg px-3 py-2 text-sm",
-                      message.role === 'user'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted'
-                    )}
-                  >
-                    {message.role === 'assistant' ? (
-                      <MarkdownRenderer content={message.content || '...'} />
-                    ) : (
-                      <p className="whitespace-pre-wrap">{message.content}</p>
-                    )}
+            )}
+          </ScrollArea>
+        ) : (
+          <>
+            <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+              {messages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-4">
+                  <Bot className="h-12 w-12 mb-4 text-primary/50" />
+                  <p className="font-medium text-foreground mb-2">¡Hola! Soy tu AI Mentor</p>
+                  <p className="text-sm">
+                    Pregúntame cualquier cosa sobre el curso, código, o conceptos de programación.
+                  </p>
+                  <div className="mt-4 flex flex-wrap gap-2 justify-center">
+                    {['¿Cómo funciona React?', '¿Qué es una API?', 'Explica async/await'].map((suggestion) => (
+                      <Button
+                        key={suggestion}
+                        variant="outline"
+                        size="sm"
+                        className="text-xs"
+                        onClick={() => {
+                          setInput(suggestion);
+                          inputRef.current?.focus();
+                        }}
+                      >
+                        {suggestion}
+                      </Button>
+                    ))}
                   </div>
                 </div>
-              ))}
-              {isLoading && messages[messages.length - 1]?.content === '' && (
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span className="text-sm">Pensando...</span>
+              ) : (
+                <div className="space-y-4">
+                  {messages.map((message, index) => (
+                    <div
+                      key={index}
+                      className={cn(
+                        "flex gap-2",
+                        message.role === 'user' ? 'justify-end' : 'justify-start'
+                      )}
+                    >
+                      {message.role === 'assistant' && (
+                        <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <Bot className="h-4 w-4 text-primary" />
+                        </div>
+                      )}
+                      <div
+                        className={cn(
+                          "max-w-[85%] rounded-lg px-3 py-2 text-sm",
+                          message.role === 'user'
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted'
+                        )}
+                      >
+                        {message.role === 'assistant' ? (
+                          <MarkdownRenderer content={message.content || '...'} />
+                        ) : (
+                          <p className="whitespace-pre-wrap">{message.content}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {isLoading && messages[messages.length - 1]?.content === '' && (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span className="text-sm">Pensando...</span>
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
-          )}
-        </ScrollArea>
+            </ScrollArea>
 
-        <div className="flex-shrink-0 p-3 border-t bg-background">
-          <div className="flex gap-2">
-            <Input
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Escribe tu pregunta..."
-              disabled={isLoading}
-              className="flex-1"
-            />
-            <Button 
-              onClick={sendMessage} 
-              disabled={!input.trim() || isLoading}
-              size="icon"
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
-        </div>
+            <div className="flex-shrink-0 p-3 border-t bg-background">
+              <div className="flex gap-2">
+                <Input
+                  ref={inputRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Escribe tu pregunta..."
+                  disabled={isLoading}
+                  className="flex-1"
+                />
+                <Button 
+                  onClick={sendMessage} 
+                  disabled={!input.trim() || isLoading}
+                  size="icon"
+                >
+                  {isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
       </CardContent>
     </Card>
   );
