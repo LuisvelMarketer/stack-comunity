@@ -24,12 +24,14 @@ import {
   Plus,
   Video,
   Square,
-  Loader2
+  Loader2,
+  Pencil
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { ScreenRecorder } from '@/utils/screenRecorder';
+import { ScreenshotAnnotator } from './ScreenshotAnnotator';
 
 const MAX_SCREENSHOTS = 5;
 const MAX_VIDEO_SIZE_MB = 50;
@@ -63,6 +65,7 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
   const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [annotatingIndex, setAnnotatingIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const screenRecorderRef = useRef<ScreenRecorder | null>(null);
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -131,6 +134,26 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
       updated.splice(index, 1);
       return updated;
     });
+  };
+
+  const handleAnnotationSave = async (annotatedImageUrl: string) => {
+    if (annotatingIndex === null) return;
+
+    // Convert base64 to blob
+    const response = await fetch(annotatedImageUrl);
+    const blob = await response.blob();
+    const file = new File([blob], `annotated-${Date.now()}.png`, { type: 'image/png' });
+    const preview = URL.createObjectURL(blob);
+
+    setScreenshots(prev => {
+      const updated = [...prev];
+      URL.revokeObjectURL(updated[annotatingIndex].preview);
+      updated[annotatingIndex] = { file, preview };
+      return updated;
+    });
+
+    setAnnotatingIndex(null);
+    toast.success('Anotaciones guardadas');
   };
 
   const startRecording = async () => {
@@ -391,21 +414,34 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
             
             <div className="flex flex-wrap gap-2">
               {screenshots.map((screenshot, index) => (
-                <div key={index} className="relative">
+                <div key={index} className="relative group">
                   <img 
                     src={screenshot.preview} 
                     alt={`Preview ${index + 1}`} 
                     className="h-20 w-20 object-cover rounded-lg border"
                   />
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    className="absolute -top-2 -right-2 h-5 w-5"
-                    onClick={() => removeScreenshot(index)}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-1">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => setAnnotatingIndex(index)}
+                      title="Anotar"
+                    >
+                      <Pencil className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => removeScreenshot(index)}
+                      title="Eliminar"
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </div>
               ))}
 
@@ -557,6 +593,16 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
             </Button>
           </div>
         </form>
+
+        {/* Screenshot Annotator */}
+        {annotatingIndex !== null && screenshots[annotatingIndex] && (
+          <ScreenshotAnnotator
+            imageUrl={screenshots[annotatingIndex].preview}
+            open={true}
+            onSave={handleAnnotationSave}
+            onCancel={() => setAnnotatingIndex(null)}
+          />
+        )}
       </CardContent>
     </Card>
   );
