@@ -63,6 +63,7 @@ export interface ProjectFeedback {
   parent_id: string | null;
   screenshot_url: string | null;
   screenshot_urls: string[] | null;
+  video_url: string | null;
   created_at: string;
   profiles?: {
     id: string;
@@ -462,6 +463,7 @@ export function useProjectFeedback(projectId: string) {
     category?: string;
     priority?: string;
     screenshot_urls?: string[];
+    video_url?: string;
     feedbackType?: ProjectFeedback['feedback_type'];
     updateId?: string;
   }) => {
@@ -483,6 +485,7 @@ export function useProjectFeedback(projectId: string) {
           priority: data.priority || 'medium',
           status: 'open',
           screenshot_urls: data.screenshot_urls || [],
+          video_url: data.video_url || null,
         })
         .select()
         .single();

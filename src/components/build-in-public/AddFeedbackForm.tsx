@@ -21,13 +21,18 @@ import {
   Image as ImageIcon,
   X,
   Upload,
-  Plus
+  Plus,
+  Video,
+  Square,
+  Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { ScreenRecorder } from '@/utils/screenRecorder';
 
 const MAX_SCREENSHOTS = 5;
+const MAX_VIDEO_SIZE_MB = 50;
 
 interface AddFeedbackFormProps {
   onAdd: (data: { 
@@ -35,6 +40,7 @@ interface AddFeedbackFormProps {
     category: string; 
     priority: string;
     screenshot_urls?: string[];
+    video_url?: string;
   }) => Promise<any>;
   disabled?: boolean;
   projectLiveUrl?: string;
@@ -53,7 +59,13 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
   const [loading, setLoading] = useState(false);
   const [screenshots, setScreenshots] = useState<ScreenshotFile[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [videoBlob, setVideoBlob] = useState<Blob | null>(null);
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const screenRecorderRef = useRef<ScreenRecorder | null>(null);
+  const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const addScreenshot = useCallback((file: File) => {
     if (screenshots.length >= MAX_SCREENSHOTS) {
@@ -121,6 +133,67 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
     });
   };
 
+  const startRecording = async () => {
+    if (!ScreenRecorder.isSupported()) {
+      toast.error('Tu navegador no soporta grabación de pantalla');
+      return;
+    }
+
+    try {
+      screenRecorderRef.current = new ScreenRecorder(30);
+      await screenRecorderRef.current.start();
+      setIsRecording(true);
+      setRecordingTime(0);
+
+      recordingIntervalRef.current = setInterval(() => {
+        setRecordingTime(prev => {
+          if (prev >= 30) {
+            stopRecording();
+            return prev;
+          }
+          return prev + 1;
+        });
+      }, 1000);
+
+      toast.success('Grabación iniciada (máx. 30 segundos)');
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      toast.error('Error al iniciar grabación');
+    }
+  };
+
+  const stopRecording = async () => {
+    if (recordingIntervalRef.current) {
+      clearInterval(recordingIntervalRef.current);
+      recordingIntervalRef.current = null;
+    }
+
+    if (screenRecorderRef.current) {
+      const blob = await screenRecorderRef.current.stop();
+      if (blob) {
+        if (blob.size > MAX_VIDEO_SIZE_MB * 1024 * 1024) {
+          toast.error(`El video no puede superar ${MAX_VIDEO_SIZE_MB}MB`);
+        } else {
+          setVideoBlob(blob);
+          setVideoPreviewUrl(URL.createObjectURL(blob));
+          toast.success('Grabación completada');
+        }
+      }
+      screenRecorderRef.current = null;
+    }
+
+    setIsRecording(false);
+    setRecordingTime(0);
+  };
+
+  const removeVideo = () => {
+    if (videoPreviewUrl) {
+      URL.revokeObjectURL(videoPreviewUrl);
+    }
+    setVideoBlob(null);
+    setVideoPreviewUrl(null);
+  };
+
   const uploadScreenshots = async (): Promise<string[]> => {
     if (screenshots.length === 0 || !user) return [];
 
@@ -155,6 +228,30 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
     }
   };
 
+  const uploadVideo = async (): Promise<string | null> => {
+    if (!videoBlob || !user) return null;
+
+    try {
+      const fileName = `${user.id}/${Date.now()}.webm`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('feedback-videos')
+        .upload(fileName, videoBlob);
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('feedback-videos')
+        .getPublicUrl(fileName);
+
+      return urlData.publicUrl;
+    } catch (error) {
+      console.error('Error uploading video:', error);
+      toast.error('Error al subir el video');
+      return null;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!content.trim()) {
@@ -164,13 +261,17 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
 
     setLoading(true);
     try {
-      const screenshotUrls = await uploadScreenshots();
+      const [screenshotUrls, videoUrl] = await Promise.all([
+        uploadScreenshots(),
+        uploadVideo()
+      ]);
 
       await onAdd({
         content: content.trim(),
         category,
         priority,
         screenshot_urls: screenshotUrls.length > 0 ? screenshotUrls : undefined,
+        video_url: videoUrl || undefined,
       });
 
       // Reset form
@@ -179,6 +280,7 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
       setPriority('medium');
       screenshots.forEach(s => URL.revokeObjectURL(s.preview));
       setScreenshots([]);
+      removeVideo();
       toast.success('Feedback enviado');
     } catch (error) {
       console.error('Error adding feedback:', error);
@@ -187,6 +289,18 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
       setLoading(false);
     }
   };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (recordingIntervalRef.current) {
+        clearInterval(recordingIntervalRef.current);
+      }
+      if (screenRecorderRef.current) {
+        screenRecorderRef.current.stop();
+      }
+    };
+  }, []);
 
   if (disabled) {
     return (
@@ -276,7 +390,6 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
             <Label>Capturas de pantalla (máx. {MAX_SCREENSHOTS})</Label>
             
             <div className="flex flex-wrap gap-2">
-              {/* Preview existing screenshots */}
               {screenshots.map((screenshot, index) => (
                 <div key={index} className="relative">
                   <img 
@@ -296,7 +409,6 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
                 </div>
               ))}
 
-              {/* Add more button */}
               {screenshots.length < MAX_SCREENSHOTS && (
                 <div
                   onClick={() => fileInputRef.current?.click()}
@@ -332,6 +444,61 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
               className="hidden"
             />
           </div>
+
+          {/* Screen Recording */}
+          {ScreenRecorder.isSupported() && (
+            <div className="space-y-2">
+              <Label>Grabación de pantalla (máx. 30 seg)</Label>
+              
+              {videoPreviewUrl ? (
+                <div className="relative">
+                  <video 
+                    src={videoPreviewUrl}
+                    controls
+                    className="w-full max-h-48 rounded-lg border bg-black"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2 h-6 w-6"
+                    onClick={removeVideo}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ) : isRecording ? (
+                <div className="border-2 border-red-500 rounded-lg p-4 text-center bg-red-500/5">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <span className="h-3 w-3 rounded-full bg-red-500 animate-pulse" />
+                    <span className="text-sm font-medium text-red-500">
+                      Grabando... {recordingTime}s / 30s
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={stopRecording}
+                    className="gap-2"
+                  >
+                    <Square className="h-3 w-3" />
+                    Detener grabación
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full gap-2"
+                  onClick={startRecording}
+                >
+                  <Video className="h-4 w-4 text-red-500" />
+                  Grabar pantalla
+                </Button>
+              )}
+            </div>
+          )}
 
           {/* Priority */}
           <div className="flex items-center gap-4">
@@ -373,18 +540,18 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
 
             <Button 
               type="submit" 
-              disabled={loading || uploadingImage || !content.trim()}
+              disabled={loading || uploadingImage || isRecording || !content.trim()}
               className="mt-6"
             >
-              {uploadingImage ? (
+              {uploadingImage || loading ? (
                 <>
-                  <ImageIcon className="h-4 w-4 mr-2 animate-pulse" />
-                  Subiendo...
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  {uploadingImage ? 'Subiendo...' : 'Enviando...'}
                 </>
               ) : (
                 <>
                   <Send className="h-4 w-4 mr-2" />
-                  {loading ? 'Enviando...' : 'Enviar'}
+                  Enviar
                 </>
               )}
             </Button>
