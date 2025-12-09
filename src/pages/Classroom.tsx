@@ -1,17 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useAIMentor } from "@/hooks/useAIMentor";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Users, Lock, BookOpen } from "lucide-react";
+import { ArrowLeft, Users, Lock, BookOpen, Bot } from "lucide-react";
 import { ClassroomSidebar } from "@/components/course/ClassroomSidebar";
 import { ClassroomContent } from "@/components/course/ClassroomContent";
 import { LockedContent } from "@/components/LockedContent";
 import { CourseCertificate } from "@/components/CourseCertificate";
 import { Badge } from "@/components/ui/badge";
+import { AIMentorFloating } from "@/components/AIMentorFloating";
 
 interface Module {
   id: string;
@@ -44,6 +46,7 @@ export default function Classroom() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { isPremium } = useSubscription();
+  const { logActivity, analyzeProgress } = useAIMentor();
   
   const [course, setCourse] = useState<Course | null>(null);
   const [community, setCommunity] = useState<Community | null>(null);
@@ -53,6 +56,10 @@ export default function Classroom() {
   const [loading, setLoading] = useState(true);
   const [progressPercent, setProgressPercent] = useState(0);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  
+  // Tracking state
+  const moduleStartTime = useRef<Date | null>(null);
+  const lastAnalysisTime = useRef<Date | null>(null);
 
   const isModuleAccessible = (module: Module) => {
     if (course?.community_id) {
@@ -60,6 +67,61 @@ export default function Classroom() {
     }
     return module.is_free || isPremium;
   };
+
+  // Track module view time and detect if stuck
+  useEffect(() => {
+    if (selectedModule && user && courseId) {
+      // Log module view
+      logActivity('module_view', courseId, selectedModule.id, {
+        module_title: selectedModule.title,
+        module_order: selectedModule.order_index
+      });
+      
+      // Start tracking time
+      moduleStartTime.current = new Date();
+
+      // Check if user is stuck (on same module for >10 minutes without completing)
+      const stuckCheckTimer = setTimeout(async () => {
+        if (selectedModule && !selectedModule.completed) {
+          // Trigger AI analysis for contextual help
+          const now = new Date();
+          const lastAnalysis = lastAnalysisTime.current;
+          
+          // Only analyze once per 30 minutes to avoid spam
+          if (!lastAnalysis || (now.getTime() - lastAnalysis.getTime()) > 30 * 60 * 1000) {
+            console.log('[Classroom] User might be stuck, triggering AI analysis');
+            await analyzeProgress(courseId, selectedModule.id);
+            lastAnalysisTime.current = now;
+          }
+        }
+      }, 10 * 60 * 1000); // 10 minutes
+
+      return () => {
+        clearTimeout(stuckCheckTimer);
+        
+        // Log time spent on module when leaving
+        if (moduleStartTime.current) {
+          const timeSpent = Math.round((new Date().getTime() - moduleStartTime.current.getTime()) / 1000);
+          if (timeSpent > 5) { // Only log if spent more than 5 seconds
+            logActivity('module_time_spent', courseId, selectedModule.id, {
+              seconds: timeSpent,
+              module_title: selectedModule.title,
+              completed: selectedModule.completed
+            });
+          }
+        }
+      };
+    }
+  }, [selectedModule?.id, user, courseId]);
+
+  // Track course entry
+  useEffect(() => {
+    if (courseId && user) {
+      logActivity('course_enter', courseId, undefined, {
+        course_title: course?.title
+      });
+    }
+  }, [courseId, user]);
 
   useEffect(() => {
     if (courseId) {
@@ -182,6 +244,16 @@ export default function Classroom() {
         });
       }
 
+      // Log completion activity
+      if (!currentStatus) {
+        logActivity('module_complete', courseId!, moduleId, {
+          module_title: modules.find(m => m.id === moduleId)?.title,
+          time_to_complete: moduleStartTime.current 
+            ? Math.round((new Date().getTime() - moduleStartTime.current.getTime()) / 1000)
+            : null
+        });
+      }
+
       // Update local state immediately for better UX
       setModules((prev) =>
         prev.map((m) =>
@@ -197,7 +269,13 @@ export default function Classroom() {
       const newCompleted = modules.filter((m) => 
         m.id === moduleId ? !currentStatus : m.completed
       ).length;
-      setProgressPercent((newCompleted / modules.length) * 100);
+      const newProgress = (newCompleted / modules.length) * 100;
+      setProgressPercent(newProgress);
+
+      // Trigger AI analysis on milestone completions
+      if (!currentStatus && (newProgress === 25 || newProgress === 50 || newProgress === 75 || newProgress === 100)) {
+        analyzeProgress(courseId!, moduleId);
+      }
 
       toast({
         title: !currentStatus ? "¡Módulo completado!" : "Marcado como incompleto",
@@ -212,6 +290,15 @@ export default function Classroom() {
   };
 
   const handleBack = () => {
+    // Log course exit
+    if (courseId && user) {
+      logActivity('course_exit', courseId, selectedModule?.id, {
+        progress_percent: progressPercent,
+        modules_completed: modules.filter(m => m.completed).length,
+        total_modules: modules.length
+      });
+    }
+
     if (community) {
       navigate(`/communities/${community.slug}`);
     } else {
@@ -349,6 +436,9 @@ export default function Classroom() {
           </div>
         )}
       </div>
+
+      {/* Floating AI Mentor */}
+      <AIMentorFloating courseId={courseId} moduleId={selectedModule?.id} />
     </div>
   );
 }
