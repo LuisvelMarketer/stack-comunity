@@ -9,20 +9,21 @@ import {
   Palette,
   MessageSquare,
   Send,
-  Image as ImageIcon,
   X,
   Upload,
   Plus,
   Video,
   Square,
   Loader2,
-  Pencil
+  Pencil,
+  Check
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { ScreenRecorder } from '@/utils/screenRecorder';
 import { ScreenshotAnnotator } from './ScreenshotAnnotator';
+import { cn } from '@/lib/utils';
 
 const MAX_SCREENSHOTS = 5;
 const MAX_VIDEO_SIZE_MB = 50;
@@ -51,6 +52,39 @@ interface FeedbackFields {
   general: string;
 }
 
+type CategoryKey = keyof FeedbackFields;
+
+const categories: { key: CategoryKey; label: string; icon: React.ReactNode; color: string; placeholder: string }[] = [
+  { 
+    key: 'bug', 
+    label: 'Bug', 
+    icon: <Bug className="h-4 w-4" />, 
+    color: 'text-red-500 border-red-500 bg-red-500/10',
+    placeholder: '1. Fui a la página X\n2. Hice clic en Y\n3. Esperaba Z pero pasó W'
+  },
+  { 
+    key: 'improvement', 
+    label: 'Mejora', 
+    icon: <Lightbulb className="h-4 w-4" />, 
+    color: 'text-yellow-500 border-yellow-500 bg-yellow-500/10',
+    placeholder: 'Sería útil agregar... / Podrían mejorar...'
+  },
+  { 
+    key: 'design', 
+    label: 'Diseño', 
+    icon: <Palette className="h-4 w-4" />, 
+    color: 'text-purple-500 border-purple-500 bg-purple-500/10',
+    placeholder: 'El botón está muy pequeño... / Los colores no contrastan bien...'
+  },
+  { 
+    key: 'general', 
+    label: 'Otro', 
+    icon: <MessageSquare className="h-4 w-4" />, 
+    color: 'text-blue-500 border-blue-500 bg-blue-500/10',
+    placeholder: 'Cualquier otro comentario, pregunta o sugerencia...'
+  },
+];
+
 export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedbackFormProps) {
   const { user } = useAuth();
   const [fields, setFields] = useState<FeedbackFields>({
@@ -59,6 +93,7 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
     design: '',
     general: ''
   });
+  const [openCategories, setOpenCategories] = useState<Set<CategoryKey>>(new Set());
   const [loading, setLoading] = useState(false);
   const [screenshots, setScreenshots] = useState<ScreenshotFile[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -71,7 +106,19 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
   const screenRecorderRef = useRef<ScreenRecorder | null>(null);
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const updateField = (field: keyof FeedbackFields, value: string) => {
+  const toggleCategory = (key: CategoryKey) => {
+    setOpenCategories(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(key)) {
+        newSet.delete(key);
+      } else {
+        newSet.add(key);
+      }
+      return newSet;
+    });
+  };
+
+  const updateField = (field: CategoryKey, value: string) => {
     setFields(prev => ({ ...prev, [field]: value }));
   };
 
@@ -282,7 +329,6 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Check if at least one field has content
     const hasContent = Object.values(fields).some(v => v.trim() !== '');
     if (!hasContent) {
       toast.error('Rellena al menos un campo de feedback');
@@ -296,7 +342,6 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
         uploadVideo()
       ]);
 
-      // Submit each non-empty field as separate feedback
       const submissions = [];
       
       if (fields.bug.trim()) {
@@ -335,8 +380,8 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
 
       await Promise.all(submissions);
 
-      // Reset form
       setFields({ bug: '', improvement: '', design: '', general: '' });
+      setOpenCategories(new Set());
       screenshots.forEach(s => URL.revokeObjectURL(s.preview));
       setScreenshots([]);
       removeVideo();
@@ -349,7 +394,6 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
     }
   };
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (recordingIntervalRef.current) {
@@ -370,6 +414,8 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
       </Card>
     );
   }
+
+  const filledCategories = categories.filter(c => fields[c.key].trim() !== '');
 
   return (
     <Card>
@@ -397,69 +443,65 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Bug Field */}
-          <div className="space-y-2 p-3 rounded-lg border border-red-200 dark:border-red-900/30 bg-red-50/50 dark:bg-red-950/20">
-            <Label htmlFor="bug" className="flex items-center gap-2 text-red-700 dark:text-red-400">
-              <Bug className="h-4 w-4" />
-              Bugs encontrados
-            </Label>
-            <Textarea
-              id="bug"
-              value={fields.bug}
-              onChange={(e) => updateField('bug', e.target.value)}
-              placeholder="1. Fui a la página X&#10;2. Hice clic en Y&#10;3. Esperaba Z pero pasó W"
-              rows={3}
-              className="resize-none bg-background"
-            />
+          {/* Category Buttons */}
+          <div className="space-y-2">
+            <Label>Selecciona las categorías (clic para expandir)</Label>
+            <div className="flex flex-wrap gap-2">
+              {categories.map((cat) => {
+                const isOpen = openCategories.has(cat.key);
+                const hasContent = fields[cat.key].trim() !== '';
+                
+                return (
+                  <button
+                    key={cat.key}
+                    type="button"
+                    onClick={() => toggleCategory(cat.key)}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 text-sm font-medium transition-all",
+                      isOpen || hasContent ? cat.color : "border-muted-foreground/30 text-muted-foreground hover:border-muted-foreground/50"
+                    )}
+                  >
+                    {cat.icon}
+                    {cat.label}
+                    {hasContent && <Check className="h-3 w-3 ml-1" />}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Improvement Field */}
-          <div className="space-y-2 p-3 rounded-lg border border-yellow-200 dark:border-yellow-900/30 bg-yellow-50/50 dark:bg-yellow-950/20">
-            <Label htmlFor="improvement" className="flex items-center gap-2 text-yellow-700 dark:text-yellow-400">
-              <Lightbulb className="h-4 w-4" />
-              Mejoras sugeridas
-            </Label>
-            <Textarea
-              id="improvement"
-              value={fields.improvement}
-              onChange={(e) => updateField('improvement', e.target.value)}
-              placeholder="Sería útil agregar... / Podrían mejorar..."
-              rows={3}
-              className="resize-none bg-background"
-            />
-          </div>
-
-          {/* Design Field */}
-          <div className="space-y-2 p-3 rounded-lg border border-purple-200 dark:border-purple-900/30 bg-purple-50/50 dark:bg-purple-950/20">
-            <Label htmlFor="design" className="flex items-center gap-2 text-purple-700 dark:text-purple-400">
-              <Palette className="h-4 w-4" />
-              Comentarios de diseño
-            </Label>
-            <Textarea
-              id="design"
-              value={fields.design}
-              onChange={(e) => updateField('design', e.target.value)}
-              placeholder="El botón está muy pequeño... / Los colores no contrastan bien..."
-              rows={3}
-              className="resize-none bg-background"
-            />
-          </div>
-
-          {/* General Field */}
-          <div className="space-y-2 p-3 rounded-lg border border-blue-200 dark:border-blue-900/30 bg-blue-50/50 dark:bg-blue-950/20">
-            <Label htmlFor="general" className="flex items-center gap-2 text-blue-700 dark:text-blue-400">
-              <MessageSquare className="h-4 w-4" />
-              Otros comentarios
-            </Label>
-            <Textarea
-              id="general"
-              value={fields.general}
-              onChange={(e) => updateField('general', e.target.value)}
-              placeholder="Cualquier otro comentario, pregunta o sugerencia..."
-              rows={3}
-              className="resize-none bg-background"
-            />
-          </div>
+          {/* Expanded Textareas */}
+          {categories.map((cat) => {
+            if (!openCategories.has(cat.key)) return null;
+            
+            return (
+              <div key={cat.key} className={cn("space-y-2 p-3 rounded-lg border-2 animate-in slide-in-from-top-2 duration-200", cat.color)}>
+                <div className="flex items-center justify-between">
+                  <Label className="flex items-center gap-2">
+                    {cat.icon}
+                    {cat.label}
+                  </Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={() => toggleCategory(cat.key)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                <Textarea
+                  value={fields[cat.key]}
+                  onChange={(e) => updateField(cat.key, e.target.value)}
+                  placeholder={cat.placeholder}
+                  rows={3}
+                  className="resize-none bg-background"
+                  autoFocus
+                />
+              </div>
+            );
+          })}
 
           {/* Screenshot Upload */}
           <div className="space-y-2">
@@ -585,6 +627,13 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
                   Iniciar grabación de pantalla
                 </Button>
               )}
+            </div>
+          )}
+
+          {/* Summary of filled categories */}
+          {filledCategories.length > 0 && (
+            <div className="text-sm text-muted-foreground">
+              Categorías con feedback: {filledCategories.map(c => c.label).join(', ')}
             </div>
           )}
 
