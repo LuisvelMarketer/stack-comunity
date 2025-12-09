@@ -2,7 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
-// Premium product configuration
+// DEPRECATED: Global premium subscription has been disabled
+// Each community now manages its own subscription independently
+// Use useCommunitySubscription hook for community-specific subscriptions
+
+// Legacy product configuration - kept for reference only
 export const PREMIUM_PRODUCT = {
   product_id: "prod_TZgd1fKmbpcWYM",
   price_id: "price_1ScXGPPj8vjAHltscNz2jo9R",
@@ -17,73 +21,40 @@ interface SubscriptionState {
   loading: boolean;
 }
 
+// This hook is now deprecated - global subscription is disabled
+// Communities are either free or have their own subscription via useCommunitySubscription
 export function useSubscription() {
-  const { user, session } = useAuth();
+  const { user } = useAuth();
   const [state, setState] = useState<SubscriptionState>({
     isSubscribed: false,
     productId: null,
     subscriptionEnd: null,
-    loading: true,
+    loading: false, // No loading needed as global subscription is disabled
   });
 
+  // Global subscription check is disabled
+  // Always returns not subscribed since we don't have global premium anymore
   const checkSubscription = useCallback(async () => {
-    if (!session?.access_token) {
-      setState(prev => ({ ...prev, loading: false, isSubscribed: false }));
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase.functions.invoke('check-subscription', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (error) throw error;
-
-      setState({
-        isSubscribed: data.subscribed || false,
-        productId: data.product_id || null,
-        subscriptionEnd: data.subscription_end || null,
-        loading: false,
-      });
-    } catch (error) {
-      console.error('Error checking subscription:', error);
-      setState(prev => ({ ...prev, loading: false }));
-    }
-  }, [session?.access_token]);
+    setState({
+      isSubscribed: false,
+      productId: null,
+      subscriptionEnd: null,
+      loading: false,
+    });
+  }, []);
 
   useEffect(() => {
     checkSubscription();
   }, [checkSubscription]);
 
-  // Auto-refresh every minute
-  useEffect(() => {
-    if (!user) return;
-    
-    const interval = setInterval(checkSubscription, 60000);
-    return () => clearInterval(interval);
-  }, [user, checkSubscription]);
-
+  // Deprecated: createCheckout for global subscription
   const createCheckout = async () => {
-    if (!session?.access_token) {
-      throw new Error('Debes iniciar sesión para suscribirte');
-    }
-
-    const { data, error } = await supabase.functions.invoke('create-checkout', {
-      headers: {
-        Authorization: `Bearer ${session.access_token}`,
-      },
-    });
-
-    if (error) throw error;
-    
-    if (data?.url) {
-      window.open(data.url, '_blank');
-    }
+    throw new Error('La suscripción global ha sido desactivada. Por favor suscríbete a una comunidad específica.');
   };
 
+  // openCustomerPortal still works for managing existing community subscriptions
   const openCustomerPortal = async () => {
+    const { session } = useAuth();
     if (!session?.access_token) {
       throw new Error('Debes iniciar sesión');
     }
@@ -103,7 +74,7 @@ export function useSubscription() {
 
   return {
     ...state,
-    isPremium: state.isSubscribed,
+    isPremium: false, // Always false since global subscription is disabled
     checkSubscription,
     createCheckout,
     openCustomerPortal,
