@@ -1935,6 +1935,247 @@ export type Database = {
           },
         ]
       }
+      season_prizes: {
+        Row: {
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+          position: number
+          prize_type: string
+          rank_type: string
+          season_id: string
+          value: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          position: number
+          prize_type: string
+          rank_type: string
+          season_id: string
+          value?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          position?: number
+          prize_type?: string
+          rank_type?: string
+          season_id?: string
+          value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "season_prizes_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      season_project_scores: {
+        Row: {
+          created_at: string
+          feedback_count: number
+          followers_count: number
+          id: string
+          likes_count: number
+          project_id: string
+          resolved_feedback_count: number
+          season_id: string
+          total_score: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          feedback_count?: number
+          followers_count?: number
+          id?: string
+          likes_count?: number
+          project_id: string
+          resolved_feedback_count?: number
+          season_id: string
+          total_score?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          feedback_count?: number
+          followers_count?: number
+          id?: string
+          likes_count?: number
+          project_id?: string
+          resolved_feedback_count?: number
+          season_id?: string
+          total_score?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "season_project_scores_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "build_projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "season_project_scores_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      season_user_points: {
+        Row: {
+          created_at: string
+          feedback_count: number
+          id: string
+          points: number
+          resolved_feedback_count: number
+          season_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          feedback_count?: number
+          id?: string
+          points?: number
+          resolved_feedback_count?: number
+          season_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          feedback_count?: number
+          id?: string
+          points?: number
+          resolved_feedback_count?: number
+          season_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "season_user_points_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      season_winners: {
+        Row: {
+          claimed_at: string | null
+          created_at: string
+          id: string
+          prize_id: string
+          project_id: string | null
+          season_id: string
+          user_id: string | null
+        }
+        Insert: {
+          claimed_at?: string | null
+          created_at?: string
+          id?: string
+          prize_id: string
+          project_id?: string | null
+          season_id: string
+          user_id?: string | null
+        }
+        Update: {
+          claimed_at?: string | null
+          created_at?: string
+          id?: string
+          prize_id?: string
+          project_id?: string | null
+          season_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "season_winners_prize_id_fkey"
+            columns: ["prize_id"]
+            isOneToOne: true
+            referencedRelation: "season_prizes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "season_winners_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "build_projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "season_winners_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seasons: {
+        Row: {
+          community_id: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          end_date: string
+          id: string
+          name: string
+          start_date: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          community_id?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          end_date: string
+          id?: string
+          name: string
+          start_date: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          community_id?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          end_date?: string
+          id?: string
+          name?: string
+          start_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seasons_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_order_messages: {
         Row: {
           content: string
