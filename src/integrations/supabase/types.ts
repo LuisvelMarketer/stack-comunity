@@ -800,6 +800,42 @@ export type Database = {
           },
         ]
       }
+      daily_challenges: {
+        Row: {
+          challenge_type: string
+          created_at: string
+          description: string
+          icon: string
+          id: string
+          is_active: boolean | null
+          target_count: number
+          title: string
+          xp_reward: number
+        }
+        Insert: {
+          challenge_type?: string
+          created_at?: string
+          description: string
+          icon?: string
+          id?: string
+          is_active?: boolean | null
+          target_count?: number
+          title: string
+          xp_reward?: number
+        }
+        Update: {
+          challenge_type?: string
+          created_at?: string
+          description?: string
+          icon?: string
+          id?: string
+          is_active?: boolean | null
+          target_count?: number
+          title?: string
+          xp_reward?: number
+        }
+        Relationships: []
+      }
       direct_messages: {
         Row: {
           content: string
@@ -2496,6 +2532,50 @@ export type Database = {
           },
         ]
       }
+      user_daily_challenges: {
+        Row: {
+          challenge_date: string
+          challenge_id: string
+          completed_at: string | null
+          created_at: string
+          current_progress: number
+          id: string
+          is_completed: boolean | null
+          user_id: string
+          xp_claimed: boolean | null
+        }
+        Insert: {
+          challenge_date?: string
+          challenge_id: string
+          completed_at?: string | null
+          created_at?: string
+          current_progress?: number
+          id?: string
+          is_completed?: boolean | null
+          user_id: string
+          xp_claimed?: boolean | null
+        }
+        Update: {
+          challenge_date?: string
+          challenge_id?: string
+          completed_at?: string | null
+          created_at?: string
+          current_progress?: number
+          id?: string
+          is_completed?: boolean | null
+          user_id?: string
+          xp_claimed?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_daily_challenges_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "daily_challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_follows: {
         Row: {
           created_at: string
@@ -2694,6 +2774,50 @@ export type Database = {
           },
         ]
       }
+      user_weekly_missions: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          current_progress: number
+          id: string
+          is_completed: boolean | null
+          mission_id: string
+          user_id: string
+          week_start: string
+          xp_claimed: boolean | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          current_progress?: number
+          id?: string
+          is_completed?: boolean | null
+          mission_id: string
+          user_id: string
+          week_start: string
+          xp_claimed?: boolean | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          current_progress?: number
+          id?: string
+          is_completed?: boolean | null
+          mission_id?: string
+          user_id?: string
+          week_start?: string
+          xp_claimed?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_weekly_missions_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       weekly_challenges: {
         Row: {
           challenge_type: string
@@ -2743,6 +2867,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      weekly_missions: {
+        Row: {
+          badge_reward: string | null
+          created_at: string
+          description: string
+          difficulty: string
+          icon: string
+          id: string
+          is_active: boolean | null
+          mission_type: string
+          target_count: number
+          title: string
+          xp_reward: number
+        }
+        Insert: {
+          badge_reward?: string | null
+          created_at?: string
+          description: string
+          difficulty?: string
+          icon?: string
+          id?: string
+          is_active?: boolean | null
+          mission_type?: string
+          target_count?: number
+          title: string
+          xp_reward?: number
+        }
+        Update: {
+          badge_reward?: string | null
+          created_at?: string
+          description?: string
+          difficulty?: string
+          icon?: string
+          id?: string
+          is_active?: boolean | null
+          mission_type?: string
+          target_count?: number
+          title?: string
+          xp_reward?: number
+        }
+        Relationships: []
       }
     }
     Views: {
