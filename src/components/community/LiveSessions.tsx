@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Video, Calendar, Play, Radio, ExternalLink, Plus, X } from 'lucide-react';
+import { CalendarAddButton } from '@/components/ui/calendar-add-button';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -305,13 +306,23 @@ export function LiveSessions({ communityId, isAdmin = false }: LiveSessionsProps
                       </Button>
                     )}
                     {session.status === 'scheduled' && (
-                      <Button 
-                        variant="outline"
-                        onClick={() => window.open(session.stream_url, '_blank')}
-                      >
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        Abrir Link
-                      </Button>
+                      <div className="flex gap-2">
+                        <CalendarAddButton
+                          title={session.title}
+                          description={session.description || undefined}
+                          location={session.stream_url}
+                          startDate={new Date(session.scheduled_at)}
+                          size="sm"
+                        />
+                        <Button 
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.open(session.stream_url, '_blank')}
+                        >
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          Abrir Link
+                        </Button>
+                      </div>
                     )}
                     {isAdmin && (
                       <div className="flex gap-1">

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Radio, Play, Calendar } from 'lucide-react';
+import { Radio, Play, Calendar, CalendarPlus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { generateGoogleCalendarUrl, downloadICalFile } from '@/lib/calendar-utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface LiveSession {
   id: string;
@@ -133,18 +140,56 @@ export function UpcomingLives() {
             {scheduledSessions.map((session) => (
               <div
                 key={session.id}
-                className="p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors"
-                onClick={() => navigate(`/communities/${session.communities?.slug}`)}
+                className="p-3 rounded-lg border hover:bg-muted/50 transition-colors"
               >
-                <div className="space-y-1">
-                  <p className="font-medium text-sm">{session.title}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {session.communities?.name}
-                  </p>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
-                    {format(new Date(session.scheduled_at), "d MMM, HH:mm", { locale: es })}
-                  </p>
+                <div className="flex items-start justify-between gap-2">
+                  <div 
+                    className="space-y-1 flex-1 cursor-pointer"
+                    onClick={() => navigate(`/communities/${session.communities?.slug}`)}
+                  >
+                    <p className="font-medium text-sm">{session.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {session.communities?.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      {format(new Date(session.scheduled_at), "d MMM, HH:mm", { locale: es })}
+                    </p>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-7 w-7">
+                        <CalendarPlus className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const url = generateGoogleCalendarUrl({
+                            title: session.title,
+                            location: session.stream_url,
+                            startDate: new Date(session.scheduled_at),
+                          });
+                          window.open(url, "_blank");
+                        }}
+                      >
+                        Google Calendar
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          downloadICalFile({
+                            title: session.title,
+                            location: session.stream_url,
+                            startDate: new Date(session.scheduled_at),
+                          });
+                        }}
+                      >
+                        Apple / iCal
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
             ))}
