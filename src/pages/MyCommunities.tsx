@@ -130,7 +130,7 @@ export default function MyCommunities() {
               onClick={() => navigate("/dashboard")} 
               className="text-xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent cursor-pointer"
             >
-              DevAcademy
+              Skoolify
             </h1>
           </div>
           <UserMenu />

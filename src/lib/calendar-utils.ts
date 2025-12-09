@@ -34,12 +34,12 @@ export const generateGoogleCalendarUrl = (event: CalendarEvent): string => {
 
 export const generateICalContent = (event: CalendarEvent): string => {
   const endDate = event.endDate || new Date(event.startDate.getTime() + 60 * 60 * 1000);
-  const uid = `${Date.now()}-${Math.random().toString(36).substring(2)}@devacademy`;
+  const uid = `${Date.now()}-${Math.random().toString(36).substring(2)}@skoolify`;
   
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//DevAcademy//NONSGML Event//ES",
+    "PRODID:-//Skoolify//NONSGML Event//ES",
     "BEGIN:VEVENT",
     `UID:${uid}`,
     `DTSTAMP:${formatICalDate(new Date())}`,
