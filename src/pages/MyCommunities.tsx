@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCommunityOwner } from "@/hooks/useCommunityOwner";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +16,7 @@ import { UserMenu } from "@/components/UserMenu";
 
 export default function MyCommunities() {
   const { user } = useAuth();
+  const { isAdmin, loading: adminLoading } = useIsAdmin();
   const { ownedCommunities, loading, refetch } = useCommunityOwner();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -25,6 +27,18 @@ export default function MyCommunities() {
     description: "",
     slug: "",
   });
+
+  // Redirect non-admin users
+  useEffect(() => {
+    if (!adminLoading && !isAdmin) {
+      toast({
+        title: "Acceso denegado",
+        description: "Solo los administradores pueden acceder a esta página.",
+        variant: "destructive",
+      });
+      navigate("/dashboard");
+    }
+  }, [isAdmin, adminLoading, navigate, toast]);
 
   const generateSlug = (name: string) => {
     return name
@@ -93,12 +107,17 @@ export default function MyCommunities() {
     }
   };
 
-  if (loading) {
+  if (loading || adminLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
+  }
+
+  // Don't render if not admin
+  if (!isAdmin) {
+    return null;
   }
 
   return (
