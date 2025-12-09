@@ -1,0 +1,470 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './useAuth';
+import { toast } from 'sonner';
+
+export interface BuildProject {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string | null;
+  tech_stack: string[];
+  repository_url: string | null;
+  live_url: string | null;
+  thumbnail_url: string | null;
+  status: 'idea' | 'in_progress' | 'paused' | 'completed' | 'abandoned';
+  visibility: 'public' | 'community' | 'private';
+  community_id: string | null;
+  is_featured: boolean;
+  featured_at: string | null;
+  views_count: number;
+  likes_count: number;
+  created_at: string;
+  updated_at: string;
+  profiles?: {
+    id: string;
+    full_name: string | null;
+    avatar_url: string | null;
+  };
+}
+
+export interface ProjectUpdate {
+  id: string;
+  project_id: string;
+  user_id: string;
+  title: string;
+  content: string;
+  update_type: 'progress' | 'milestone' | 'challenge' | 'learning' | 'launch';
+  mood: 'excited' | 'productive' | 'stuck' | 'learning' | 'celebrating' | null;
+  hours_spent: number | null;
+  images: string[];
+  created_at: string;
+  updated_at: string;
+  profiles?: {
+    id: string;
+    full_name: string | null;
+    avatar_url: string | null;
+  };
+  build_projects?: BuildProject;
+}
+
+export interface ProjectFeedback {
+  id: string;
+  project_id: string;
+  update_id: string | null;
+  user_id: string;
+  content: string;
+  feedback_type: 'comment' | 'suggestion' | 'encouragement' | 'question';
+  parent_id: string | null;
+  created_at: string;
+  profiles?: {
+    id: string;
+    full_name: string | null;
+    avatar_url: string | null;
+  };
+}
+
+export function useBuildProjects() {
+  const { user } = useAuth();
+  const [projects, setProjects] = useState<BuildProject[]>([]);
+  const [myProjects, setMyProjects] = useState<BuildProject[]>([]);
+  const [featuredProjects, setFeaturedProjects] = useState<BuildProject[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchProjects = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('build_projects')
+        .select(`
+          *,
+          profiles:user_id (id, full_name, avatar_url)
+        `)
+        .eq('visibility', 'public')
+        .order('updated_at', { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+      setProjects((data as unknown as BuildProject[]) || []);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+    }
+  };
+
+  const fetchMyProjects = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('build_projects')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('updated_at', { ascending: false });
+
+      if (error) throw error;
+      setMyProjects((data as unknown as BuildProject[]) || []);
+    } catch (error) {
+      console.error('Error fetching my projects:', error);
+    }
+  };
+
+  const fetchFeaturedProjects = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('build_projects')
+        .select(`
+          *,
+          profiles:user_id (id, full_name, avatar_url)
+        `)
+        .eq('is_featured', true)
+        .eq('visibility', 'public')
+        .order('featured_at', { ascending: false })
+        .limit(5);
+
+      if (error) throw error;
+      setFeaturedProjects((data as unknown as BuildProject[]) || []);
+    } catch (error) {
+      console.error('Error fetching featured projects:', error);
+    }
+  };
+
+  const createProject = async (project: {
+    title: string;
+    description?: string;
+    tech_stack?: string[];
+    repository_url?: string;
+    live_url?: string;
+    visibility?: 'public' | 'community' | 'private';
+    community_id?: string;
+  }) => {
+    if (!user) {
+      toast.error('Debes iniciar sesión');
+      return null;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('build_projects')
+        .insert({
+          user_id: user.id,
+          title: project.title,
+          description: project.description || null,
+          tech_stack: project.tech_stack || [],
+          repository_url: project.repository_url || null,
+          live_url: project.live_url || null,
+          visibility: project.visibility || 'public',
+          community_id: project.community_id || null,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      toast.success('¡Proyecto creado exitosamente!');
+      fetchMyProjects();
+      fetchProjects();
+      return data as unknown as BuildProject;
+    } catch (error) {
+      console.error('Error creating project:', error);
+      toast.error('Error al crear el proyecto');
+      return null;
+    }
+  };
+
+  const updateProject = async (projectId: string, updates: Partial<BuildProject>) => {
+    try {
+      const { error } = await supabase
+        .from('build_projects')
+        .update(updates)
+        .eq('id', projectId);
+
+      if (error) throw error;
+      
+      toast.success('Proyecto actualizado');
+      fetchMyProjects();
+      fetchProjects();
+    } catch (error) {
+      console.error('Error updating project:', error);
+      toast.error('Error al actualizar');
+    }
+  };
+
+  const deleteProject = async (projectId: string) => {
+    try {
+      const { error } = await supabase
+        .from('build_projects')
+        .delete()
+        .eq('id', projectId);
+
+      if (error) throw error;
+      
+      toast.success('Proyecto eliminado');
+      fetchMyProjects();
+      fetchProjects();
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      toast.error('Error al eliminar');
+    }
+  };
+
+  const toggleLike = async (projectId: string) => {
+    if (!user) {
+      toast.error('Debes iniciar sesión');
+      return;
+    }
+
+    try {
+      const { data: existingLike } = await supabase
+        .from('project_likes')
+        .select('id')
+        .eq('project_id', projectId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (existingLike) {
+        await supabase
+          .from('project_likes')
+          .delete()
+          .eq('id', existingLike.id);
+      } else {
+        await supabase
+          .from('project_likes')
+          .insert({ project_id: projectId, user_id: user.id });
+      }
+
+      fetchProjects();
+      fetchFeaturedProjects();
+    } catch (error) {
+      console.error('Error toggling like:', error);
+    }
+  };
+
+  const checkIfLiked = async (projectId: string): Promise<boolean> => {
+    if (!user) return false;
+
+    try {
+      const { data } = await supabase
+        .from('project_likes')
+        .select('id')
+        .eq('project_id', projectId)
+        .eq('user_id', user.id)
+        .single();
+
+      return !!data;
+    } catch {
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      await Promise.all([
+        fetchProjects(),
+        fetchMyProjects(),
+        fetchFeaturedProjects(),
+      ]);
+      setLoading(false);
+    };
+
+    loadData();
+  }, [user]);
+
+  return {
+    projects,
+    myProjects,
+    featuredProjects,
+    loading,
+    createProject,
+    updateProject,
+    deleteProject,
+    toggleLike,
+    checkIfLiked,
+    refreshProjects: fetchProjects,
+  };
+}
+
+export function useProjectUpdates(projectId: string) {
+  const { user } = useAuth();
+  const [updates, setUpdates] = useState<ProjectUpdate[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchUpdates = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('project_updates')
+        .select(`
+          *,
+          profiles:user_id (id, full_name, avatar_url)
+        `)
+        .eq('project_id', projectId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setUpdates((data as unknown as ProjectUpdate[]) || []);
+    } catch (error) {
+      console.error('Error fetching updates:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createUpdate = async (update: {
+    title: string;
+    content: string;
+    update_type: ProjectUpdate['update_type'];
+    mood?: ProjectUpdate['mood'];
+    hours_spent?: number;
+  }) => {
+    if (!user) {
+      toast.error('Debes iniciar sesión');
+      return null;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('project_updates')
+        .insert({
+          project_id: projectId,
+          user_id: user.id,
+          title: update.title,
+          content: update.content,
+          update_type: update.update_type,
+          mood: update.mood || null,
+          hours_spent: update.hours_spent || null,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      toast.success('¡Actualización publicada!');
+      fetchUpdates();
+      return data as unknown as ProjectUpdate;
+    } catch (error) {
+      console.error('Error creating update:', error);
+      toast.error('Error al publicar');
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    fetchUpdates();
+
+    // Real-time subscription
+    const channel = supabase
+      .channel(`project-updates-${projectId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'project_updates',
+          filter: `project_id=eq.${projectId}`,
+        },
+        () => {
+          fetchUpdates();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [projectId]);
+
+  return {
+    updates,
+    loading,
+    createUpdate,
+    refreshUpdates: fetchUpdates,
+  };
+}
+
+export function useProjectFeedback(projectId: string) {
+  const { user } = useAuth();
+  const [feedback, setFeedback] = useState<ProjectFeedback[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchFeedback = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('project_feedback')
+        .select(`
+          *,
+          profiles:user_id (id, full_name, avatar_url)
+        `)
+        .eq('project_id', projectId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      setFeedback((data as unknown as ProjectFeedback[]) || []);
+    } catch (error) {
+      console.error('Error fetching feedback:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addFeedback = async (content: string, feedbackType: ProjectFeedback['feedback_type'] = 'comment', updateId?: string) => {
+    if (!user) {
+      toast.error('Debes iniciar sesión');
+      return null;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('project_feedback')
+        .insert({
+          project_id: projectId,
+          update_id: updateId || null,
+          user_id: user.id,
+          content,
+          feedback_type: feedbackType,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      toast.success('¡Feedback enviado!');
+      fetchFeedback();
+      return data as unknown as ProjectFeedback;
+    } catch (error) {
+      console.error('Error adding feedback:', error);
+      toast.error('Error al enviar feedback');
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    fetchFeedback();
+
+    // Real-time subscription
+    const channel = supabase
+      .channel(`project-feedback-${projectId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'project_feedback',
+          filter: `project_id=eq.${projectId}`,
+        },
+        () => {
+          fetchFeedback();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [projectId]);
+
+  return {
+    feedback,
+    loading,
+    addFeedback,
+    refreshFeedback: fetchFeedback,
+  };
+}
