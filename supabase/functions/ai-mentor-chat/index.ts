@@ -69,10 +69,64 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Get course and module context if available
+    // Get comprehensive student context
+    let studentContext = "";
     let courseContext = "";
     let moduleContext = "";
+    let progressContext = "";
+    let streakContext = "";
+    let communityContext = "";
 
+    // Get student profile and stats
+    const { data: profile } = await supabaseClient
+      .from('profiles')
+      .select('full_name, level, points, badges')
+      .eq('id', effectiveUserId)
+      .single();
+
+    if (profile) {
+      studentContext = `
+PERFIL DEL ESTUDIANTE:
+- Nombre: ${profile.full_name || 'Estudiante'}
+- Nivel: ${profile.level || 1}
+- Puntos totales: ${profile.points || 0}
+- Badges desbloqueados: ${Array.isArray(profile.badges) ? profile.badges.length : 0}`;
+    }
+
+    // Get student streak data
+    const { data: streakData } = await supabaseClient
+      .from('user_activity_logs')
+      .select('created_at')
+      .eq('user_id', effectiveUserId)
+      .order('created_at', { ascending: false })
+      .limit(30);
+
+    if (streakData && streakData.length > 0) {
+      const lastActivity = new Date(streakData[0].created_at);
+      const daysSinceActivity = Math.floor((Date.now() - lastActivity.getTime()) / (1000 * 60 * 60 * 24));
+      streakContext = `
+ACTIVIDAD RECIENTE:
+- Última actividad: hace ${daysSinceActivity} días
+- Actividades en los últimos 30 días: ${streakData.length}`;
+    }
+
+    // Get student communities
+    const { data: memberships } = await supabaseClient
+      .from('community_members')
+      .select('communities(name)')
+      .eq('user_id', effectiveUserId)
+      .limit(5);
+
+    if (memberships && memberships.length > 0) {
+      const communityNames = memberships
+        .map(m => (m.communities as any)?.name)
+        .filter(Boolean)
+        .join(', ');
+      communityContext = `
+COMUNIDADES: ${communityNames}`;
+    }
+
+    // Get course context if available
     if (course_id) {
       const { data: course } = await supabaseClient
         .from('courses')
@@ -81,10 +135,39 @@ serve(async (req) => {
         .single();
       
       if (course) {
-        courseContext = `Curso actual: "${course.title}" - ${course.description || 'Sin descripción'}`;
+        courseContext = `
+CURSO ACTUAL: "${course.title}"
+Descripción: ${course.description || 'Sin descripción'}`;
+      }
+
+      // Get detailed progress for this course
+      const { data: modules } = await supabaseClient
+        .from('course_modules')
+        .select('id, title, order_index')
+        .eq('course_id', course_id)
+        .order('order_index');
+
+      const { data: userProgress } = await supabaseClient
+        .from('user_progress')
+        .select('module_id, completed')
+        .eq('user_id', effectiveUserId);
+
+      if (modules && modules.length > 0) {
+        const completedIds = new Set(userProgress?.filter(p => p.completed).map(p => p.module_id) || []);
+        const completedCount = modules.filter(m => completedIds.has(m.id)).length;
+        const percentage = Math.round((completedCount / modules.length) * 100);
+        
+        // Find current and next module
+        const nextModule = modules.find(m => !completedIds.has(m.id));
+        
+        progressContext = `
+PROGRESO EN EL CURSO:
+- Módulos completados: ${completedCount}/${modules.length} (${percentage}%)
+- Siguiente módulo: ${nextModule?.title || 'Todos completados'}`;
       }
     }
 
+    // Get module context if available
     if (module_id) {
       const { data: module } = await supabaseClient
         .from('course_modules')
@@ -93,48 +176,53 @@ serve(async (req) => {
         .single();
       
       if (module) {
-        moduleContext = `Módulo actual: "${module.title}" - ${module.description || ''}\nContenido del módulo: ${module.content?.substring(0, 2000) || 'Sin contenido'}`;
+        moduleContext = `
+MÓDULO ACTUAL: "${module.title}"
+${module.description || ''}
+Contenido resumido: ${module.content?.substring(0, 1500) || 'Sin contenido'}`;
       }
     }
 
-    // Get user's progress
-    let progressContext = "";
-    if (effectiveUserId && course_id) {
-      const { data: progress } = await supabaseClient
-        .from('user_progress')
-        .select('completed, course_modules(title)')
-        .eq('user_id', effectiveUserId)
-        .eq('course_modules.course_id', course_id);
+    // Get recent questions to avoid repetition
+    const { data: recentMessages } = await supabaseClient
+      .from('ai_mentor_messages')
+      .select('content, role')
+      .eq('conversation_id', messages[0]?.conversation_id)
+      .order('created_at', { ascending: false })
+      .limit(5);
 
-      if (progress && progress.length > 0) {
-        const completedModules = progress.filter(p => p.completed).length;
-        progressContext = `El estudiante ha completado ${completedModules} de ${progress.length} módulos en este curso.`;
-      }
-    }
+    const systemPrompt = `Eres "Cero", el mentor de IA de la plataforma de aprendizaje "Código Cero". Eres amigable, empático, motivador y experto en programación.
 
-    const systemPrompt = `Eres un mentor de IA amigable y experto para la plataforma de aprendizaje "Código Cero". Tu rol es ayudar a los estudiantes con sus preguntas sobre programación y los cursos.
-
-CONTEXTO DEL ESTUDIANTE:
+PERSONALIDAD:
+- Eres como un amigo programador que siempre está disponible para ayudar
+- Celebras los logros del estudiante, por pequeños que sean
+- Cuando el estudiante tiene dificultades, eres comprensivo y paciente
+- Usas un tono casual pero profesional
+- Ocasionalmente usas emojis para hacer la conversación más amigable
+${studentContext}
+${streakContext}
+${communityContext}
 ${courseContext}
-${moduleContext}
 ${progressContext}
+${moduleContext}
 
 INSTRUCCIONES:
-1. Responde de manera clara, concisa y amigable en español
-2. Si la pregunta es sobre el contenido del módulo actual, usa ese contexto para dar una respuesta más precisa
-3. Proporciona ejemplos de código cuando sea útil (usa bloques de código markdown)
-4. Si no estás seguro de algo, dilo honestamente
-5. Anima al estudiante y sé motivador
-6. Mantén las respuestas cortas pero informativas (máximo 3-4 párrafos)
-7. Si el estudiante parece frustrado, sé empático y ofrece alternativas
+1. Responde siempre en español, de manera clara y amigable
+2. Si el estudiante pregunta sobre el módulo actual, usa el contexto para dar respuestas precisas
+3. Proporciona ejemplos de código cuando sea útil (usa bloques de código markdown con el lenguaje)
+4. Si ves que el estudiante no ha estado activo, anímalo a continuar
+5. Si ha completado muchos módulos, felicítalo por su progreso
+6. Si está atascado, ofrece diferentes enfoques para resolver el problema
+7. Mantén respuestas concisas pero completas (2-4 párrafos)
+8. Si no sabes algo con certeza, sé honesto
 
-Eres experto en:
-- JavaScript, TypeScript, React
-- HTML, CSS, Tailwind
-- Node.js, APIs REST
-- Bases de datos SQL y NoSQL
-- Git y control de versiones
-- Buenas prácticas de programación`;
+ÁREAS DE EXPERTISE:
+- JavaScript/TypeScript y React
+- HTML, CSS y Tailwind CSS
+- Node.js, APIs REST y bases de datos
+- Git y buenas prácticas
+- Arquitectura de software y patrones de diseño
+- Debugging y resolución de problemas`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
