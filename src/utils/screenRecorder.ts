@@ -17,7 +17,7 @@ export class ScreenRecorder {
           height: { ideal: 720 },
           frameRate: { ideal: 30 }
         },
-        audio: false
+        audio: true
       });
 
       this.chunks = [];

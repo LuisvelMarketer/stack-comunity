@@ -94,6 +94,7 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
     general: ''
   });
   const [openCategories, setOpenCategories] = useState<Set<CategoryKey>>(new Set());
+  const MAX_RECORDING_SECONDS = 60;
   const [loading, setLoading] = useState(false);
   const [screenshots, setScreenshots] = useState<ScreenshotFile[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -214,14 +215,14 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
     }
 
     try {
-      screenRecorderRef.current = new ScreenRecorder(30);
+      screenRecorderRef.current = new ScreenRecorder(MAX_RECORDING_SECONDS);
       await screenRecorderRef.current.start();
       setIsRecording(true);
       setRecordingTime(0);
 
       recordingIntervalRef.current = setInterval(() => {
         setRecordingTime(prev => {
-          if (prev >= 30) {
+          if (prev >= MAX_RECORDING_SECONDS) {
             stopRecording();
             return prev;
           }
@@ -229,7 +230,7 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
         });
       }, 1000);
 
-      toast.success('Grabación iniciada (máx. 30 segundos)');
+      toast.success(`Grabación iniciada (máx. ${MAX_RECORDING_SECONDS} segundos)`);
     } catch (error) {
       console.error('Error starting recording:', error);
       toast.error('Error al iniciar grabación');
@@ -579,7 +580,7 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
           {/* Screen Recording */}
           {ScreenRecorder.isSupported() && (
             <div className="space-y-2">
-              <Label>Grabación de pantalla (máx. 30 seg)</Label>
+              <Label>Grabación de pantalla con audio (máx. {MAX_RECORDING_SECONDS} seg)</Label>
               
               {videoPreviewUrl ? (
                 <div className="relative">
@@ -602,7 +603,7 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
                 <div className="flex items-center gap-3 p-3 bg-red-50 dark:bg-red-950/30 rounded-lg border border-red-200 dark:border-red-900">
                   <div className="h-3 w-3 rounded-full bg-red-500 animate-pulse" />
                   <span className="text-sm font-medium text-red-700 dark:text-red-400">
-                    Grabando... {recordingTime}s / 30s
+                    Grabando... {recordingTime}s / {MAX_RECORDING_SECONDS}s
                   </span>
                   <Button
                     type="button"
