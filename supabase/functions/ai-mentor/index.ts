@@ -65,6 +65,16 @@ serve(async (req) => {
 
     const { action, user_id, course_id, module_id } = await req.json();
     
+    // Validate action against whitelist of allowed actions
+    const allowedActions = ['analyze_progress', 'get_suggestions', 'dismiss_suggestion', 'log_activity'];
+    if (!action || !allowedActions.includes(action)) {
+      console.log("[AI-MENTOR] Invalid action attempted:", action);
+      return new Response(JSON.stringify({ error: "Invalid action" }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
     // Validate that requested user_id matches authenticated user
     if (user_id && user_id !== user.id) {
       console.log("[AI-MENTOR] User ID mismatch - attempted access to other user's data");
