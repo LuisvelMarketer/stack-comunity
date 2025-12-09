@@ -84,7 +84,7 @@ const Dashboard = () => {
                   <Users className="w-4 h-4 mr-2" />
                   Comunidades
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/courses")}>
                   <BookOpen className="w-4 h-4 mr-2" />
                   Cursos
                 </Button>
