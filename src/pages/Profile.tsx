@@ -17,6 +17,7 @@ import { ArrowLeft, Upload, Loader2, Trophy, Award, Users, Sun, Moon, Monitor } 
 import { UserMenu } from "@/components/UserMenu";
 import { useThemePreference } from "@/hooks/useThemePreference";
 import { UserAchievements } from "@/components/UserAchievements";
+import { NotificationSettings } from "@/components/NotificationSettings";
 
 type FollowListType = "followers" | "following" | null;
 
@@ -574,6 +575,9 @@ export default function Profile() {
               </RadioGroup>
             </CardContent>
           </Card>
+
+          {/* Push Notifications */}
+          <NotificationSettings />
 
           {/* Save Button */}
           <div className="flex justify-end">
