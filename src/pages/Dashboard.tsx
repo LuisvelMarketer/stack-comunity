@@ -16,7 +16,7 @@ import { UpcomingLives } from "@/components/social/UpcomingLives";
 import { AIMentorWidget } from "@/components/AIMentorWidget";
 import { UserStreakCard } from "@/components/gamification/UserStreakCard";
 import { AIMentorChat, AIMentorChatButton } from "@/components/AIMentorChat";
-import { Home, Users, BookOpen, Calendar, Search } from "lucide-react";
+import { Home, Users, BookOpen, Calendar, Search, Rocket } from "lucide-react";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { toast } from "sonner";
 
@@ -91,6 +91,10 @@ const Dashboard = () => {
                 <Button variant="ghost" size="sm" onClick={() => navigate("/calendar")}>
                   <Calendar className="w-4 h-4 mr-2" />
                   Calendario
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/build-in-public")}>
+                  <Rocket className="w-4 h-4 mr-2" />
+                  Build in Public
                 </Button>
               </div>
             </div>

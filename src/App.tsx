@@ -26,6 +26,8 @@ import CalendarPage from "./pages/CalendarPage";
 import MyCommunities from "./pages/MyCommunities";
 import CommunityManage from "./pages/CommunityManage";
 import Subscriptions from "./pages/Subscriptions";
+import BuildInPublic from "./pages/BuildInPublic";
+import ProjectDetail from "./pages/ProjectDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -177,6 +179,22 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Subscriptions />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/build-in-public"
+              element={
+                <ProtectedRoute>
+                  <BuildInPublic />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/project/:projectId"
+              element={
+                <ProtectedRoute>
+                  <ProjectDetail />
                 </ProtectedRoute>
               }
             />
