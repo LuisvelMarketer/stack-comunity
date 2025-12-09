@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -67,6 +67,44 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
     setScreenshot(file);
     setScreenshotPreview(URL.createObjectURL(file));
   };
+
+  const handlePasteImage = useCallback((file: File) => {
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('La imagen no puede superar 5MB');
+      return;
+    }
+
+    setScreenshot(file);
+    setScreenshotPreview(URL.createObjectURL(file));
+    toast.success('Captura pegada desde portapapeles');
+  }, []);
+
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.startsWith('image/')) {
+          const file = items[i].getAsFile();
+          if (file) {
+            e.preventDefault();
+            handlePasteImage(file);
+            break;
+          }
+        }
+      }
+    };
+
+    document.addEventListener('paste', handlePaste);
+    return () => document.removeEventListener('paste', handlePaste);
+  }, [handlePasteImage]);
 
   const removeScreenshot = () => {
     setScreenshot(null);
@@ -255,7 +293,7 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
               >
                 <Upload className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">
-                  Clic para subir imagen
+                  Clic para subir o <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">Ctrl+V</kbd> para pegar
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   PNG, JPG hasta 5MB
