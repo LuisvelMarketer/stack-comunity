@@ -157,16 +157,26 @@ export function MyProjects() {
                 </div>
 
                 <div className="flex items-center gap-1">
-                  <Link to={`/build-in-public/${project.id}`}>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8"
+                    asChild
+                  >
+                    <Link to={`/build-in-public/${project.id}`}>
                       <Eye className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                  <Link to={`/build-in-public/${project.id}/edit`}>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                    </Link>
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8"
+                    asChild
+                  >
+                    <Link to={`/build-in-public/${project.id}/edit`}>
                       <Edit className="h-4 w-4" />
-                    </Button>
-                  </Link>
+                    </Link>
+                  </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
