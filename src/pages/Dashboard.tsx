@@ -20,6 +20,7 @@ import { LevelProgressCard } from "@/components/gamification/LevelProgressCard";
 import { AIMentorChat, AIMentorChatButton } from "@/components/AIMentorChat";
 import { Home, Users, GraduationCap, Calendar, Search, Rocket } from "lucide-react";
 import { NotificationCenter } from "@/components/NotificationCenter";
+import { PushNotificationPrompt } from "@/components/PushNotificationPrompt";
 import { toast } from "sonner";
 
 const Dashboard = () => {
@@ -147,6 +148,9 @@ const Dashboard = () => {
         isOpen={isChatOpen}
         onClose={() => setIsChatOpen(false)}
       />
+
+      {/* Push notification prompt */}
+      <PushNotificationPrompt />
     </div>
   );
 };

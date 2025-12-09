@@ -66,6 +66,7 @@ export const usePushNotifications = () => {
 
     const channel = supabase
       .channel('push-notifications')
+      // New notifications
       .on(
         'postgres_changes',
         {
@@ -89,6 +90,7 @@ export const usePushNotifications = () => {
           });
         }
       )
+      // New community messages
       .on(
         'postgres_changes',
         {
@@ -108,6 +110,131 @@ export const usePushNotifications = () => {
               body: message.content.substring(0, 100),
               tag: 'message',
             });
+          }
+        }
+      )
+      // New achievements unlocked
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'user_achievements',
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          showNotification('🏆 ¡Nuevo logro desbloqueado!', {
+            body: 'Has obtenido un nuevo logro. ¡Revisa tu perfil para verlo!',
+            tag: 'achievement',
+          });
+        }
+      )
+      // Level up via user_level_history
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'user_level_history',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const levelUp = payload.new as {
+            from_level: number;
+            to_level: number;
+          };
+          
+          showNotification('⬆️ ¡Subiste de nivel!', {
+            body: `Has pasado del nivel ${levelUp.from_level} al nivel ${levelUp.to_level}. ¡Sigue así!`,
+            tag: 'level-up',
+          });
+        }
+      )
+      // Live sessions starting
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'live_sessions',
+        },
+        (payload) => {
+          const session = payload.new as {
+            status: string;
+            title: string;
+          };
+          
+          if (session.status === 'live') {
+            showNotification('🔴 ¡En vivo ahora!', {
+              body: `"${session.title}" acaba de comenzar. ¡Únete!`,
+              tag: 'live-session',
+            });
+          }
+        }
+      )
+      // Direct messages
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'direct_messages',
+        },
+        async (payload) => {
+          const message = payload.new as {
+            sender_id: string;
+            content: string;
+            conversation_id: string;
+          };
+          
+          if (message.sender_id !== user.id) {
+            // Check if this conversation belongs to the user
+            const { data: conv } = await supabase
+              .from('conversations')
+              .select('participant_1, participant_2')
+              .eq('id', message.conversation_id)
+              .single();
+            
+            if (conv && (conv.participant_1 === user.id || conv.participant_2 === user.id)) {
+              showNotification('💬 Nuevo mensaje directo', {
+                body: message.content.substring(0, 100),
+                tag: 'dm',
+                data: { link: `/messages/${message.conversation_id}` },
+              });
+            }
+          }
+        }
+      )
+      // Project feedback
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'project_feedback',
+        },
+        async (payload) => {
+          const feedback = payload.new as {
+            project_id: string;
+            user_id: string;
+            content: string;
+          };
+          
+          if (feedback.user_id !== user.id) {
+            // Check if user owns this project
+            const { data: project } = await supabase
+              .from('build_projects')
+              .select('user_id, title')
+              .eq('id', feedback.project_id)
+              .single();
+            
+            if (project && project.user_id === user.id) {
+              showNotification('📝 Nuevo feedback en tu proyecto', {
+                body: `"${project.title}": ${feedback.content.substring(0, 80)}...`,
+                tag: 'feedback',
+                data: { link: `/project/${feedback.project_id}` },
+              });
+            }
           }
         }
       )
