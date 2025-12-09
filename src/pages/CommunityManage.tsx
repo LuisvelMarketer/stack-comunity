@@ -30,7 +30,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Users, Settings, BookOpen, Trash2, Save, Bell, DollarSign, Tag, X, Plus, Images, Upload, ImageIcon, BarChart3, Mail } from "lucide-react";
+import { ArrowLeft, Users, Settings, BookOpen, Trash2, Save, Bell, DollarSign, Tag, X, Plus, Images, Upload, ImageIcon, BarChart3, Mail, Target } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -44,6 +44,7 @@ import { BroadcastNotification } from "@/components/community/BroadcastNotificat
 import { CommunityGalleryManager } from "@/components/community/CommunityGalleryManager";
 import { CommunityAnalyticsTab } from "@/components/community/CommunityAnalyticsTab";
 import { EmailCampaignManager } from "@/components/community/EmailCampaignManager";
+import { WeeklyChallengesManager } from "@/components/community/WeeklyChallengesManager";
 import { UserMenu } from "@/components/UserMenu";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -371,6 +372,10 @@ export default function CommunityManage() {
               <Mail className="h-4 w-4" />
               Email Marketing
             </TabsTrigger>
+            <TabsTrigger value="challenges" className="gap-2">
+              <Target className="h-4 w-4" />
+              Desafíos
+            </TabsTrigger>
             <TabsTrigger value="pricing" className="gap-2">
               <DollarSign className="h-4 w-4" />
               Membresía
@@ -499,6 +504,11 @@ export default function CommunityManage() {
               communityId={communityId!} 
               communityName={community.name}
             />
+          </TabsContent>
+
+          {/* Challenges Tab */}
+          <TabsContent value="challenges">
+            <WeeklyChallengesManager communityId={communityId!} />
           </TabsContent>
 
           {/* Pricing Tab */}
