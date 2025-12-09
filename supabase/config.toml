@@ -29,3 +29,9 @@ verify_jwt = false
 
 [functions.ai-mentor]
 verify_jwt = false
+
+[functions.ai-mentor-inactivity-check]
+verify_jwt = false
+
+[functions.generate-recurring-events]
+verify_jwt = false
