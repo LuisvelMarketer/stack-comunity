@@ -45,6 +45,7 @@ interface FeedUpdate extends ProjectUpdate {
       avatar_url: string | null;
     };
   };
+  comments_count: number;
 }
 
 export function BuildPublicFeed() {
@@ -66,17 +67,21 @@ export function BuildPublicFeed() {
               visibility,
               user_id,
               profiles:user_id (id, full_name, avatar_url)
-            )
+            ),
+            project_update_comments (id)
           `)
           .order('created_at', { ascending: false })
           .limit(20);
 
         if (error) throw error;
         
-        // Filter only public projects
-        const publicUpdates = (data || []).filter(
-          (update: any) => update.build_projects?.visibility === 'public'
-        );
+        // Filter only public projects and add comments count
+        const publicUpdates = (data || [])
+          .filter((update: any) => update.build_projects?.visibility === 'public')
+          .map((update: any) => ({
+            ...update,
+            comments_count: update.project_update_comments?.length || 0,
+          }));
         
         setUpdates(publicUpdates as unknown as FeedUpdate[]);
       } catch (error) {
@@ -231,7 +236,7 @@ export function BuildPublicFeed() {
                 <Link to={`/build-in-public/${project?.id}`}>
                   <Button variant="ghost" size="sm" className="text-muted-foreground">
                     <MessageCircle className="h-4 w-4 mr-1" />
-                    Ver proyecto
+                    {update.comments_count || 0}
                   </Button>
                 </Link>
                 <Link to={`/build-in-public/${project?.id}`} className="ml-auto">
