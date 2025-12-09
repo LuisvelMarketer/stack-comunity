@@ -18,7 +18,7 @@ import { UserStreakCard } from "@/components/gamification/UserStreakCard";
 import { DailyMissionsCard } from "@/components/gamification/DailyMissionsCard";
 import { LevelProgressCard } from "@/components/gamification/LevelProgressCard";
 import { AIMentorChat, AIMentorChatButton } from "@/components/AIMentorChat";
-import { Home, Users, GraduationCap, Calendar, Search, Rocket } from "lucide-react";
+import { Home, Users, GraduationCap, Calendar, Search, Rocket, Briefcase } from "lucide-react";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { PushNotificationPrompt } from "@/components/PushNotificationPrompt";
 import { toast } from "sonner";
@@ -98,6 +98,10 @@ const Dashboard = () => {
                 <Button variant="ghost" size="sm" onClick={() => navigate("/build-in-public")}>
                   <Rocket className="w-4 h-4 mr-2" />
                   Build in Public
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/marketplace")}>
+                  <Briefcase className="w-4 h-4 mr-2" />
+                  Marketplace
                 </Button>
               </div>
             </div>
