@@ -6,14 +6,18 @@ import { useStreak } from '@/hooks/useStreak';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Flame, Target, Trophy, Calendar, Zap } from 'lucide-react';
+import { Flame, Target, Trophy, Calendar, Zap, Award } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 
 interface UserStreakCardProps {
   compact?: boolean;
 }
+
+const STREAK_MILESTONES = [
+  { days: 7, label: '7 días', icon: '🔥' },
+  { days: 30, label: '30 días', icon: '⚡' },
+  { days: 100, label: '100 días', icon: '🏆' },
+];
 
 export const UserStreakCard: React.FC<UserStreakCardProps> = ({ compact = false }) => {
   const { user } = useAuth();
@@ -33,6 +37,30 @@ export const UserStreakCard: React.FC<UserStreakCardProps> = ({ compact = false 
         .maybeSingle();
 
       return data;
+    },
+    enabled: !!user,
+  });
+
+  const { data: streakAchievements } = useQuery({
+    queryKey: ['streak-achievements', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+
+      const { data } = await supabase
+        .from('user_achievements')
+        .select(`
+          achievement_id,
+          achievements (
+            name,
+            icon,
+            points
+          )
+        `)
+        .eq('user_id', user.id);
+
+      return data?.filter((a: any) => 
+        a.achievements?.name?.includes('Racha')
+      ) || [];
     },
     enabled: !!user,
   });
@@ -80,14 +108,34 @@ export const UserStreakCard: React.FC<UserStreakCardProps> = ({ compact = false 
 
   // Calculate streak tier for visual feedback
   const getStreakTier = (streak: number) => {
-    if (streak >= 30) return { color: 'text-yellow-500', label: 'Legendario', icon: '🔥' };
-    if (streak >= 14) return { color: 'text-orange-500', label: 'En fuego', icon: '🔥' };
+    if (streak >= 100) return { color: 'text-yellow-500', label: 'Legendario', icon: '🏆' };
+    if (streak >= 30) return { color: 'text-orange-500', label: 'En fuego', icon: '⚡' };
     if (streak >= 7) return { color: 'text-red-500', label: 'Racha caliente', icon: '🔥' };
     if (streak >= 3) return { color: 'text-primary', label: 'Buen ritmo', icon: '💪' };
     return { color: 'text-muted-foreground', label: 'Comenzando', icon: '✨' };
   };
 
   const tier = getStreakTier(currentStreak);
+
+  // Get next milestone
+  const getNextMilestone = () => {
+    for (const milestone of STREAK_MILESTONES) {
+      if (currentStreak < milestone.days) {
+        return milestone;
+      }
+    }
+    return null;
+  };
+
+  const nextMilestone = getNextMilestone();
+  const progressToNextMilestone = nextMilestone 
+    ? (currentStreak / nextMilestone.days) * 100 
+    : 100;
+
+  // Check which badges are unlocked
+  const unlockedBadges = new Set(
+    streakAchievements?.map((a: any) => a.achievements?.name) || []
+  );
 
   if (compact) {
     return (
@@ -124,6 +172,47 @@ export const UserStreakCard: React.FC<UserStreakCardProps> = ({ compact = false 
             <Badge variant="secondary" className="mt-2">
               {tier.icon} {tier.label}
             </Badge>
+          )}
+        </div>
+
+        {/* Streak Badges Progress */}
+        <div className="pt-4 border-t">
+          <div className="flex items-center gap-2 text-sm font-medium mb-3">
+            <Award className="h-4 w-4 text-primary" />
+            Badges de Racha
+          </div>
+          <div className="flex justify-between gap-2">
+            {STREAK_MILESTONES.map((milestone) => {
+              const isUnlocked = currentStreak >= milestone.days || 
+                unlockedBadges.has(`Racha de ${milestone.days} días`);
+              const progress = Math.min((currentStreak / milestone.days) * 100, 100);
+              
+              return (
+                <div 
+                  key={milestone.days} 
+                  className={`flex-1 text-center p-2 rounded-lg border transition-all ${
+                    isUnlocked 
+                      ? 'bg-primary/10 border-primary/30' 
+                      : 'bg-muted/50 border-border'
+                  }`}
+                >
+                  <div className="text-2xl mb-1">
+                    {isUnlocked ? milestone.icon : '🔒'}
+                  </div>
+                  <p className={`text-xs font-medium ${isUnlocked ? 'text-primary' : 'text-muted-foreground'}`}>
+                    {milestone.label}
+                  </p>
+                  {!isUnlocked && (
+                    <Progress value={progress} className="h-1 mt-2" />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          {nextMilestone && (
+            <p className="text-xs text-center text-muted-foreground mt-2">
+              {nextMilestone.days - currentStreak} días para desbloquear {nextMilestone.icon}
+            </p>
           )}
         </div>
 
