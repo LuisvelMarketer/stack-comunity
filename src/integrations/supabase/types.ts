@@ -288,6 +288,74 @@ export type Database = {
           },
         ]
       }
+      build_projects: {
+        Row: {
+          community_id: string | null
+          created_at: string
+          description: string | null
+          featured_at: string | null
+          id: string
+          is_featured: boolean | null
+          likes_count: number | null
+          live_url: string | null
+          repository_url: string | null
+          status: string
+          tech_stack: string[] | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          user_id: string
+          views_count: number | null
+          visibility: string
+        }
+        Insert: {
+          community_id?: string | null
+          created_at?: string
+          description?: string | null
+          featured_at?: string | null
+          id?: string
+          is_featured?: boolean | null
+          likes_count?: number | null
+          live_url?: string | null
+          repository_url?: string | null
+          status?: string
+          tech_stack?: string[] | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+          views_count?: number | null
+          visibility?: string
+        }
+        Update: {
+          community_id?: string | null
+          created_at?: string
+          description?: string | null
+          featured_at?: string | null
+          id?: string
+          is_featured?: boolean | null
+          likes_count?: number | null
+          live_url?: string | null
+          repository_url?: string | null
+          status?: string
+          tech_stack?: string[] | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          views_count?: number | null
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "build_projects_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       certificates: {
         Row: {
           certificate_number: string
@@ -1422,6 +1490,169 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      project_feedback: {
+        Row: {
+          content: string
+          created_at: string
+          feedback_type: string | null
+          id: string
+          parent_id: string | null
+          project_id: string
+          update_id: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          feedback_type?: string | null
+          id?: string
+          parent_id?: string | null
+          project_id: string
+          update_id?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          feedback_type?: string | null
+          id?: string
+          parent_id?: string | null
+          project_id?: string
+          update_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_feedback_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "project_feedback"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_feedback_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "build_projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_feedback_update_id_fkey"
+            columns: ["update_id"]
+            isOneToOne: false
+            referencedRelation: "project_updates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_followers: {
+        Row: {
+          created_at: string
+          id: string
+          project_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          project_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          project_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_followers_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "build_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_likes: {
+        Row: {
+          created_at: string
+          id: string
+          project_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          project_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          project_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_likes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "build_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_updates: {
+        Row: {
+          content: string
+          created_at: string
+          hours_spent: number | null
+          id: string
+          images: string[] | null
+          mood: string | null
+          project_id: string
+          title: string
+          update_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          hours_spent?: number | null
+          id?: string
+          images?: string[] | null
+          mood?: string | null
+          project_id: string
+          title: string
+          update_type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          hours_spent?: number | null
+          id?: string
+          images?: string[] | null
+          mood?: string | null
+          project_id?: string
+          title?: string
+          update_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_updates_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "build_projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       referrals: {
         Row: {
