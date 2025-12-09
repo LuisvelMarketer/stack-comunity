@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Image, Send } from "lucide-react";
+import { Image, Send, X, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { MentionInput } from "./MentionInput";
 
