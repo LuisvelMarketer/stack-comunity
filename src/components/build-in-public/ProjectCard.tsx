@@ -11,7 +11,8 @@ import {
   Palette,
   Clock,
   Eye,
-  Heart
+  Heart,
+  MessageSquarePlus
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -96,21 +97,28 @@ export function ProjectCard({ project, showFeedbackCounts = true }: ProjectCardP
             {statusLabels[project.status]}
           </Badge>
 
-          {/* Live URL Overlay */}
-          {project.live_url && (
-            <a 
-              href={project.live_url} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Button variant="secondary" size="lg" className="gap-2">
-                <ExternalLink className="h-5 w-5" />
-                Probar App
+          {/* Overlay con acciones */}
+          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
+            {project.live_url && (
+              <a 
+                href={project.live_url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Button variant="secondary" size="sm" className="gap-2">
+                  <ExternalLink className="h-4 w-4" />
+                  Probar App
+                </Button>
+              </a>
+            )}
+            <Link to={`/build-in-public/${project.id}`} onClick={(e) => e.stopPropagation()}>
+              <Button variant="outline" size="sm" className="gap-2 bg-background/20 hover:bg-background/40 border-white/30 text-white">
+                <Bug className="h-4 w-4" />
+                Dar Feedback
               </Button>
-            </a>
-          )}
+            </Link>
+          </div>
         </div>
 
         {/* Content Section */}
