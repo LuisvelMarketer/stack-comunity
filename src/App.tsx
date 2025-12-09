@@ -191,6 +191,14 @@ const App = () => (
               }
             />
             <Route
+              path="/build-in-public/:projectId"
+              element={
+                <ProtectedRoute>
+                  <ProjectDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/project/:projectId"
               element={
                 <ProtectedRoute>
