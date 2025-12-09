@@ -13,6 +13,7 @@ import { ContinueLearning } from "@/components/social/ContinueLearning";
 import { ActiveCommunity } from "@/components/social/ActiveCommunity";
 import { SuggestedCommunities } from "@/components/social/SuggestedCommunities";
 import { UpcomingLives } from "@/components/social/UpcomingLives";
+import { AIMentorWidget } from "@/components/AIMentorWidget";
 import { Home, Users, BookOpen, Calendar, Search } from "lucide-react";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { toast } from "sonner";
@@ -105,6 +106,7 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Sidebar - 3 columns */}
           <div className="lg:col-span-3 space-y-4">
+            <AIMentorWidget />
             <MyCommunities />
             <UserProgress />
           </div>
