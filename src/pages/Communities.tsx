@@ -263,7 +263,7 @@ export default function Communities() {
         {featuredCommunity && !searchQuery && filter === "all" && (
           <Card 
             className="mb-8 overflow-hidden cursor-pointer hover:shadow-lg transition-all group"
-            onClick={() => navigate(`/communities/${featuredCommunity.slug}`)}
+            onClick={() => navigate(`/c/${featuredCommunity.slug}`)}
           >
             <div className="md:flex">
               <div className="md:w-1/3 h-48 md:h-auto bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
@@ -354,7 +354,7 @@ export default function Communities() {
               <Card 
                 key={community.id}
                 className="group cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
-                onClick={() => navigate(`/communities/${community.slug}`)}
+                onClick={() => navigate(`/c/${community.slug}`)}
               >
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4 mb-4">
