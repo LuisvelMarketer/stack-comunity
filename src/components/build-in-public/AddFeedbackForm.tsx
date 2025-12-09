@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -17,25 +17,95 @@ import {
   Palette,
   MessageSquare,
   Send,
-  AlertTriangle
+  AlertTriangle,
+  Image as ImageIcon,
+  X,
+  Upload
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 interface AddFeedbackFormProps {
   onAdd: (data: { 
     content: string; 
     category: string; 
     priority: string;
+    screenshot_url?: string;
   }) => Promise<any>;
   disabled?: boolean;
   projectLiveUrl?: string;
 }
 
 export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedbackFormProps) {
+  const { user } = useAuth();
   const [content, setContent] = useState('');
   const [category, setCategory] = useState('bug');
   const [priority, setPriority] = useState('medium');
   const [loading, setLoading] = useState(false);
+  const [screenshot, setScreenshot] = useState<File | null>(null);
+  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Solo se permiten imágenes');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('La imagen no puede superar 5MB');
+      return;
+    }
+
+    setScreenshot(file);
+    setScreenshotPreview(URL.createObjectURL(file));
+  };
+
+  const removeScreenshot = () => {
+    setScreenshot(null);
+    if (screenshotPreview) {
+      URL.revokeObjectURL(screenshotPreview);
+      setScreenshotPreview(null);
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const uploadScreenshot = async (): Promise<string | null> => {
+    if (!screenshot || !user) return null;
+
+    setUploadingImage(true);
+    try {
+      const fileExt = screenshot.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('feedback-screenshots')
+        .upload(fileName, screenshot);
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('feedback-screenshots')
+        .getPublicUrl(fileName);
+
+      return urlData.publicUrl;
+    } catch (error) {
+      console.error('Error uploading screenshot:', error);
+      toast.error('Error al subir la captura');
+      return null;
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,14 +116,25 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
 
     setLoading(true);
     try {
+      // Upload screenshot if exists
+      let screenshotUrl: string | undefined;
+      if (screenshot) {
+        const url = await uploadScreenshot();
+        if (url) screenshotUrl = url;
+      }
+
       await onAdd({
         content: content.trim(),
         category,
         priority,
+        screenshot_url: screenshotUrl,
       });
+
+      // Reset form
       setContent('');
       setCategory('bug');
       setPriority('medium');
+      removeScreenshot();
       toast.success('Feedback enviado');
     } catch (error) {
       console.error('Error adding feedback:', error);
@@ -146,6 +227,51 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
             />
           </div>
 
+          {/* Screenshot Upload */}
+          <div className="space-y-2">
+            <Label>Captura de pantalla (opcional)</Label>
+            
+            {screenshotPreview ? (
+              <div className="relative inline-block">
+                <img 
+                  src={screenshotPreview} 
+                  alt="Preview" 
+                  className="max-h-40 rounded-lg border"
+                />
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="icon"
+                  className="absolute -top-2 -right-2 h-6 w-6"
+                  onClick={removeScreenshot}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            ) : (
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors"
+              >
+                <Upload className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">
+                  Clic para subir imagen
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  PNG, JPG hasta 5MB
+                </p>
+              </div>
+            )}
+            
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+          </div>
+
           {/* Priority */}
           <div className="flex items-center gap-4">
             <div className="space-y-2 flex-1">
@@ -186,11 +312,20 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
 
             <Button 
               type="submit" 
-              disabled={loading || !content.trim()}
+              disabled={loading || uploadingImage || !content.trim()}
               className="mt-6"
             >
-              <Send className="h-4 w-4 mr-2" />
-              {loading ? 'Enviando...' : 'Enviar'}
+              {uploadingImage ? (
+                <>
+                  <ImageIcon className="h-4 w-4 mr-2 animate-pulse" />
+                  Subiendo...
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4 mr-2" />
+                  {loading ? 'Enviando...' : 'Enviar'}
+                </>
+              )}
             </Button>
           </div>
         </form>
