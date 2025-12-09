@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 interface AISuggestion {
   id: string;
-  suggestion_type: 'blocked' | 'encouragement' | 'tip' | 'milestone';
+  suggestion_type: 'blocked' | 'encouragement' | 'tip' | 'milestone' | 'streak' | 'challenge';
   title: string;
   content: string;
   priority: 'low' | 'medium' | 'high';
@@ -12,6 +13,8 @@ interface AISuggestion {
   created_at: string;
   course_id?: string;
   module_id?: string;
+  action_type?: string;
+  action_data?: Record<string, any>;
 }
 
 interface ProgressAnalysis {
@@ -19,6 +22,10 @@ interface ProgressAnalysis {
   totalModules: number;
   daysSinceLastActivity: number;
   isBlocked: boolean;
+  streakAtRisk?: boolean;
+  currentStreak?: number;
+  activeChallenges?: number;
+  suggestionContext?: string;
 }
 
 export const useAIMentor = () => {
@@ -60,10 +67,23 @@ export const useAIMentor = () => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        // Handle rate limit errors
+        if (error.message?.includes('429') || error.message?.includes('rate limit')) {
+          toast.error('Demasiadas solicitudes. Intenta de nuevo en unos segundos.');
+          return null;
+        }
+        throw error;
+      }
       
       if (data.suggestion) {
-        setSuggestions(prev => [data.suggestion, ...prev.slice(0, 4)]);
+        // Add action metadata if present
+        const enrichedSuggestion = {
+          ...data.suggestion,
+          action_type: data.suggestion.action_type,
+          action_data: data.suggestion.action_data
+        };
+        setSuggestions(prev => [enrichedSuggestion, ...prev.filter(s => s.id !== enrichedSuggestion.id).slice(0, 4)]);
       }
       
       if (data.analysis) {
