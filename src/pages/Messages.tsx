@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,10 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ArrowLeft, Send, MessageSquare } from "lucide-react";
+import { ArrowLeft, Send, MessageSquare, Search } from "lucide-react";
 import { UserMenu } from "@/components/UserMenu";
-import { formatDistanceToNow } from "date-fns";
-import { es } from "date-fns/locale";
+import { MessageBubble } from "@/components/messages/MessageBubble";
+import { ConversationItem } from "@/components/messages/ConversationItem";
+import { TypingIndicator } from "@/components/messages/TypingIndicator";
+import { useTypingIndicator } from "@/hooks/useTypingIndicator";
 
 interface Conversation {
   id: string;
@@ -33,6 +35,19 @@ interface Message {
   content: string;
   read: boolean;
   created_at: string;
+  reactions?: Array<{
+    emoji: string;
+    count: number;
+    users: string[];
+    hasReacted: boolean;
+  }>;
+}
+
+interface Reaction {
+  id: string;
+  message_id: string;
+  user_id: string;
+  emoji: string;
 }
 
 export default function Messages() {
@@ -41,11 +56,14 @@ export default function Messages() {
   const navigate = useNavigate();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [reactions, setReactions] = useState<Reaction[]>([]);
   const [newMessage, setNewMessage] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { isOtherUserTyping, setTyping } = useTypingIndicator(conversationId);
 
   useEffect(() => {
     if (!user) {
@@ -58,11 +76,13 @@ export default function Messages() {
   useEffect(() => {
     if (conversationId) {
       fetchMessages(conversationId);
+      fetchReactions(conversationId);
       const conv = conversations.find(c => c.id === conversationId);
       setSelectedConversation(conv || null);
     }
   }, [conversationId, conversations]);
 
+  // Realtime messages
   useEffect(() => {
     if (!conversationId) return;
 
@@ -77,7 +97,18 @@ export default function Messages() {
           filter: `conversation_id=eq.${conversationId}`
         },
         (payload) => {
-          setMessages(prev => [...prev, payload.new as Message]);
+          setMessages(prev => [...prev, { ...payload.new as Message, reactions: [] }]);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'dm_reactions'
+        },
+        () => {
+          fetchReactions(conversationId);
         }
       )
       .subscribe();
@@ -102,7 +133,6 @@ export default function Messages() {
 
       if (error) throw error;
 
-      // Fetch other user details for each conversation
       const conversationsWithUsers = await Promise.all(
         (data || []).map(async (conv) => {
           const otherUserId = conv.participant_1 === user?.id ? conv.participant_2 : conv.participant_1;
@@ -121,10 +151,18 @@ export default function Messages() {
             .limit(1)
             .single();
 
+          const { count } = await supabase
+            .from("direct_messages")
+            .select("*", { count: 'exact', head: true })
+            .eq("conversation_id", conv.id)
+            .eq("read", false)
+            .neq("sender_id", user?.id);
+
           return {
             ...conv,
             other_user: profileData,
-            last_message: lastMsg?.content
+            last_message: lastMsg?.content,
+            unread_count: count || 0
           };
         })
       );
@@ -146,12 +184,12 @@ export default function Messages() {
         .order("created_at", { ascending: true });
 
       if (error) throw error;
-      setMessages(data || []);
+      setMessages((data || []).map(m => ({ ...m, reactions: [] })));
 
       // Mark messages as read
       await supabase
         .from("direct_messages")
-        .update({ read: true })
+        .update({ read: true, read_at: new Date().toISOString() })
         .eq("conversation_id", convId)
         .neq("sender_id", user?.id);
     } catch (error) {
@@ -159,10 +197,61 @@ export default function Messages() {
     }
   };
 
+  const fetchReactions = async (convId: string) => {
+    try {
+      // Get all message IDs for this conversation
+      const { data: messageIds } = await supabase
+        .from("direct_messages")
+        .select("id")
+        .eq("conversation_id", convId);
+
+      if (!messageIds?.length) return;
+
+      const { data: reactionsData } = await supabase
+        .from("dm_reactions")
+        .select("*")
+        .in("message_id", messageIds.map(m => m.id));
+
+      setReactions(reactionsData || []);
+    } catch (error) {
+      console.error("Error fetching reactions:", error);
+    }
+  };
+
+  const getMessageReactions = useCallback((messageId: string) => {
+    const messageReactions = reactions.filter(r => r.message_id === messageId);
+    const grouped: { [key: string]: { count: number; users: string[] } } = {};
+    
+    messageReactions.forEach(r => {
+      if (!grouped[r.emoji]) {
+        grouped[r.emoji] = { count: 0, users: [] };
+      }
+      grouped[r.emoji].count++;
+      grouped[r.emoji].users.push(r.user_id);
+    });
+
+    return Object.entries(grouped).map(([emoji, data]) => ({
+      emoji,
+      count: data.count,
+      users: data.users,
+      hasReacted: data.users.includes(user?.id || '')
+    }));
+  }, [reactions, user]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewMessage(e.target.value);
+    if (e.target.value) {
+      setTyping(true);
+    } else {
+      setTyping(false);
+    }
+  };
+
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !conversationId || !user) return;
 
+    setTyping(false);
     setSending(true);
     try {
       const { error } = await supabase
@@ -187,6 +276,11 @@ export default function Messages() {
       setSending(false);
     }
   };
+
+  const filteredConversations = conversations.filter(conv => 
+    conv.other_user?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    conv.last_message?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const getInitials = (name: string | null) => {
     if (!name) return "U";
@@ -214,49 +308,42 @@ export default function Messages() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[calc(100vh-250px)]">
           {/* Conversations List */}
-          <Card className="md:col-span-1">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+          <Card className="md:col-span-1 flex flex-col">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-lg">
                 <MessageSquare className="h-5 w-5" />
                 Conversaciones
               </CardTitle>
+              <div className="relative mt-2">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Buscar conversación..."
+                  className="pl-9"
+                />
+              </div>
             </CardHeader>
-            <CardContent className="p-0">
-              <ScrollArea className="h-[calc(100vh-380px)]">
+            <CardContent className="p-0 flex-1 overflow-hidden">
+              <ScrollArea className="h-full">
                 {loading ? (
                   <div className="p-4 text-center text-muted-foreground">Cargando...</div>
-                ) : conversations.length === 0 ? (
+                ) : filteredConversations.length === 0 ? (
                   <div className="p-4 text-center text-muted-foreground">
-                    No tienes conversaciones
+                    {searchQuery ? "Sin resultados" : "No tienes conversaciones"}
                   </div>
                 ) : (
-                  conversations.map((conv) => (
-                    <div
+                  filteredConversations.map((conv) => (
+                    <ConversationItem
                       key={conv.id}
+                      id={conv.id}
+                      otherUser={conv.other_user || null}
+                      lastMessage={conv.last_message}
+                      updatedAt={conv.updated_at}
+                      unreadCount={conv.unread_count}
+                      isSelected={conversationId === conv.id}
                       onClick={() => navigate(`/messages/${conv.id}`)}
-                      className={`flex items-center gap-3 p-4 cursor-pointer hover:bg-muted/50 transition-colors border-b ${
-                        conversationId === conv.id ? "bg-muted" : ""
-                      }`}
-                    >
-                      <Avatar>
-                        {conv.other_user?.avatar_url && (
-                          <AvatarImage src={conv.other_user.avatar_url} />
-                        )}
-                        <AvatarFallback>
-                          {getInitials(conv.other_user?.full_name || null)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">
-                          {conv.other_user?.full_name || "Usuario"}
-                        </p>
-                        {conv.last_message && (
-                          <p className="text-sm text-muted-foreground truncate">
-                            {conv.last_message}
-                          </p>
-                        )}
-                      </div>
-                    </div>
+                    />
                   ))
                 )}
               </ScrollArea>
@@ -267,61 +354,67 @@ export default function Messages() {
           <Card className="md:col-span-2 flex flex-col">
             {conversationId && selectedConversation ? (
               <>
-                <CardHeader className="border-b">
+                <CardHeader className="border-b py-3">
                   <div className="flex items-center gap-3">
-                    <Avatar>
-                      {selectedConversation.other_user?.avatar_url && (
-                        <AvatarImage src={selectedConversation.other_user.avatar_url} />
-                      )}
-                      <AvatarFallback>
-                        {getInitials(selectedConversation.other_user?.full_name || null)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <CardTitle className="text-lg">
+                    <div className="relative">
+                      <Avatar className="h-10 w-10">
+                        {selectedConversation.other_user?.avatar_url && (
+                          <AvatarImage src={selectedConversation.other_user.avatar_url} />
+                        )}
+                        <AvatarFallback className="bg-primary/10 text-primary">
+                          {getInitials(selectedConversation.other_user?.full_name || null)}
+                        </AvatarFallback>
+                      </Avatar>
+                    </div>
+                    <div className="flex-1">
+                      <CardTitle className="text-base">
                         {selectedConversation.other_user?.full_name || "Usuario"}
                       </CardTitle>
+                      {isOtherUserTyping && (
+                        <span className="text-xs text-primary">Escribiendo...</span>
+                      )}
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="flex-1 flex flex-col p-0">
+                <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
                   <ScrollArea className="flex-1 p-4">
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       {messages.map((message) => (
-                        <div
+                        <MessageBubble
                           key={message.id}
-                          className={`flex ${
-                            message.sender_id === user.id ? "justify-end" : "justify-start"
-                          }`}
-                        >
-                          <div
-                            className={`max-w-[70%] rounded-lg px-4 py-2 ${
-                              message.sender_id === user.id
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-muted"
-                            }`}
-                          >
-                            <p className="text-sm">{message.content}</p>
-                            <p className="text-xs opacity-70 mt-1">
-                              {formatDistanceToNow(new Date(message.created_at), {
-                                addSuffix: true,
-                                locale: es
-                              })}
-                            </p>
+                          id={message.id}
+                          content={message.content}
+                          senderId={message.sender_id}
+                          isOwnMessage={message.sender_id === user.id}
+                          createdAt={message.created_at}
+                          read={message.read}
+                          reactions={getMessageReactions(message.id)}
+                          onReactionToggle={() => fetchReactions(conversationId)}
+                        />
+                      ))}
+                      {isOtherUserTyping && (
+                        <div className="flex justify-start">
+                          <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3">
+                            <TypingIndicator />
                           </div>
                         </div>
-                      ))}
+                      )}
                       <div ref={messagesEndRef} />
                     </div>
                   </ScrollArea>
-                  <form onSubmit={sendMessage} className="p-4 border-t flex gap-2">
+                  <form onSubmit={sendMessage} className="p-4 border-t flex gap-2 bg-card/50">
                     <Input
                       value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
+                      onChange={handleInputChange}
                       placeholder="Escribe un mensaje..."
                       disabled={sending}
+                      className="flex-1"
                     />
-                    <Button type="submit" disabled={sending || !newMessage.trim()}>
+                    <Button 
+                      type="submit" 
+                      disabled={sending || !newMessage.trim()}
+                      size="icon"
+                    >
                       <Send className="h-4 w-4" />
                     </Button>
                   </form>
@@ -329,9 +422,12 @@ export default function Messages() {
               </>
             ) : (
               <CardContent className="flex-1 flex items-center justify-center">
-                <p className="text-muted-foreground">
-                  Selecciona una conversación para ver los mensajes
-                </p>
+                <div className="text-center">
+                  <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                  <p className="text-muted-foreground">
+                    Selecciona una conversación para ver los mensajes
+                  </p>
+                </div>
               </CardContent>
             )}
           </Card>
