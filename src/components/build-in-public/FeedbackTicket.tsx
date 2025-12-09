@@ -25,8 +25,9 @@ import {
   Clock,
   XCircle,
   AlertCircle,
-  ImageIcon,
-  ZoomIn
+  ZoomIn,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -64,6 +65,7 @@ interface FeedbackTicketProps {
     created_at: string;
     user_id: string;
     screenshot_url?: string | null;
+    screenshot_urls?: string[] | null;
     profiles?: {
       id: string;
       full_name: string | null;
@@ -76,6 +78,7 @@ interface FeedbackTicketProps {
 
 export function FeedbackTicket({ feedback, isOwner, onStatusChange }: FeedbackTicketProps) {
   const [updating, setUpdating] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   
   const category = categoryConfig[feedback.category] || categoryConfig.general;
   const status = statusConfig[feedback.status] || statusConfig.open;
@@ -83,6 +86,13 @@ export function FeedbackTicket({ feedback, isOwner, onStatusChange }: FeedbackTi
   const CategoryIcon = category.icon;
   const StatusIcon = status.icon;
   const author = feedback.profiles;
+
+  // Get all screenshots (support both old single and new array format)
+  const screenshots: string[] = feedback.screenshot_urls && feedback.screenshot_urls.length > 0
+    ? feedback.screenshot_urls
+    : feedback.screenshot_url
+      ? [feedback.screenshot_url]
+      : [];
 
   const handleStatusChange = async (newStatus: string) => {
     setUpdating(true);
@@ -101,6 +111,14 @@ export function FeedbackTicket({ feedback, isOwner, onStatusChange }: FeedbackTi
     } finally {
       setUpdating(false);
     }
+  };
+
+  const nextImage = () => {
+    setSelectedImageIndex(prev => (prev + 1) % screenshots.length);
+  };
+
+  const prevImage = () => {
+    setSelectedImageIndex(prev => (prev - 1 + screenshots.length) % screenshots.length);
   };
 
   return (
@@ -135,29 +153,78 @@ export function FeedbackTicket({ feedback, isOwner, onStatusChange }: FeedbackTi
             {/* Content */}
             <p className="text-sm whitespace-pre-wrap">{feedback.content}</p>
 
-            {/* Screenshot */}
-            {feedback.screenshot_url && (
-              <Dialog>
-                <DialogTrigger asChild>
-                  <div className="mt-3 relative group cursor-pointer">
-                    <img 
-                      src={feedback.screenshot_url} 
-                      alt="Screenshot del bug"
-                      className="max-h-40 rounded-lg border object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                      <ZoomIn className="h-6 w-6 text-white" />
+            {/* Screenshots */}
+            {screenshots.length > 0 && (
+              <div className="mt-3">
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <div className="relative group cursor-pointer inline-block">
+                      <div className="flex gap-2">
+                        {screenshots.slice(0, 3).map((url, index) => (
+                          <img 
+                            key={index}
+                            src={url} 
+                            alt={`Screenshot ${index + 1}`}
+                            className="h-20 w-20 object-cover rounded-lg border"
+                          />
+                        ))}
+                        {screenshots.length > 3 && (
+                          <div className="h-20 w-20 rounded-lg border bg-muted flex items-center justify-center">
+                            <span className="text-sm font-medium text-muted-foreground">
+                              +{screenshots.length - 3}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                        <ZoomIn className="h-6 w-6 text-white" />
+                      </div>
                     </div>
-                  </div>
-                </DialogTrigger>
-                <DialogContent className="max-w-4xl p-2">
-                  <img 
-                    src={feedback.screenshot_url} 
-                    alt="Screenshot del bug"
-                    className="w-full h-auto rounded-lg"
-                  />
-                </DialogContent>
-              </Dialog>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl p-2">
+                    <div className="relative">
+                      <img 
+                        src={screenshots[selectedImageIndex]} 
+                        alt={`Screenshot ${selectedImageIndex + 1}`}
+                        className="w-full h-auto rounded-lg max-h-[80vh] object-contain"
+                      />
+                      
+                      {screenshots.length > 1 && (
+                        <>
+                          <Button
+                            variant="secondary"
+                            size="icon"
+                            className="absolute left-2 top-1/2 -translate-y-1/2"
+                            onClick={prevImage}
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            size="icon"
+                            className="absolute right-2 top-1/2 -translate-y-1/2"
+                            onClick={nextImage}
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                          </Button>
+                          
+                          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1">
+                            {screenshots.map((_, index) => (
+                              <button
+                                key={index}
+                                onClick={() => setSelectedImageIndex(index)}
+                                className={`h-2 w-2 rounded-full transition-colors ${
+                                  index === selectedImageIndex ? 'bg-primary' : 'bg-muted-foreground/50'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
             )}
 
             {/* Footer */}
