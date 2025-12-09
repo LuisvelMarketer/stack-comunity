@@ -5,9 +5,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { UserAvatar } from '@/components/UserAvatar';
-import { MessageCircle, Send, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { MessageCircle, Send, Trash2, ChevronDown, ChevronUp, Heart } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 interface UpdateCommentsProps {
   updateId: string;
@@ -16,7 +17,7 @@ interface UpdateCommentsProps {
 
 export function UpdateComments({ updateId, initialCount = 0 }: UpdateCommentsProps) {
   const { user } = useAuth();
-  const { comments, addComment, deleteComment, loading } = useUpdateComments(updateId);
+  const { comments, addComment, deleteComment, toggleCommentLike, loading } = useUpdateComments(updateId);
   const [isExpanded, setIsExpanded] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -61,7 +62,9 @@ export function UpdateComments({ updateId, initialCount = 0 }: UpdateCommentsPro
                   key={comment.id}
                   comment={comment}
                   isOwner={user?.id === comment.user_id}
+                  isLoggedIn={!!user}
                   onDelete={() => deleteComment(comment.id)}
+                  onToggleLike={() => toggleCommentLike(comment.id)}
                 />
               ))}
             </div>
@@ -109,11 +112,15 @@ export function UpdateComments({ updateId, initialCount = 0 }: UpdateCommentsPro
 function CommentItem({
   comment,
   isOwner,
+  isLoggedIn,
   onDelete,
+  onToggleLike,
 }: {
   comment: UpdateComment;
   isOwner: boolean;
+  isLoggedIn: boolean;
   onDelete: () => void;
+  onToggleLike: () => void;
 }) {
   const author = comment.profiles;
 
@@ -126,30 +133,57 @@ function CommentItem({
           size="sm"
         />
       </Link>
-      <div className="flex-1 bg-muted/50 rounded-lg p-2">
-        <div className="flex items-center gap-2">
-          <Link
-            to={`/profile/${author?.id}`}
-            className="text-sm font-medium hover:underline"
-          >
-            {author?.full_name || 'Usuario'}
-          </Link>
-          <span className="text-xs text-muted-foreground">
-            {formatDistanceToNow(new Date(comment.created_at), {
-              addSuffix: true,
-              locale: es,
-            })}
-          </span>
-          {isOwner && (
-            <button
-              onClick={onDelete}
-              className="ml-auto opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
+      <div className="flex-1">
+        <div className="bg-muted/50 rounded-lg p-2">
+          <div className="flex items-center gap-2">
+            <Link
+              to={`/profile/${author?.id}`}
+              className="text-sm font-medium hover:underline"
             >
-              <Trash2 className="h-3 w-3" />
-            </button>
-          )}
+              {author?.full_name || 'Usuario'}
+            </Link>
+            <span className="text-xs text-muted-foreground">
+              {formatDistanceToNow(new Date(comment.created_at), {
+                addSuffix: true,
+                locale: es,
+              })}
+            </span>
+            {isOwner && (
+              <button
+                onClick={onDelete}
+                className="ml-auto opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
+              >
+                <Trash2 className="h-3 w-3" />
+              </button>
+            )}
+          </div>
+          <p className="text-sm mt-1">{comment.content}</p>
         </div>
-        <p className="text-sm mt-1">{comment.content}</p>
+        
+        {/* Like button */}
+        <div className="flex items-center gap-1 mt-1 ml-1">
+          <button
+            onClick={onToggleLike}
+            disabled={!isLoggedIn}
+            className={cn(
+              "flex items-center gap-1 text-xs transition-colors",
+              comment.is_liked 
+                ? "text-red-500 hover:text-red-600" 
+                : "text-muted-foreground hover:text-foreground",
+              !isLoggedIn && "cursor-default opacity-50"
+            )}
+          >
+            <Heart 
+              className={cn(
+                "h-3 w-3",
+                comment.is_liked && "fill-current"
+              )} 
+            />
+            {comment.likes_count > 0 && (
+              <span>{comment.likes_count}</span>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

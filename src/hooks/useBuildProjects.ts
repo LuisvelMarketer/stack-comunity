@@ -71,6 +71,8 @@ export interface UpdateComment {
   user_id: string;
   content: string;
   created_at: string;
+  likes_count: number;
+  is_liked: boolean;
   profiles?: {
     id: string;
     full_name: string | null;
@@ -496,13 +498,22 @@ export function useUpdateComments(updateId: string) {
         .from('project_update_comments')
         .select(`
           *,
-          profiles:user_id (id, full_name, avatar_url)
+          profiles:user_id (id, full_name, avatar_url),
+          project_update_comment_likes (id, user_id)
         `)
         .eq('update_id', updateId)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      setComments((data as unknown as UpdateComment[]) || []);
+      
+      // Process comments to add likes_count and is_liked
+      const processedComments = (data || []).map((comment: any) => ({
+        ...comment,
+        likes_count: comment.project_update_comment_likes?.length || 0,
+        is_liked: user ? comment.project_update_comment_likes?.some((like: any) => like.user_id === user.id) : false,
+      }));
+      
+      setComments(processedComments as UpdateComment[]);
     } catch (error) {
       console.error('Error fetching update comments:', error);
     } finally {
@@ -556,15 +567,47 @@ export function useUpdateComments(updateId: string) {
     }
   };
 
+  const toggleCommentLike = async (commentId: string) => {
+    if (!user) {
+      toast.error('Debes iniciar sesión');
+      return;
+    }
+
+    try {
+      const { data: existingLike } = await supabase
+        .from('project_update_comment_likes')
+        .select('id')
+        .eq('comment_id', commentId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (existingLike) {
+        await supabase
+          .from('project_update_comment_likes')
+          .delete()
+          .eq('id', existingLike.id);
+      } else {
+        await supabase
+          .from('project_update_comment_likes')
+          .insert({ comment_id: commentId, user_id: user.id });
+      }
+
+      fetchComments();
+    } catch (error) {
+      console.error('Error toggling comment like:', error);
+    }
+  };
+
   useEffect(() => {
     fetchComments();
-  }, [updateId]);
+  }, [updateId, user]);
 
   return {
     comments,
     loading,
     addComment,
     deleteComment,
+    toggleCommentLike,
     refreshComments: fetchComments,
   };
 }
