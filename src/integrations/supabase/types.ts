@@ -1130,6 +1130,48 @@ export type Database = {
         }
         Relationships: []
       }
+      level_benefits: {
+        Row: {
+          badge_url: string | null
+          benefits: Json | null
+          color: string
+          created_at: string
+          description: string | null
+          icon: string
+          id: string
+          is_prestige: boolean | null
+          level: number
+          min_points: number
+          name: string
+        }
+        Insert: {
+          badge_url?: string | null
+          benefits?: Json | null
+          color?: string
+          created_at?: string
+          description?: string | null
+          icon?: string
+          id?: string
+          is_prestige?: boolean | null
+          level: number
+          min_points?: number
+          name: string
+        }
+        Update: {
+          badge_url?: string | null
+          benefits?: Json | null
+          color?: string
+          created_at?: string
+          description?: string | null
+          icon?: string
+          id?: string
+          is_prestige?: boolean | null
+          level?: number
+          min_points?: number
+          name?: string
+        }
+        Relationships: []
+      }
       live_sessions: {
         Row: {
           community_id: string
@@ -2594,6 +2636,33 @@ export type Database = {
           follower_id?: string
           following_id?: string
           id?: string
+        }
+        Relationships: []
+      }
+      user_level_history: {
+        Row: {
+          created_at: string
+          from_level: number
+          id: string
+          points_at_level_up: number
+          to_level: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          from_level: number
+          id?: string
+          points_at_level_up: number
+          to_level: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          from_level?: number
+          id?: string
+          points_at_level_up?: number
+          to_level?: number
+          user_id?: string
         }
         Relationships: []
       }

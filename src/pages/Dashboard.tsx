@@ -16,6 +16,7 @@ import { UpcomingLives } from "@/components/social/UpcomingLives";
 import { AIMentorWidget } from "@/components/AIMentorWidget";
 import { UserStreakCard } from "@/components/gamification/UserStreakCard";
 import { DailyMissionsCard } from "@/components/gamification/DailyMissionsCard";
+import { LevelProgressCard } from "@/components/gamification/LevelProgressCard";
 import { AIMentorChat, AIMentorChatButton } from "@/components/AIMentorChat";
 import { Home, Users, GraduationCap, Calendar, Search, Rocket } from "lucide-react";
 import { NotificationCenter } from "@/components/NotificationCenter";
@@ -114,11 +115,11 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Sidebar - 3 columns */}
           <div className="lg:col-span-3 space-y-4">
+            <LevelProgressCard />
             <UserStreakCard compact />
             <DailyMissionsCard />
             <AIMentorWidget />
             <MyCommunities />
-            <UserProgress />
           </div>
 
           {/* Main Feed - 6 columns */}
