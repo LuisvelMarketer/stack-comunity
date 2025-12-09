@@ -27,7 +27,8 @@ import {
   AlertCircle,
   ZoomIn,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Play
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -66,6 +67,7 @@ interface FeedbackTicketProps {
     user_id: string;
     screenshot_url?: string | null;
     screenshot_urls?: string[] | null;
+    video_url?: string | null;
     profiles?: {
       id: string;
       full_name: string | null;
@@ -79,6 +81,7 @@ interface FeedbackTicketProps {
 export function FeedbackTicket({ feedback, isOwner, onStatusChange }: FeedbackTicketProps) {
   const [updating, setUpdating] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [showVideoDialog, setShowVideoDialog] = useState(false);
   
   const category = categoryConfig[feedback.category] || categoryConfig.general;
   const status = statusConfig[feedback.status] || statusConfig.open;
@@ -153,77 +156,108 @@ export function FeedbackTicket({ feedback, isOwner, onStatusChange }: FeedbackTi
             {/* Content */}
             <p className="text-sm whitespace-pre-wrap">{feedback.content}</p>
 
-            {/* Screenshots */}
-            {screenshots.length > 0 && (
-              <div className="mt-3">
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <div className="relative group cursor-pointer inline-block">
-                      <div className="flex gap-2">
-                        {screenshots.slice(0, 3).map((url, index) => (
-                          <img 
-                            key={index}
-                            src={url} 
-                            alt={`Screenshot ${index + 1}`}
-                            className="h-20 w-20 object-cover rounded-lg border"
-                          />
-                        ))}
-                        {screenshots.length > 3 && (
-                          <div className="h-20 w-20 rounded-lg border bg-muted flex items-center justify-center">
-                            <span className="text-sm font-medium text-muted-foreground">
-                              +{screenshots.length - 3}
-                            </span>
-                          </div>
+            {/* Media (Screenshots + Video) */}
+            {(screenshots.length > 0 || feedback.video_url) && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {/* Screenshots */}
+                {screenshots.length > 0 && (
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <div className="relative group cursor-pointer inline-block">
+                        <div className="flex gap-2">
+                          {screenshots.slice(0, 3).map((url, index) => (
+                            <img 
+                              key={index}
+                              src={url} 
+                              alt={`Screenshot ${index + 1}`}
+                              className="h-20 w-20 object-cover rounded-lg border"
+                            />
+                          ))}
+                          {screenshots.length > 3 && (
+                            <div className="h-20 w-20 rounded-lg border bg-muted flex items-center justify-center">
+                              <span className="text-sm font-medium text-muted-foreground">
+                                +{screenshots.length - 3}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                          <ZoomIn className="h-6 w-6 text-white" />
+                        </div>
+                      </div>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl p-2">
+                      <div className="relative">
+                        <img 
+                          src={screenshots[selectedImageIndex]} 
+                          alt={`Screenshot ${selectedImageIndex + 1}`}
+                          className="w-full h-auto rounded-lg max-h-[80vh] object-contain"
+                        />
+                        
+                        {screenshots.length > 1 && (
+                          <>
+                            <Button
+                              variant="secondary"
+                              size="icon"
+                              className="absolute left-2 top-1/2 -translate-y-1/2"
+                              onClick={prevImage}
+                            >
+                              <ChevronLeft className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              size="icon"
+                              className="absolute right-2 top-1/2 -translate-y-1/2"
+                              onClick={nextImage}
+                            >
+                              <ChevronRight className="h-4 w-4" />
+                            </Button>
+                            
+                            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1">
+                              {screenshots.map((_, index) => (
+                                <button
+                                  key={index}
+                                  onClick={() => setSelectedImageIndex(index)}
+                                  className={`h-2 w-2 rounded-full transition-colors ${
+                                    index === selectedImageIndex ? 'bg-primary' : 'bg-muted-foreground/50'
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          </>
                         )}
                       </div>
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                        <ZoomIn className="h-6 w-6 text-white" />
+                    </DialogContent>
+                  </Dialog>
+                )}
+
+                {/* Video */}
+                {feedback.video_url && (
+                  <Dialog open={showVideoDialog} onOpenChange={setShowVideoDialog}>
+                    <DialogTrigger asChild>
+                      <div className="relative h-20 w-32 rounded-lg border bg-black cursor-pointer group overflow-hidden">
+                        <video 
+                          src={feedback.video_url}
+                          className="h-full w-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/60 transition-colors">
+                          <Play className="h-8 w-8 text-white fill-white" />
+                        </div>
+                        <Badge className="absolute bottom-1 right-1 text-[10px] px-1 py-0">
+                          Video
+                        </Badge>
                       </div>
-                    </div>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-4xl p-2">
-                    <div className="relative">
-                      <img 
-                        src={screenshots[selectedImageIndex]} 
-                        alt={`Screenshot ${selectedImageIndex + 1}`}
-                        className="w-full h-auto rounded-lg max-h-[80vh] object-contain"
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl p-2">
+                      <video 
+                        src={feedback.video_url}
+                        controls
+                        autoPlay
+                        className="w-full h-auto rounded-lg max-h-[80vh]"
                       />
-                      
-                      {screenshots.length > 1 && (
-                        <>
-                          <Button
-                            variant="secondary"
-                            size="icon"
-                            className="absolute left-2 top-1/2 -translate-y-1/2"
-                            onClick={prevImage}
-                          >
-                            <ChevronLeft className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="secondary"
-                            size="icon"
-                            className="absolute right-2 top-1/2 -translate-y-1/2"
-                            onClick={nextImage}
-                          >
-                            <ChevronRight className="h-4 w-4" />
-                          </Button>
-                          
-                          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1">
-                            {screenshots.map((_, index) => (
-                              <button
-                                key={index}
-                                onClick={() => setSelectedImageIndex(index)}
-                                className={`h-2 w-2 rounded-full transition-colors ${
-                                  index === selectedImageIndex ? 'bg-primary' : 'bg-muted-foreground/50'
-                                }`}
-                              />
-                            ))}
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                    </DialogContent>
+                  </Dialog>
+                )}
               </div>
             )}
 
