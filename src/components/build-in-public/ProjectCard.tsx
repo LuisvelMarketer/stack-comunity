@@ -59,18 +59,33 @@ export function ProjectCard({ project, showFeedbackCounts = true }: ProjectCardP
     <Card className="group hover:shadow-lg transition-all duration-300 hover:border-primary/50 overflow-hidden">
       <CardContent className="p-0">
         {/* Screenshot/Thumbnail Section */}
-        <div className="relative h-48 bg-gradient-to-br from-primary/5 to-primary/20 overflow-hidden">
+        <div className="relative h-48 bg-gradient-to-br from-primary/5 via-primary/10 to-primary/20 overflow-hidden">
           {project.screenshot_url || project.thumbnail_url ? (
             <img 
               src={project.screenshot_url || project.thumbnail_url!} 
               alt={project.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
+          ) : project.live_url ? (
+            /* Placeholder que indica que hay app pero no screenshot */
+            <div className="w-full h-full flex flex-col items-center justify-center gap-3 p-4">
+              <div className="w-16 h-16 rounded-xl bg-primary/20 flex items-center justify-center">
+                <ExternalLink className="h-8 w-8 text-primary/60" />
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-medium text-primary/70">App disponible</p>
+                <p className="text-xs text-muted-foreground">Haz clic para probar</p>
+              </div>
+            </div>
           ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <span className="text-6xl font-bold text-primary/30">
-                {project.title[0]}
-              </span>
+            /* Placeholder cuando no hay screenshot ni URL */
+            <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center shadow-inner">
+                <span className="text-4xl font-bold text-primary/50">
+                  {project.title[0]?.toUpperCase()}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">Sin vista previa</p>
             </div>
           )}
           
