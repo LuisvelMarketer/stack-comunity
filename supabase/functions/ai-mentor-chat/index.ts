@@ -6,14 +6,57 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Helper function to verify user authentication
+async function verifyAuth(req: Request) {
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader) {
+    return { user: null, error: "No authorization header" };
+  }
+
+  const supabaseClient = createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+  );
+
+  const token = authHeader.replace("Bearer ", "");
+  const { data: { user }, error } = await supabaseClient.auth.getUser(token);
+
+  if (error || !user) {
+    return { user: null, error: "Invalid or expired token" };
+  }
+
+  return { user, error: null };
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    // Verify authentication
+    const { user, error: authError } = await verifyAuth(req);
+    if (authError || !user) {
+      console.log("[AI-MENTOR-CHAT] Authentication failed:", authError);
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const { messages, user_id, course_id, module_id } = await req.json();
-    console.log(`[AI-MENTOR-CHAT] User: ${user_id}, Course: ${course_id}, Module: ${module_id}`);
+    
+    // Validate that requested user_id matches authenticated user
+    if (user_id && user_id !== user.id) {
+      console.log("[AI-MENTOR-CHAT] User ID mismatch");
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const effectiveUserId = user_id || user.id;
+    console.log(`[AI-MENTOR-CHAT] User: ${effectiveUserId}, Course: ${course_id}, Module: ${module_id}`);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -56,11 +99,11 @@ serve(async (req) => {
 
     // Get user's progress
     let progressContext = "";
-    if (user_id && course_id) {
+    if (effectiveUserId && course_id) {
       const { data: progress } = await supabaseClient
         .from('user_progress')
         .select('completed, course_modules(title)')
-        .eq('user_id', user_id)
+        .eq('user_id', effectiveUserId)
         .eq('course_modules.course_id', course_id);
 
       if (progress && progress.length > 0) {
@@ -128,11 +171,11 @@ Eres experto en:
     }
 
     // Log activity
-    if (user_id) {
+    if (effectiveUserId) {
       await supabaseClient
         .from('user_activity_logs')
         .insert({
-          user_id,
+          user_id: effectiveUserId,
           activity_type: 'ai_chat_message',
           course_id: course_id || null,
           module_id: module_id || null,

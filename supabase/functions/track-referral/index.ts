@@ -11,33 +11,76 @@ const logStep = (step: string, details?: any) => {
   console.log(`[TRACK-REFERRAL] ${step}${detailsStr}`);
 };
 
+// Helper function to verify user authentication
+async function verifyAuth(req: Request) {
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader) {
+    return { user: null, error: "No authorization header" };
+  }
+
+  const supabaseClient = createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+  );
+
+  const token = authHeader.replace("Bearer ", "");
+  const { data: { user }, error } = await supabaseClient.auth.getUser(token);
+
+  if (error || !user) {
+    return { user: null, error: "Invalid or expired token" };
+  }
+
+  return { user, error: null };
+}
+
+// UUID validation regex
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const supabaseAdmin = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-    { auth: { persistSession: false } }
-  );
-
   try {
     logStep("Function started");
-    
+
+    // Verify authentication
+    const { user, error: authError } = await verifyAuth(req);
+    if (authError || !user) {
+      logStep("Authentication failed", { error: authError });
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401,
+      });
+    }
+
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
+
     const { referral_code, user_id } = await req.json();
     
-    if (!referral_code || !user_id) {
-      throw new Error("Missing referral_code or user_id");
+    // Validate inputs
+    if (!referral_code || typeof referral_code !== 'string' || referral_code.length > 20) {
+      logStep("Invalid referral_code");
+      return new Response(JSON.stringify({ success: false, error: "Código de referido inválido" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      });
     }
+
+    // Use authenticated user's ID, ignore user_id from request body for security
+    const effectiveUserId = user.id;
     
-    logStep("Processing referral", { referral_code, user_id });
+    logStep("Processing referral", { referral_code, user_id: effectiveUserId });
 
     // Find affiliate by referral code
     const { data: affiliate, error: affiliateError } = await supabaseAdmin
       .from("affiliates")
       .select("id, user_id")
-      .eq("referral_code", referral_code.toUpperCase())
+      .eq("referral_code", referral_code.toUpperCase().trim())
       .single();
 
     if (affiliateError || !affiliate) {
@@ -49,7 +92,7 @@ serve(async (req) => {
     }
 
     // Prevent self-referral
-    if (affiliate.user_id === user_id) {
+    if (affiliate.user_id === effectiveUserId) {
       logStep("Self-referral attempt blocked");
       return new Response(JSON.stringify({ success: false, error: "No puedes usar tu propio código" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -61,7 +104,7 @@ serve(async (req) => {
     const { data: existingReferral } = await supabaseAdmin
       .from("referrals")
       .select("id")
-      .eq("referred_user_id", user_id)
+      .eq("referred_user_id", effectiveUserId)
       .single();
 
     if (existingReferral) {
@@ -77,7 +120,7 @@ serve(async (req) => {
       .from("referrals")
       .insert({
         affiliate_id: affiliate.id,
-        referred_user_id: user_id,
+        referred_user_id: effectiveUserId,
         status: "pending"
       });
 

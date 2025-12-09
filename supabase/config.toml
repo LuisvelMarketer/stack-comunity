@@ -1,7 +1,7 @@
 project_id = "zdrekqhxzhuttafkwtpa"
 
 [functions.generate-certificate]
-verify_jwt = false
+verify_jwt = true
 
 [functions.create-checkout]
 verify_jwt = false
@@ -13,10 +13,10 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.track-referral]
-verify_jwt = false
+verify_jwt = true
 
 [functions.process-referral-commission]
-verify_jwt = false
+verify_jwt = true
 
 [functions.process-scheduled-notifications]
 verify_jwt = false
@@ -28,7 +28,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.ai-mentor]
-verify_jwt = false
+verify_jwt = true
 
 [functions.ai-mentor-inactivity-check]
 verify_jwt = false
@@ -37,7 +37,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.ai-mentor-chat]
-verify_jwt = false
+verify_jwt = true
 
 [functions.sitemap]
 verify_jwt = false

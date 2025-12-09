@@ -19,12 +19,44 @@ interface ActivityLog {
   created_at: string;
 }
 
+// Helper function to verify user authentication
+async function verifyAuth(req: Request) {
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader) {
+    return { user: null, error: "No authorization header" };
+  }
+
+  const supabaseClient = createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+  );
+
+  const token = authHeader.replace("Bearer ", "");
+  const { data: { user }, error } = await supabaseClient.auth.getUser(token);
+
+  if (error || !user) {
+    return { user: null, error: "Invalid or expired token" };
+  }
+
+  return { user, error: null };
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    // Verify authentication
+    const { user, error: authError } = await verifyAuth(req);
+    if (authError || !user) {
+      console.log("[AI-MENTOR] Authentication failed:", authError);
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
@@ -32,14 +64,25 @@ serve(async (req) => {
     );
 
     const { action, user_id, course_id, module_id } = await req.json();
-    console.log(`[AI-MENTOR] Action: ${action}, User: ${user_id}`);
+    
+    // Validate that requested user_id matches authenticated user
+    if (user_id && user_id !== user.id) {
+      console.log("[AI-MENTOR] User ID mismatch - attempted access to other user's data");
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const effectiveUserId = user_id || user.id;
+    console.log(`[AI-MENTOR] Action: ${action}, User: ${effectiveUserId}`);
 
     if (action === 'analyze_progress') {
       // Get user's progress data
       const { data: progress, error: progressError } = await supabaseClient
         .from('user_progress')
         .select('*, course_modules(id, title, course_id, order_index)')
-        .eq('user_id', user_id);
+        .eq('user_id', effectiveUserId);
 
       if (progressError) throw progressError;
 
@@ -50,7 +93,7 @@ serve(async (req) => {
       const { data: activityLogs, error: activityError } = await supabaseClient
         .from('user_activity_logs')
         .select('*')
-        .eq('user_id', user_id)
+        .eq('user_id', effectiveUserId)
         .gte('created_at', sevenDaysAgo.toISOString())
         .order('created_at', { ascending: false });
 
@@ -60,7 +103,7 @@ serve(async (req) => {
       const { data: profile, error: profileError } = await supabaseClient
         .from('profiles')
         .select('full_name, level, points')
-        .eq('id', user_id)
+        .eq('id', effectiveUserId)
         .single();
 
       if (profileError) throw profileError;
@@ -149,7 +192,7 @@ Responde SOLO en formato JSON con esta estructura:
       const { data: savedSuggestion, error: saveError } = await supabaseClient
         .from('ai_mentor_suggestions')
         .insert({
-          user_id,
+          user_id: effectiveUserId,
           course_id: course_id || null,
           module_id: module_id || null,
           suggestion_type: suggestion.suggestion_type,
@@ -183,7 +226,7 @@ Responde SOLO en formato JSON con esta estructura:
       const { data: suggestions, error } = await supabaseClient
         .from('ai_mentor_suggestions')
         .select('*')
-        .eq('user_id', user_id)
+        .eq('user_id', effectiveUserId)
         .eq('is_dismissed', false)
         .order('created_at', { ascending: false })
         .limit(5);
@@ -201,7 +244,8 @@ Responde SOLO en formato JSON con esta estructura:
       const { error } = await supabaseClient
         .from('ai_mentor_suggestions')
         .update({ is_dismissed: true })
-        .eq('id', suggestion_id);
+        .eq('id', suggestion_id)
+        .eq('user_id', effectiveUserId); // Ensure user can only dismiss their own suggestions
 
       if (error) throw error;
 
@@ -216,7 +260,7 @@ Responde SOLO en formato JSON con esta estructura:
       const { error } = await supabaseClient
         .from('user_activity_logs')
         .insert({
-          user_id,
+          user_id: effectiveUserId,
           activity_type,
           module_id: module_id || null,
           course_id: course_id || null,
