@@ -51,6 +51,8 @@ import { es } from 'date-fns/locale';
 import type { ProjectUpdate, ProjectFeedback } from '@/hooks/useBuildProjects';
 import { ProjectStats } from '@/components/build-in-public/ProjectStats';
 import { UpdateComments } from '@/components/build-in-public/UpdateComments';
+import { FeedbackTicket as FeedbackTicketCard } from '@/components/build-in-public/FeedbackTicket';
+import { AddFeedbackForm as FeedbackForm } from '@/components/build-in-public/AddFeedbackForm';
 
 const statusLabels = {
   idea: 'Idea',
@@ -308,21 +310,32 @@ export default function ProjectDetail() {
             </TabsContent>
 
             <TabsContent value="feedback" className="mt-4 space-y-4">
-              <AddFeedbackForm onAdd={addFeedback} disabled={!user} />
+              <FeedbackForm 
+                onAdd={addFeedback} 
+                disabled={!user} 
+                projectLiveUrl={project.live_url}
+              />
               
               {feedback.length === 0 ? (
                 <Card className="text-center py-8">
                   <CardContent>
                     <MessageCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
                     <p className="text-muted-foreground">
-                      Sé el primero en dar feedback
+                      Sé el primero en reportar bugs o sugerencias
                     </p>
                   </CardContent>
                 </Card>
               ) : (
-                feedback.map((item) => (
-                  <FeedbackCard key={item.id} feedback={item} />
-                ))
+                <div className="space-y-3">
+                  {feedback.map((item) => (
+                    <FeedbackTicketCard 
+                      key={item.id} 
+                      feedback={item} 
+                      isOwner={isOwner}
+                      onStatusChange={() => {}}
+                    />
+                  ))}
+                </div>
               )}
             </TabsContent>
 

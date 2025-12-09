@@ -12,6 +12,7 @@ export interface BuildProject {
   repository_url: string | null;
   live_url: string | null;
   thumbnail_url: string | null;
+  screenshot_url: string | null;
   status: 'idea' | 'in_progress' | 'paused' | 'completed' | 'abandoned';
   visibility: 'public' | 'community' | 'private';
   community_id: string | null;
@@ -56,6 +57,9 @@ export interface ProjectFeedback {
   user_id: string;
   content: string;
   feedback_type: 'comment' | 'suggestion' | 'encouragement' | 'question';
+  category: 'bug' | 'improvement' | 'design' | 'general';
+  status: 'open' | 'in_progress' | 'resolved' | 'wont_fix';
+  priority: 'low' | 'medium' | 'high' | 'critical';
   parent_id: string | null;
   created_at: string;
   profiles?: {
@@ -451,21 +455,30 @@ export function useProjectFeedback(projectId: string) {
     }
   };
 
-  const addFeedback = async (content: string, feedbackType: ProjectFeedback['feedback_type'] = 'comment', updateId?: string) => {
+  const addFeedback = async (data: { 
+    content: string; 
+    category?: string;
+    priority?: string;
+    feedbackType?: ProjectFeedback['feedback_type'];
+    updateId?: string;
+  }) => {
     if (!user) {
       toast.error('Debes iniciar sesión');
       return null;
     }
 
     try {
-      const { data, error } = await supabase
+      const { data: result, error } = await supabase
         .from('project_feedback')
         .insert({
           project_id: projectId,
-          update_id: updateId || null,
+          update_id: data.updateId || null,
           user_id: user.id,
-          content,
-          feedback_type: feedbackType,
+          content: data.content,
+          feedback_type: data.feedbackType || 'comment',
+          category: data.category || 'general',
+          priority: data.priority || 'medium',
+          status: 'open',
         })
         .select()
         .single();
@@ -474,7 +487,7 @@ export function useProjectFeedback(projectId: string) {
       
       toast.success('¡Feedback enviado!');
       fetchFeedback();
-      return data as unknown as ProjectFeedback;
+      return result as unknown as ProjectFeedback;
     } catch (error) {
       console.error('Error adding feedback:', error);
       toast.error('Error al enviar feedback');

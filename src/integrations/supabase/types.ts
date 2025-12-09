@@ -299,6 +299,7 @@ export type Database = {
           likes_count: number | null
           live_url: string | null
           repository_url: string | null
+          screenshot_url: string | null
           status: string
           tech_stack: string[] | null
           thumbnail_url: string | null
@@ -318,6 +319,7 @@ export type Database = {
           likes_count?: number | null
           live_url?: string | null
           repository_url?: string | null
+          screenshot_url?: string | null
           status?: string
           tech_stack?: string[] | null
           thumbnail_url?: string | null
@@ -337,6 +339,7 @@ export type Database = {
           likes_count?: number | null
           live_url?: string | null
           repository_url?: string | null
+          screenshot_url?: string | null
           status?: string
           tech_stack?: string[] | null
           thumbnail_url?: string | null
@@ -1493,32 +1496,41 @@ export type Database = {
       }
       project_feedback: {
         Row: {
+          category: string | null
           content: string
           created_at: string
           feedback_type: string | null
           id: string
           parent_id: string | null
+          priority: string | null
           project_id: string
+          status: string | null
           update_id: string | null
           user_id: string
         }
         Insert: {
+          category?: string | null
           content: string
           created_at?: string
           feedback_type?: string | null
           id?: string
           parent_id?: string | null
+          priority?: string | null
           project_id: string
+          status?: string | null
           update_id?: string | null
           user_id: string
         }
         Update: {
+          category?: string | null
           content?: string
           created_at?: string
           feedback_type?: string | null
           id?: string
           parent_id?: string | null
+          priority?: string | null
           project_id?: string
+          status?: string | null
           update_id?: string | null
           user_id?: string
         }
