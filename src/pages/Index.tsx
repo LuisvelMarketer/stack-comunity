@@ -215,40 +215,29 @@ const Index = () => {
       <section className="py-20 px-4 bg-muted/30">
         <div className="container mx-auto max-w-5xl">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Simple y transparente</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Acceso gratuito para todos</h2>
             <p className="text-muted-foreground">
-              Crea tu comunidad gratis. Solo pagas cuando monetizas.
+              Explora comunidades gratis. Paga solo por las que elijas.
             </p>
           </div>
           <div className="grid md:grid-cols-2 gap-8">
-            <Card className="relative">
-              <CardContent className="p-8">
-                <h3 className="text-2xl font-bold mb-2">Gratis</h3>
-                <p className="text-muted-foreground mb-6">Para empezar tu comunidad</p>
-                <div className="text-4xl font-bold mb-6">$0<span className="text-lg font-normal text-muted-foreground">/mes</span></div>
-                <ul className="space-y-3 mb-8">
-                  {["Hasta 100 miembros", "1 curso", "Chat de comunidad", "Eventos básicos", "Gamificación"].map((item) => (
-                    <li key={item} className="flex items-center gap-2">
-                      <Check className="h-5 w-5 text-green-500" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Button variant="outline" className="w-full" onClick={() => navigate("/auth")}>
-                  Empezar gratis
-                </Button>
-              </CardContent>
-            </Card>
             <Card className="relative border-primary">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <Badge className="bg-primary">Más popular</Badge>
+                <Badge className="bg-primary">Para Estudiantes</Badge>
               </div>
               <CardContent className="p-8">
-                <h3 className="text-2xl font-bold mb-2">Pro</h3>
-                <p className="text-muted-foreground mb-6">Para creadores serios</p>
-                <div className="text-4xl font-bold mb-6">$29<span className="text-lg font-normal text-muted-foreground">/mes</span></div>
+                <h3 className="text-2xl font-bold mb-2">Acceso Gratuito</h3>
+                <p className="text-muted-foreground mb-6">Explora y aprende sin límites</p>
+                <div className="text-4xl font-bold mb-6">$0<span className="text-lg font-normal text-muted-foreground">/siempre</span></div>
                 <ul className="space-y-3 mb-8">
-                  {["Miembros ilimitados", "Cursos ilimitados", "Lives con YouTube/Zoom", "Suscripciones de pago", "Afiliados", "Soporte prioritario"].map((item) => (
+                  {[
+                    "Acceso a comunidades gratuitas",
+                    "Cursos disponibles sin costo",
+                    "Chat y networking",
+                    "Gamificación y logros",
+                    "Eventos y lives",
+                    "Paga solo por comunidades premium"
+                  ].map((item) => (
                     <li key={item} className="flex items-center gap-2">
                       <Check className="h-5 w-5 text-green-500" />
                       <span>{item}</span>
@@ -256,7 +245,36 @@ const Index = () => {
                   ))}
                 </ul>
                 <Button className="w-full" onClick={() => navigate("/auth")}>
-                  Empezar prueba gratis
+                  Crear cuenta gratis
+                </Button>
+              </CardContent>
+            </Card>
+            <Card className="relative">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <Badge variant="secondary">Para Creadores</Badge>
+              </div>
+              <CardContent className="p-8">
+                <h3 className="text-2xl font-bold mb-2">Crea tu Comunidad</h3>
+                <p className="text-muted-foreground mb-6">Monetiza tu conocimiento</p>
+                <div className="text-4xl font-bold mb-6">$49<span className="text-lg font-normal text-muted-foreground">/mes</span></div>
+                <ul className="space-y-3 mb-8">
+                  {[
+                    "Tu propia comunidad privada",
+                    "Cursos ilimitados",
+                    "Cobra a tus miembros",
+                    "Lives con YouTube/Zoom",
+                    "Sistema de afiliados",
+                    "Analytics y reportes",
+                    "Soporte prioritario"
+                  ].map((item) => (
+                    <li key={item} className="flex items-center gap-2">
+                      <Check className="h-5 w-5 text-green-500" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Button variant="outline" className="w-full" onClick={() => navigate("/auth")}>
+                  Próximamente
                 </Button>
               </CardContent>
             </Card>
