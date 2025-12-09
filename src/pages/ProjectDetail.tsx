@@ -43,11 +43,13 @@ import {
   Zap,
   MessageCircle,
   Users,
-  Eye
+  Eye,
+  TrendingUp
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type { ProjectUpdate, ProjectFeedback } from '@/hooks/useBuildProjects';
+import { ProjectStats } from '@/components/build-in-public/ProjectStats';
 
 const statusLabels = {
   idea: 'Idea',
@@ -276,6 +278,10 @@ export default function ProjectDetail() {
                 <MessageCircle className="h-4 w-4 mr-2" />
                 Feedback ({feedback.length})
               </TabsTrigger>
+              <TabsTrigger value="stats" className="flex-1">
+                <TrendingUp className="h-4 w-4 mr-2" />
+                Estadísticas
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="updates" className="mt-4 space-y-4">
@@ -317,6 +323,10 @@ export default function ProjectDetail() {
                   <FeedbackCard key={item.id} feedback={item} />
                 ))
               )}
+            </TabsContent>
+
+            <TabsContent value="stats" className="mt-4">
+              <ProjectStats updates={updates} createdAt={project.created_at} />
             </TabsContent>
           </Tabs>
         </div>
