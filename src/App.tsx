@@ -29,6 +29,7 @@ import Subscriptions from "./pages/Subscriptions";
 import BuildInPublic from "./pages/BuildInPublic";
 import ProjectDetail from "./pages/ProjectDetail";
 import ProjectEdit from "./pages/ProjectEdit";
+import Marketplace from "./pages/Marketplace";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -212,6 +213,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <ProjectDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/marketplace"
+              element={
+                <ProtectedRoute>
+                  <Marketplace />
                 </ProtectedRoute>
               }
             />

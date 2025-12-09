@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { User, LogOut, Settings, LayoutDashboard, Shield, MessageCircle, Gift, Users, CreditCard } from "lucide-react";
+import { User, LogOut, Settings, LayoutDashboard, Shield, MessageCircle, Gift, Users, CreditCard, Store } from "lucide-react";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -234,6 +234,14 @@ export const UserMenu = ({ showAdminLink = false }: UserMenuProps) => {
           >
             <CreditCard className="mr-2 h-4 w-4" />
             <span>Mis Suscripciones</span>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem 
+            onClick={() => navigate("/marketplace")}
+            className="cursor-pointer"
+          >
+            <Store className="mr-2 h-4 w-4" />
+            <span>Marketplace</span>
           </DropdownMenuItem>
 
           {showAdminLink && (
