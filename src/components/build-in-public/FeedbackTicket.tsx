@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { UserAvatar } from '@/components/UserAvatar';
 import {
   DropdownMenu,
@@ -15,6 +16,11 @@ import {
   DialogContent,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { 
   Bug, 
   Lightbulb, 
@@ -28,12 +34,18 @@ import {
   ZoomIn,
   ChevronLeft,
   ChevronRight,
-  Play
+  Play,
+  Reply,
+  ChevronDown,
+  Send,
+  Loader2
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
+import { ProjectFeedback } from '@/hooks/useBuildProjects';
 
 const categoryConfig: Record<string, { icon: any; color: string; label: string }> = {
   bug: { icon: Bug, color: 'text-red-500 bg-red-500/10', label: 'Bug' },
@@ -65,6 +77,7 @@ interface FeedbackTicketProps {
     priority: string;
     created_at: string;
     user_id: string;
+    project_id?: string;
     screenshot_url?: string | null;
     screenshot_urls?: string[] | null;
     video_url?: string | null;
@@ -76,12 +89,21 @@ interface FeedbackTicketProps {
   };
   isOwner: boolean;
   onStatusChange?: () => void;
+  fetchReplies?: (parentId: string) => Promise<ProjectFeedback[]>;
+  addReply?: (data: { content: string; parentId: string }) => Promise<ProjectFeedback | null>;
 }
 
-export function FeedbackTicket({ feedback, isOwner, onStatusChange }: FeedbackTicketProps) {
+export function FeedbackTicket({ feedback, isOwner, onStatusChange, fetchReplies, addReply }: FeedbackTicketProps) {
+  const { user } = useAuth();
   const [updating, setUpdating] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showVideoDialog, setShowVideoDialog] = useState(false);
+  const [showReplies, setShowReplies] = useState(false);
+  const [replies, setReplies] = useState<ProjectFeedback[]>([]);
+  const [loadingReplies, setLoadingReplies] = useState(false);
+  const [replyContent, setReplyContent] = useState('');
+  const [submittingReply, setSubmittingReply] = useState(false);
+  const [showReplyInput, setShowReplyInput] = useState(false);
   
   const category = categoryConfig[feedback.category] || categoryConfig.general;
   const status = statusConfig[feedback.status] || statusConfig.open;
@@ -96,6 +118,23 @@ export function FeedbackTicket({ feedback, isOwner, onStatusChange }: FeedbackTi
     : feedback.screenshot_url
       ? [feedback.screenshot_url]
       : [];
+
+  const loadReplies = async () => {
+    if (!fetchReplies) return;
+    setLoadingReplies(true);
+    try {
+      const data = await fetchReplies(feedback.id);
+      setReplies(data);
+    } finally {
+      setLoadingReplies(false);
+    }
+  };
+
+  useEffect(() => {
+    if (showReplies && fetchReplies) {
+      loadReplies();
+    }
+  }, [showReplies]);
 
   const handleStatusChange = async (newStatus: string) => {
     setUpdating(true);
@@ -113,6 +152,21 @@ export function FeedbackTicket({ feedback, isOwner, onStatusChange }: FeedbackTi
       toast.error('Error al actualizar estado');
     } finally {
       setUpdating(false);
+    }
+  };
+
+  const handleSubmitReply = async () => {
+    if (!replyContent.trim() || !addReply) return;
+    
+    setSubmittingReply(true);
+    try {
+      await addReply({ content: replyContent.trim(), parentId: feedback.id });
+      setReplyContent('');
+      setShowReplyInput(false);
+      await loadReplies();
+      setShowReplies(true);
+    } finally {
+      setSubmittingReply(false);
     }
   };
 
@@ -263,22 +317,37 @@ export function FeedbackTicket({ feedback, isOwner, onStatusChange }: FeedbackTi
 
             {/* Footer */}
             <div className="flex items-center justify-between mt-3">
-              <Link 
-                to={`/user/${author?.id}`}
-                className="flex items-center gap-2 hover:underline"
-              >
-                <UserAvatar
-                  src={author?.avatar_url || undefined}
-                  fallback={author?.full_name?.[0] || '?'}
-                  size="sm"
-                />
-                <span className="text-sm text-muted-foreground">
-                  {author?.full_name || 'Usuario'}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  · {formatDistanceToNow(new Date(feedback.created_at), { addSuffix: true, locale: es })}
-                </span>
-              </Link>
+              <div className="flex items-center gap-3">
+                <Link 
+                  to={`/user/${author?.id}`}
+                  className="flex items-center gap-2 hover:underline"
+                >
+                  <UserAvatar
+                    src={author?.avatar_url || undefined}
+                    fallback={author?.full_name?.[0] || '?'}
+                    size="sm"
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    {author?.full_name || 'Usuario'}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    · {formatDistanceToNow(new Date(feedback.created_at), { addSuffix: true, locale: es })}
+                  </span>
+                </Link>
+
+                {/* Reply button */}
+                {user && fetchReplies && addReply && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs gap-1"
+                    onClick={() => setShowReplyInput(!showReplyInput)}
+                  >
+                    <Reply className="h-3 w-3" />
+                    Responder
+                  </Button>
+                )}
+              </div>
 
               {/* Actions for Owner */}
               {isOwner && feedback.status !== 'resolved' && (
@@ -307,9 +376,86 @@ export function FeedbackTicket({ feedback, isOwner, onStatusChange }: FeedbackTi
                 </DropdownMenu>
               )}
             </div>
+
+            {/* Reply Input */}
+            {showReplyInput && user && (
+              <div className="mt-3 flex gap-2">
+                <Textarea
+                  placeholder="Escribe tu respuesta..."
+                  value={replyContent}
+                  onChange={(e) => setReplyContent(e.target.value)}
+                  className="min-h-[60px] text-sm"
+                  disabled={submittingReply}
+                />
+                <Button
+                  size="icon"
+                  onClick={handleSubmitReply}
+                  disabled={!replyContent.trim() || submittingReply}
+                >
+                  {submittingReply ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            )}
+
+            {/* Replies Section */}
+            {fetchReplies && (
+              <Collapsible open={showReplies} onOpenChange={setShowReplies}>
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="sm" className="mt-2 h-7 text-xs gap-1 text-muted-foreground">
+                    <ChevronDown className={`h-3 w-3 transition-transform ${showReplies ? 'rotate-180' : ''}`} />
+                    {loadingReplies ? 'Cargando...' : `${replies.length > 0 ? replies.length : 'Ver'} respuestas`}
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="mt-2 pl-4 border-l-2 border-muted space-y-3">
+                    {loadingReplies ? (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Cargando respuestas...
+                      </div>
+                    ) : replies.length === 0 ? (
+                      <p className="text-sm text-muted-foreground py-2">No hay respuestas aún</p>
+                    ) : (
+                      replies.map((reply) => (
+                        <ReplyItem key={reply.id} reply={reply} />
+                      ))
+                    )}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            )}
           </div>
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function ReplyItem({ reply }: { reply: ProjectFeedback }) {
+  const author = reply.profiles;
+  
+  return (
+    <div className="flex items-start gap-2">
+      <UserAvatar
+        src={author?.avatar_url || undefined}
+        fallback={author?.full_name?.[0] || '?'}
+        size="sm"
+      />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <Link to={`/user/${author?.id}`} className="text-sm font-medium hover:underline">
+            {author?.full_name || 'Usuario'}
+          </Link>
+          <span className="text-xs text-muted-foreground">
+            {formatDistanceToNow(new Date(reply.created_at), { addSuffix: true, locale: es })}
+          </span>
+        </div>
+        <p className="text-sm text-muted-foreground mt-0.5 whitespace-pre-wrap">{reply.content}</p>
+      </div>
+    </div>
   );
 }

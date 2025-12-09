@@ -440,6 +440,7 @@ export function useProjectFeedback(projectId: string) {
 
   const fetchFeedback = async () => {
     try {
+      // Only fetch parent feedback (not replies)
       const { data, error } = await supabase
         .from('project_feedback')
         .select(`
@@ -447,6 +448,7 @@ export function useProjectFeedback(projectId: string) {
           profiles:user_id (id, full_name, avatar_url)
         `)
         .eq('project_id', projectId)
+        .is('parent_id', null)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
@@ -458,6 +460,25 @@ export function useProjectFeedback(projectId: string) {
     }
   };
 
+  const fetchReplies = async (parentId: string): Promise<ProjectFeedback[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('project_feedback')
+        .select(`
+          *,
+          profiles:user_id (id, full_name, avatar_url)
+        `)
+        .eq('parent_id', parentId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      return (data as unknown as ProjectFeedback[]) || [];
+    } catch (error) {
+      console.error('Error fetching replies:', error);
+      return [];
+    }
+  };
+
   const addFeedback = async (data: { 
     content: string; 
     category?: string;
@@ -466,6 +487,7 @@ export function useProjectFeedback(projectId: string) {
     video_url?: string;
     feedbackType?: ProjectFeedback['feedback_type'];
     updateId?: string;
+    parentId?: string;
   }) => {
     if (!user) {
       toast.error('Debes iniciar sesión');
@@ -486,18 +508,19 @@ export function useProjectFeedback(projectId: string) {
           status: 'open',
           screenshot_urls: data.screenshot_urls || [],
           video_url: data.video_url || null,
+          parent_id: data.parentId || null,
         })
         .select()
         .single();
 
       if (error) throw error;
       
-      toast.success('¡Feedback enviado!');
+      toast.success(data.parentId ? '¡Respuesta enviada!' : '¡Feedback enviado!');
       fetchFeedback();
       return result as unknown as ProjectFeedback;
     } catch (error) {
       console.error('Error adding feedback:', error);
-      toast.error('Error al enviar feedback');
+      toast.error('Error al enviar');
       return null;
     }
   };
@@ -531,6 +554,7 @@ export function useProjectFeedback(projectId: string) {
     feedback,
     loading,
     addFeedback,
+    fetchReplies,
     refreshFeedback: fetchFeedback,
   };
 }
