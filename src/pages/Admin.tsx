@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, FileText, MessageCircle, Calendar, Video } from "lucide-react";
+import { BookOpen, FileText, MessageCircle, Calendar, Video, Rocket } from "lucide-react";
 import { UserMenu } from "@/components/UserMenu";
 import { CoursesManager } from "@/components/admin/CoursesManager";
 import { ModulesManager } from "@/components/admin/ModulesManager";
@@ -8,6 +8,7 @@ import { QuizzesManager } from "@/components/admin/QuizzesManager";
 import { CommentsManager } from "@/components/admin/CommentsManager";
 import { EventsManager } from "@/components/admin/EventsManager";
 import { LivesManager } from "@/components/admin/LivesManager";
+import { IncubatorManager } from "@/components/admin/IncubatorManager";
 
 export default function Admin() {
   const [activeTab, setActiveTab] = useState("courses");
@@ -25,7 +26,7 @@ export default function Admin() {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
+          <TabsList className="grid w-full grid-cols-7 lg:w-auto lg:inline-grid">
             <TabsTrigger value="courses" className="gap-2">
               <BookOpen className="h-4 w-4" />
               <span className="hidden sm:inline">Cursos</span>
@@ -49,6 +50,10 @@ export default function Admin() {
             <TabsTrigger value="lives" className="gap-2">
               <Video className="h-4 w-4" />
               <span className="hidden sm:inline">Lives</span>
+            </TabsTrigger>
+            <TabsTrigger value="incubator" className="gap-2">
+              <Rocket className="h-4 w-4" />
+              <span className="hidden sm:inline">Incubadora</span>
             </TabsTrigger>
           </TabsList>
 
@@ -74,6 +79,10 @@ export default function Admin() {
 
           <TabsContent value="lives">
             <LivesManager />
+          </TabsContent>
+
+          <TabsContent value="incubator">
+            <IncubatorManager />
           </TabsContent>
         </Tabs>
       </main>
