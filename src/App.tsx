@@ -28,6 +28,7 @@ import CommunityManage from "./pages/CommunityManage";
 import Subscriptions from "./pages/Subscriptions";
 import BuildInPublic from "./pages/BuildInPublic";
 import ProjectDetail from "./pages/ProjectDetail";
+import ProjectEdit from "./pages/ProjectEdit";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -187,6 +188,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <BuildInPublic />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/build-in-public/:projectId/edit"
+              element={
+                <ProtectedRoute>
+                  <ProjectEdit />
                 </ProtectedRoute>
               }
             />
