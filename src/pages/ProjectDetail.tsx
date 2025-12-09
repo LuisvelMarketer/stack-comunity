@@ -45,8 +45,17 @@ import {
   Users,
   Eye,
   TrendingUp,
-  Filter
+  Filter,
+  Download,
+  FileSpreadsheet,
+  FileText
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { formatDistanceToNow, format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type { ProjectUpdate, ProjectFeedback } from '@/hooks/useBuildProjects';
@@ -55,6 +64,7 @@ import { UpdateComments } from '@/components/build-in-public/UpdateComments';
 import { FeedbackTicket as FeedbackTicketCard } from '@/components/build-in-public/FeedbackTicket';
 import { AddFeedbackForm as FeedbackForm } from '@/components/build-in-public/AddFeedbackForm';
 import { FeedbackFilters } from '@/components/build-in-public/FeedbackFilters';
+import { exportFeedbackToCSV, exportFeedbackToPDF } from '@/lib/export-utils';
 
 const statusLabels = {
   idea: 'Idea',
@@ -337,15 +347,38 @@ export default function ProjectDetail() {
               />
               
               {feedback.length > 0 && (
-                <FeedbackFilters
-                  statusFilter={statusFilter}
-                  categoryFilter={categoryFilter}
-                  onStatusChange={setStatusFilter}
-                  onCategoryChange={setCategoryFilter}
-                  onClearFilters={clearFilters}
-                  feedbackCount={feedback.length}
-                  filteredCount={filteredFeedback.length}
-                />
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                  <div className="flex-1">
+                    <FeedbackFilters
+                      statusFilter={statusFilter}
+                      categoryFilter={categoryFilter}
+                      onStatusChange={setStatusFilter}
+                      onCategoryChange={setCategoryFilter}
+                      onClearFilters={clearFilters}
+                      feedbackCount={feedback.length}
+                      filteredCount={filteredFeedback.length}
+                    />
+                  </div>
+                  
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" className="gap-2">
+                        <Download className="h-4 w-4" />
+                        Exportar
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => exportFeedbackToCSV(filteredFeedback, project.title)}>
+                        <FileSpreadsheet className="h-4 w-4 mr-2" />
+                        Exportar a CSV
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => exportFeedbackToPDF(filteredFeedback, project.title)}>
+                        <FileText className="h-4 w-4 mr-2" />
+                        Exportar a PDF
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               )}
               
               {feedback.length === 0 ? (
