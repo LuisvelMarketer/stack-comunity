@@ -14,6 +14,7 @@ import { ActiveCommunity } from "@/components/social/ActiveCommunity";
 import { SuggestedCommunities } from "@/components/social/SuggestedCommunities";
 import { UpcomingLives } from "@/components/social/UpcomingLives";
 import { AIMentorWidget } from "@/components/AIMentorWidget";
+import { UserStreakCard } from "@/components/gamification/UserStreakCard";
 import { AIMentorChat, AIMentorChatButton } from "@/components/AIMentorChat";
 import { Home, Users, BookOpen, Calendar, Search } from "lucide-react";
 import { NotificationCenter } from "@/components/NotificationCenter";
@@ -108,6 +109,7 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Sidebar - 3 columns */}
           <div className="lg:col-span-3 space-y-4">
+            <UserStreakCard compact />
             <AIMentorWidget />
             <MyCommunities />
             <UserProgress />

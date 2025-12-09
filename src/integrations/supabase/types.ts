@@ -1532,6 +1532,47 @@ export type Database = {
           },
         ]
       }
+      user_challenge_progress: {
+        Row: {
+          challenge_id: string | null
+          completed: boolean | null
+          completed_at: string | null
+          created_at: string
+          current_count: number | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          challenge_id?: string | null
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string
+          current_count?: number | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string | null
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string
+          current_count?: number | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_challenge_progress_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_follows: {
         Row: {
           created_at: string
@@ -1644,6 +1685,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_streaks: {
+        Row: {
+          created_at: string
+          current_streak: number | null
+          id: string
+          last_activity_date: string | null
+          longest_streak: number | null
+          total_activity_days: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_streak?: number | null
+          id?: string
+          last_activity_date?: string | null
+          longest_streak?: number | null
+          total_activity_days?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_streak?: number | null
+          id?: string
+          last_activity_date?: string | null
+          longest_streak?: number | null
+          total_activity_days?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_subscriptions: {
         Row: {
           cancel_at_period_end: boolean | null
@@ -1693,6 +1767,56 @@ export type Database = {
             columns: ["tier_id"]
             isOneToOne: false
             referencedRelation: "membership_tiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      weekly_challenges: {
+        Row: {
+          challenge_type: string
+          community_id: string | null
+          created_at: string
+          description: string | null
+          end_date: string
+          id: string
+          is_active: boolean | null
+          points_reward: number
+          start_date: string
+          target_count: number
+          title: string
+        }
+        Insert: {
+          challenge_type: string
+          community_id?: string | null
+          created_at?: string
+          description?: string | null
+          end_date: string
+          id?: string
+          is_active?: boolean | null
+          points_reward?: number
+          start_date: string
+          target_count?: number
+          title: string
+        }
+        Update: {
+          challenge_type?: string
+          community_id?: string | null
+          created_at?: string
+          description?: string | null
+          end_date?: string
+          id?: string
+          is_active?: boolean | null
+          points_reward?: number
+          start_date?: string
+          target_count?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_challenges_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
             referencedColumns: ["id"]
           },
         ]
