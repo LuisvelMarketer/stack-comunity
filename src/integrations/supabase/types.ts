@@ -930,6 +930,170 @@ export type Database = {
           },
         ]
       }
+      incubator_projects: {
+        Row: {
+          approved_at: string | null
+          business_model: string | null
+          created_at: string
+          deck_url: string | null
+          equity_offered: number | null
+          featured_at: string | null
+          funding_goal: number
+          funding_received: number
+          id: string
+          pitch: string
+          project_id: string | null
+          revenue_projection: string | null
+          status: string
+          target_market: string | null
+          team_size: number | null
+          updated_at: string
+          user_id: string
+          video_pitch_url: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          business_model?: string | null
+          created_at?: string
+          deck_url?: string | null
+          equity_offered?: number | null
+          featured_at?: string | null
+          funding_goal?: number
+          funding_received?: number
+          id?: string
+          pitch: string
+          project_id?: string | null
+          revenue_projection?: string | null
+          status?: string
+          target_market?: string | null
+          team_size?: number | null
+          updated_at?: string
+          user_id: string
+          video_pitch_url?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          business_model?: string | null
+          created_at?: string
+          deck_url?: string | null
+          equity_offered?: number | null
+          featured_at?: string | null
+          funding_goal?: number
+          funding_received?: number
+          id?: string
+          pitch?: string
+          project_id?: string | null
+          revenue_projection?: string | null
+          status?: string
+          target_market?: string | null
+          team_size?: number | null
+          updated_at?: string
+          user_id?: string
+          video_pitch_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incubator_projects_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "build_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investment_interests: {
+        Row: {
+          amount: number | null
+          created_at: string
+          id: string
+          incubator_project_id: string
+          investor_id: string
+          message: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          id?: string
+          incubator_project_id: string
+          investor_id: string
+          message?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          id?: string
+          incubator_project_id?: string
+          investor_id?: string
+          message?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investment_interests_incubator_project_id_fkey"
+            columns: ["incubator_project_id"]
+            isOneToOne: false
+            referencedRelation: "incubator_projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investment_interests_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investor_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investor_profiles: {
+        Row: {
+          bio: string | null
+          created_at: string
+          id: string
+          interests: string[] | null
+          investment_range_max: number | null
+          investment_range_min: number | null
+          is_verified: boolean | null
+          linkedin_url: string | null
+          portfolio_companies: string[] | null
+          total_investments: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string
+          id?: string
+          interests?: string[] | null
+          investment_range_max?: number | null
+          investment_range_min?: number | null
+          is_verified?: boolean | null
+          linkedin_url?: string | null
+          portfolio_companies?: string[] | null
+          total_investments?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string
+          id?: string
+          interests?: string[] | null
+          investment_range_max?: number | null
+          investment_range_min?: number | null
+          is_verified?: boolean | null
+          linkedin_url?: string | null
+          portfolio_companies?: string[] | null
+          total_investments?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       live_sessions: {
         Row: {
           community_id: string
