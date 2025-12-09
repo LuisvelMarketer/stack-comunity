@@ -1771,6 +1771,211 @@ export type Database = {
           },
         ]
       }
+      service_order_messages: {
+        Row: {
+          content: string
+          created_at: string
+          file_name: string | null
+          file_url: string | null
+          id: string
+          order_id: string
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          order_id: string
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          order_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_order_messages_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "service_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_orders: {
+        Row: {
+          buyer_id: string
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          completed_at: string | null
+          created_at: string
+          delivered_at: string | null
+          delivery_deadline: string | null
+          id: string
+          platform_fee: number
+          price: number
+          requirements: string
+          seller_earnings: number
+          seller_id: string
+          service_id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          buyer_id: string
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          delivery_deadline?: string | null
+          id?: string
+          platform_fee?: number
+          price: number
+          requirements: string
+          seller_earnings?: number
+          seller_id: string
+          service_id: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          buyer_id?: string
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          delivery_deadline?: string | null
+          id?: string
+          platform_fee?: number
+          price?: number
+          requirements?: string
+          seller_earnings?: number
+          seller_id?: string
+          service_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_orders_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "student_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          order_id: string
+          rating: number
+          reviewer_id: string
+          service_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          order_id: string
+          rating: number
+          reviewer_id: string
+          service_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          order_id?: string
+          rating?: number
+          reviewer_id?: string
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_reviews_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "service_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_reviews_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "student_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_services: {
+        Row: {
+          category: string
+          created_at: string
+          delivery_days: number
+          description: string
+          id: string
+          is_active: boolean | null
+          orders_completed: number | null
+          portfolio_urls: string[] | null
+          price: number
+          rating_average: number | null
+          rating_count: number | null
+          skills: string[] | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          delivery_days?: number
+          description: string
+          id?: string
+          is_active?: boolean | null
+          orders_completed?: number | null
+          portfolio_urls?: string[] | null
+          price: number
+          rating_average?: number | null
+          rating_count?: number | null
+          skills?: string[] | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          delivery_days?: number
+          description?: string
+          id?: string
+          is_active?: boolean | null
+          orders_completed?: number | null
+          portfolio_urls?: string[] | null
+          price?: number
+          rating_average?: number | null
+          rating_count?: number | null
+          skills?: string[] | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_achievements: {
         Row: {
           achievement_id: string
