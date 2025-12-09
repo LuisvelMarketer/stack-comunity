@@ -14,6 +14,7 @@ import { ActiveCommunity } from "@/components/social/ActiveCommunity";
 import { SuggestedCommunities } from "@/components/social/SuggestedCommunities";
 import { UpcomingLives } from "@/components/social/UpcomingLives";
 import { AIMentorWidget } from "@/components/AIMentorWidget";
+import { AIMentorChat, AIMentorChatButton } from "@/components/AIMentorChat";
 import { Home, Users, BookOpen, Calendar, Search } from "lucide-react";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { toast } from "sonner";
@@ -21,6 +22,7 @@ import { toast } from "sonner";
 const Dashboard = () => {
   const { user } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -127,6 +129,15 @@ const Dashboard = () => {
           </div>
         </div>
       </main>
+
+      {/* AI Mentor Chat */}
+      {!isChatOpen && (
+        <AIMentorChatButton onClick={() => setIsChatOpen(true)} />
+      )}
+      <AIMentorChat
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+      />
     </div>
   );
 };
