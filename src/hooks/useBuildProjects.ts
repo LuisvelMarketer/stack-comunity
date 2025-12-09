@@ -46,6 +46,7 @@ export interface ProjectUpdate {
     avatar_url: string | null;
   };
   build_projects?: BuildProject;
+  comments_count?: number;
 }
 
 export interface ProjectFeedback {
@@ -56,6 +57,19 @@ export interface ProjectFeedback {
   content: string;
   feedback_type: 'comment' | 'suggestion' | 'encouragement' | 'question';
   parent_id: string | null;
+  created_at: string;
+  profiles?: {
+    id: string;
+    full_name: string | null;
+    avatar_url: string | null;
+  };
+}
+
+export interface UpdateComment {
+  id: string;
+  update_id: string;
+  user_id: string;
+  content: string;
   created_at: string;
   profiles?: {
     id: string;
@@ -466,5 +480,91 @@ export function useProjectFeedback(projectId: string) {
     loading,
     addFeedback,
     refreshFeedback: fetchFeedback,
+  };
+}
+
+export function useUpdateComments(updateId: string) {
+  const { user } = useAuth();
+  const [comments, setComments] = useState<UpdateComment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchComments = async () => {
+    if (!updateId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('project_update_comments')
+        .select(`
+          *,
+          profiles:user_id (id, full_name, avatar_url)
+        `)
+        .eq('update_id', updateId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      setComments((data as unknown as UpdateComment[]) || []);
+    } catch (error) {
+      console.error('Error fetching update comments:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addComment = async (content: string) => {
+    if (!user) {
+      toast.error('Debes iniciar sesión');
+      return null;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('project_update_comments')
+        .insert({
+          update_id: updateId,
+          user_id: user.id,
+          content,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      toast.success('¡Comentario añadido!');
+      fetchComments();
+      return data as unknown as UpdateComment;
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      toast.error('Error al comentar');
+      return null;
+    }
+  };
+
+  const deleteComment = async (commentId: string) => {
+    try {
+      const { error } = await supabase
+        .from('project_update_comments')
+        .delete()
+        .eq('id', commentId);
+
+      if (error) throw error;
+      
+      toast.success('Comentario eliminado');
+      fetchComments();
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+      toast.error('Error al eliminar');
+    }
+  };
+
+  useEffect(() => {
+    fetchComments();
+  }, [updateId]);
+
+  return {
+    comments,
+    loading,
+    addComment,
+    deleteComment,
+    refreshComments: fetchComments,
   };
 }

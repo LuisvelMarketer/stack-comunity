@@ -50,6 +50,7 @@ import { formatDistanceToNow, format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type { ProjectUpdate, ProjectFeedback } from '@/hooks/useBuildProjects';
 import { ProjectStats } from '@/components/build-in-public/ProjectStats';
+import { UpdateComments } from '@/components/build-in-public/UpdateComments';
 
 const statusLabels = {
   idea: 'Idea',
@@ -438,6 +439,9 @@ function UpdateCard({ update }: { update: ProjectUpdate }) {
                 <span>{update.hours_spent}h invertidas</span>
               )}
             </div>
+            
+            {/* Comments section */}
+            <UpdateComments updateId={update.id} />
           </div>
         </div>
       </CardContent>
