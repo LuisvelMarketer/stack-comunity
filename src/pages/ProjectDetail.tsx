@@ -137,17 +137,30 @@ export default function ProjectDetail() {
       if (!projectId) return;
 
       try {
-        const { data, error } = await supabase
+        // Fetch project
+        const { data: projectData, error } = await supabase
           .from('build_projects')
-          .select(`
-            *,
-            profiles:user_id (id, full_name, avatar_url, level, points)
-          `)
+          .select('*')
           .eq('id', projectId)
           .single();
 
         if (error) throw error;
-        setProject(data as unknown as BuildProject);
+
+        // Fetch profile separately
+        let profileData = null;
+        if (projectData.user_id) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('id, full_name, avatar_url, level, points')
+            .eq('id', projectData.user_id)
+            .single();
+          profileData = profile;
+        }
+
+        setProject({
+          ...projectData,
+          profiles: profileData,
+        } as unknown as BuildProject);
 
         // Check if liked
         const liked = await checkIfLiked(projectId);

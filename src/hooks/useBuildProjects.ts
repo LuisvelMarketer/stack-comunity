@@ -343,17 +343,31 @@ export function useProjectUpdates(projectId: string) {
 
   const fetchUpdates = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: updatesData, error } = await supabase
         .from('project_updates')
-        .select(`
-          *,
-          profiles:user_id (id, full_name, avatar_url)
-        `)
+        .select('*')
         .eq('project_id', projectId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setUpdates((data as unknown as ProjectUpdate[]) || []);
+
+      // Fetch profiles separately
+      const userIds = [...new Set((updatesData || []).map(u => u.user_id))];
+      let profilesMap = new Map();
+      if (userIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url')
+          .in('id', userIds);
+        profilesMap = new Map((profilesData || []).map(p => [p.id, p]));
+      }
+
+      const updatesWithProfiles = (updatesData || []).map(update => ({
+        ...update,
+        profiles: profilesMap.get(update.user_id) || null,
+      }));
+
+      setUpdates(updatesWithProfiles as unknown as ProjectUpdate[]);
     } catch (error) {
       console.error('Error fetching updates:', error);
     } finally {
@@ -441,18 +455,32 @@ export function useProjectFeedback(projectId: string) {
   const fetchFeedback = async () => {
     try {
       // Only fetch parent feedback (not replies)
-      const { data, error } = await supabase
+      const { data: feedbackData, error } = await supabase
         .from('project_feedback')
-        .select(`
-          *,
-          profiles:user_id (id, full_name, avatar_url)
-        `)
+        .select('*')
         .eq('project_id', projectId)
         .is('parent_id', null)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      setFeedback((data as unknown as ProjectFeedback[]) || []);
+
+      // Fetch profiles separately
+      const userIds = [...new Set((feedbackData || []).map(f => f.user_id))];
+      let profilesMap = new Map();
+      if (userIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url')
+          .in('id', userIds);
+        profilesMap = new Map((profilesData || []).map(p => [p.id, p]));
+      }
+
+      const feedbackWithProfiles = (feedbackData || []).map(item => ({
+        ...item,
+        profiles: profilesMap.get(item.user_id) || null,
+      }));
+
+      setFeedback(feedbackWithProfiles as unknown as ProjectFeedback[]);
     } catch (error) {
       console.error('Error fetching feedback:', error);
     } finally {
@@ -462,17 +490,31 @@ export function useProjectFeedback(projectId: string) {
 
   const fetchReplies = async (parentId: string): Promise<ProjectFeedback[]> => {
     try {
-      const { data, error } = await supabase
+      const { data: repliesData, error } = await supabase
         .from('project_feedback')
-        .select(`
-          *,
-          profiles:user_id (id, full_name, avatar_url)
-        `)
+        .select('*')
         .eq('parent_id', parentId)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      return (data as unknown as ProjectFeedback[]) || [];
+
+      // Fetch profiles separately
+      const userIds = [...new Set((repliesData || []).map(r => r.user_id))];
+      let profilesMap = new Map();
+      if (userIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url')
+          .in('id', userIds);
+        profilesMap = new Map((profilesData || []).map(p => [p.id, p]));
+      }
+
+      const repliesWithProfiles = (repliesData || []).map(reply => ({
+        ...reply,
+        profiles: profilesMap.get(reply.user_id) || null,
+      }));
+
+      return repliesWithProfiles as unknown as ProjectFeedback[];
     } catch (error) {
       console.error('Error fetching replies:', error);
       return [];
