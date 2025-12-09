@@ -98,9 +98,13 @@ export default function ProjectDetail() {
   const [followersCount, setFollowersCount] = useState(0);
 
   const { updates, createUpdate } = useProjectUpdates(projectId || '');
-  const { feedback, addFeedback } = useProjectFeedback(projectId || '');
+  const { feedback, addFeedback, fetchReplies } = useProjectFeedback(projectId || '');
 
   const isOwner = user?.id === project?.user_id;
+
+  const handleAddReply = async (data: { content: string; parentId: string }) => {
+    return addFeedback({ content: data.content, parentId: data.parentId });
+  };
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -333,6 +337,8 @@ export default function ProjectDetail() {
                       feedback={item} 
                       isOwner={isOwner}
                       onStatusChange={() => {}}
+                      fetchReplies={fetchReplies}
+                      addReply={handleAddReply}
                     />
                   ))}
                 </div>
