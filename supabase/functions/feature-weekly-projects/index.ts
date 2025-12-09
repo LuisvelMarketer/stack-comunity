@@ -11,6 +11,21 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Validate cron secret to prevent unauthorized calls
+    const authHeader = req.headers.get("Authorization");
+    const cronSecret = Deno.env.get("CRON_SECRET");
+    
+    // Allow calls with service role key OR cron secret
+    if (cronSecret && authHeader) {
+      const token = authHeader.replace("Bearer ", "");
+      if (token !== cronSecret && token !== Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")) {
+        console.log("[FEATURE-WEEKLY-PROJECTS] Unauthorized access attempt");
+        return new Response(
+          JSON.stringify({ error: "Unauthorized" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
