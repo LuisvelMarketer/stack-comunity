@@ -3,6 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useBuildProjects } from '@/hooks/useBuildProjects';
 import { CreateProjectDialog } from '@/components/build-in-public/CreateProjectDialog';
 import { ProjectCard } from '@/components/build-in-public/ProjectCard';
+import { FeedbackLeaderboard } from '@/components/build-in-public/FeedbackLeaderboard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -230,134 +231,146 @@ export default function BuildInPublic() {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-8">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar proyectos, tecnologías..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-40">
-              <Filter className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Estado" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="in_progress">En desarrollo</SelectItem>
-              <SelectItem value="completed">Completados</SelectItem>
-              <SelectItem value="idea">Ideas</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-full sm:w-40">
-              <SelectValue placeholder="Ordenar" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="recent">Más recientes</SelectItem>
-              <SelectItem value="popular">Más populares</SelectItem>
-              <SelectItem value="feedback">Necesitan ayuda</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* My Projects Section */}
-        {user && myProjects.length > 0 && (
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold">Mis Proyectos</h2>
-              <CreateProjectDialog
-                trigger={
-                  <Button variant="outline" size="sm">
-                    <Rocket className="h-4 w-4 mr-2" />
-                    Nuevo
-                  </Button>
-                }
-              />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {myProjects.slice(0, 3).map((project) => (
-                <ProjectCard 
-                  key={project.id} 
-                  project={project as ProjectWithFeedback} 
-                  showFeedbackCounts={true}
+        <div className="flex gap-8">
+          {/* Left Column - Projects */}
+          <div className="flex-1">
+            {/* Filters */}
+            <div className="flex flex-col sm:flex-row gap-4 mb-8">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar proyectos, tecnologías..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
                 />
-              ))}
-            </div>
-          </div>
-        )}
+              </div>
+              
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-40">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Estado" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="in_progress">En desarrollo</SelectItem>
+                  <SelectItem value="completed">Completados</SelectItem>
+                  <SelectItem value="idea">Ideas</SelectItem>
+                </SelectContent>
+              </Select>
 
-        {/* All Projects */}
-        <div>
-          <h2 className="text-xl font-bold mb-4">
-            Proyectos para Probar
-            {filteredProjects.length > 0 && (
-              <Badge variant="secondary" className="ml-2">
-                {filteredProjects.length}
-              </Badge>
-            )}
-          </h2>
-
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <Card key={i}>
-                  <CardContent className="p-0">
-                    <Skeleton className="h-48 rounded-t-lg" />
-                    <div className="p-5 space-y-3">
-                      <Skeleton className="h-6 w-3/4" />
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-10 w-full" />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-full sm:w-40">
+                  <SelectValue placeholder="Ordenar" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="recent">Más recientes</SelectItem>
+                  <SelectItem value="popular">Más populares</SelectItem>
+                  <SelectItem value="feedback">Necesitan ayuda</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          ) : filteredProjects.length === 0 ? (
-            <Card className="text-center py-12">
-              <CardContent>
-                <Rocket className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-semibold mb-2">
-                  {searchQuery || statusFilter !== 'all' 
-                    ? 'No se encontraron proyectos' 
-                    : 'No hay proyectos aún'
-                  }
-                </h3>
-                <p className="text-muted-foreground mb-4">
-                  {searchQuery || statusFilter !== 'all'
-                    ? 'Intenta con otros filtros'
-                    : '¡Sé el primero en subir tu proyecto!'
-                  }
-                </p>
-                {user && (
+
+            {/* My Projects Section */}
+            {user && myProjects.length > 0 && (
+              <div className="mb-8">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-bold">Mis Proyectos</h2>
                   <CreateProjectDialog
                     trigger={
-                      <Button>
+                      <Button variant="outline" size="sm">
                         <Rocket className="h-4 w-4 mr-2" />
-                        Subir Mi Proyecto
+                        Nuevo
                       </Button>
                     }
                   />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {myProjects.slice(0, 3).map((project) => (
+                    <ProjectCard 
+                      key={project.id} 
+                      project={project as ProjectWithFeedback} 
+                      showFeedbackCounts={true}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* All Projects */}
+            <div>
+              <h2 className="text-xl font-bold mb-4">
+                Proyectos para Probar
+                {filteredProjects.length > 0 && (
+                  <Badge variant="secondary" className="ml-2">
+                    {filteredProjects.length}
+                  </Badge>
                 )}
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProjects.map((project) => (
-                <ProjectCard 
-                  key={project.id} 
-                  project={project} 
-                  showFeedbackCounts={true}
-                />
-              ))}
+              </h2>
+
+              {loading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <Card key={i}>
+                      <CardContent className="p-0">
+                        <Skeleton className="h-48 rounded-t-lg" />
+                        <div className="p-5 space-y-3">
+                          <Skeleton className="h-6 w-3/4" />
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-10 w-full" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : filteredProjects.length === 0 ? (
+                <Card className="text-center py-12">
+                  <CardContent>
+                    <Rocket className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                    <h3 className="text-lg font-semibold mb-2">
+                      {searchQuery || statusFilter !== 'all' 
+                        ? 'No se encontraron proyectos' 
+                        : 'No hay proyectos aún'
+                      }
+                    </h3>
+                    <p className="text-muted-foreground mb-4">
+                      {searchQuery || statusFilter !== 'all'
+                        ? 'Intenta con otros filtros'
+                        : '¡Sé el primero en subir tu proyecto!'
+                      }
+                    </p>
+                    {user && (
+                      <CreateProjectDialog
+                        trigger={
+                          <Button>
+                            <Rocket className="h-4 w-4 mr-2" />
+                            Subir Mi Proyecto
+                          </Button>
+                        }
+                      />
+                    )}
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {filteredProjects.map((project) => (
+                    <ProjectCard 
+                      key={project.id} 
+                      project={project} 
+                      showFeedbackCounts={true}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
-          )}
+          </div>
+
+          {/* Right Sidebar - Leaderboard */}
+          <div className="hidden lg:block w-80 flex-shrink-0">
+            <div className="sticky top-4">
+              <FeedbackLeaderboard />
+            </div>
+          </div>
         </div>
       </div>
     </div>
