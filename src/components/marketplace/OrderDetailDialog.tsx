@@ -141,6 +141,7 @@ export function OrderDetailDialog({
       if (error) throw error;
       toast.success("¡Gracias por tu valoración!");
       setHasReviewed(true);
+      onRefresh();
     } catch (error: any) {
       toast.error(error.message || "Error al enviar valoración");
     } finally {
