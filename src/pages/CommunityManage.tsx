@@ -30,7 +30,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Users, Settings, BookOpen, Trash2, Save, Bell, DollarSign, Tag, X, Plus, Images, Upload, ImageIcon } from "lucide-react";
+import { ArrowLeft, Users, Settings, BookOpen, Trash2, Save, Bell, DollarSign, Tag, X, Plus, Images, Upload, ImageIcon, BarChart3, Mail } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -42,6 +42,8 @@ import { CommunityPricingManager } from "@/components/community/CommunityPricing
 import { CommunityCoursesManager } from "@/components/community/CommunityCoursesManager";
 import { BroadcastNotification } from "@/components/community/BroadcastNotification";
 import { CommunityGalleryManager } from "@/components/community/CommunityGalleryManager";
+import { CommunityAnalyticsTab } from "@/components/community/CommunityAnalyticsTab";
+import { EmailCampaignManager } from "@/components/community/EmailCampaignManager";
 import { UserMenu } from "@/components/UserMenu";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -343,8 +345,12 @@ export default function CommunityManage() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="members" className="space-y-6">
-          <TabsList>
+        <Tabs defaultValue="analytics" className="space-y-6">
+          <TabsList className="flex-wrap">
+            <TabsTrigger value="analytics" className="gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Analytics
+            </TabsTrigger>
             <TabsTrigger value="members" className="gap-2">
               <Users className="h-4 w-4" />
               Miembros ({members.length})
@@ -361,6 +367,10 @@ export default function CommunityManage() {
               <Bell className="h-4 w-4" />
               Notificaciones
             </TabsTrigger>
+            <TabsTrigger value="email" className="gap-2">
+              <Mail className="h-4 w-4" />
+              Email Marketing
+            </TabsTrigger>
             <TabsTrigger value="pricing" className="gap-2">
               <DollarSign className="h-4 w-4" />
               Membresía
@@ -370,6 +380,11 @@ export default function CommunityManage() {
               Configuración
             </TabsTrigger>
           </TabsList>
+
+          {/* Analytics Tab */}
+          <TabsContent value="analytics">
+            <CommunityAnalyticsTab communityId={communityId!} />
+          </TabsContent>
 
           {/* Members Tab */}
           <TabsContent value="members">
@@ -473,6 +488,14 @@ export default function CommunityManage() {
           {/* Notifications Tab */}
           <TabsContent value="notifications">
             <BroadcastNotification 
+              communityId={communityId!} 
+              communityName={community.name}
+            />
+          </TabsContent>
+
+          {/* Email Marketing Tab */}
+          <TabsContent value="email">
+            <EmailCampaignManager 
               communityId={communityId!} 
               communityName={community.name}
             />
