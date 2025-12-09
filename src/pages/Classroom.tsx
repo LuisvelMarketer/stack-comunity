@@ -14,6 +14,7 @@ import { LockedContent } from "@/components/LockedContent";
 import { CourseCertificate } from "@/components/CourseCertificate";
 import { Badge } from "@/components/ui/badge";
 import { AIMentorFloating } from "@/components/AIMentorFloating";
+import { AIMentorChat, AIMentorChatButton } from "@/components/AIMentorChat";
 
 interface Module {
   id: string;
@@ -56,6 +57,7 @@ export default function Classroom() {
   const [loading, setLoading] = useState(true);
   const [progressPercent, setProgressPercent] = useState(0);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   
   // Tracking state
   const moduleStartTime = useRef<Date | null>(null);
@@ -439,6 +441,17 @@ export default function Classroom() {
 
       {/* Floating AI Mentor */}
       <AIMentorFloating courseId={courseId} moduleId={selectedModule?.id} />
+      
+      {/* AI Mentor Chat */}
+      {!isChatOpen && (
+        <AIMentorChatButton onClick={() => setIsChatOpen(true)} />
+      )}
+      <AIMentorChat
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+        courseId={courseId}
+        moduleId={selectedModule?.id}
+      />
     </div>
   );
 }
