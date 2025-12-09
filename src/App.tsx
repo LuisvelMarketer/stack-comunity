@@ -30,6 +30,7 @@ import BuildInPublic from "./pages/BuildInPublic";
 import ProjectDetail from "./pages/ProjectDetail";
 import ProjectEdit from "./pages/ProjectEdit";
 import Marketplace from "./pages/Marketplace";
+import Incubator from "./pages/Incubator";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -221,6 +222,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Marketplace />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/incubator"
+              element={
+                <ProtectedRoute>
+                  <Incubator />
                 </ProtectedRoute>
               }
             />
