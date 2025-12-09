@@ -313,7 +313,7 @@ export const AIMentorChat: React.FC<AIMentorChatProps> = ({
             </div>
           )}
           <CardTitle className="text-base font-semibold">
-            {showHistory ? 'Historial' : 'AI Mentor'}
+            {showHistory ? 'Historial' : 'Cero - AI Mentor'}
           </CardTitle>
         </div>
         <div className="flex items-center gap-1">
@@ -382,23 +382,33 @@ export const AIMentorChat: React.FC<AIMentorChatProps> = ({
             <ScrollArea className="flex-1 p-4" ref={scrollRef}>
               {messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-4">
-                  <Bot className="h-12 w-12 mb-4 text-primary/50" />
-                  <p className="font-medium text-foreground mb-2">¡Hola! Soy tu AI Mentor</p>
-                  <p className="text-sm">
-                    Pregúntame cualquier cosa sobre el curso, código, o conceptos de programación.
+                  <div className="relative mb-4">
+                    <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse" />
+                    <Bot className="h-14 w-14 text-primary relative z-10" />
+                  </div>
+                  <p className="font-semibold text-lg text-foreground mb-1">¡Hola! Soy Cero 👋</p>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Tu mentor de IA personal. Pregúntame lo que quieras sobre programación o el curso.
                   </p>
-                  <div className="mt-4 flex flex-wrap gap-2 justify-center">
-                    {['¿Cómo funciona React?', '¿Qué es una API?', 'Explica async/await'].map((suggestion) => (
+                  <div className="w-full space-y-2">
+                    <p className="text-xs text-muted-foreground/70 mb-2">Prueba preguntando:</p>
+                    {[
+                      '¿Por dónde empiezo si soy principiante?',
+                      'Explícame React con un ejemplo simple',
+                      '¿Cómo mejoro mi código?',
+                      'Tengo un error, ¿me ayudas?'
+                    ].map((suggestion) => (
                       <Button
                         key={suggestion}
                         variant="outline"
                         size="sm"
-                        className="text-xs"
+                        className="w-full text-xs justify-start hover:bg-primary/5 hover:border-primary/30"
                         onClick={() => {
                           setInput(suggestion);
                           inputRef.current?.focus();
                         }}
                       >
+                        <Sparkles className="h-3 w-3 mr-2 text-primary" />
                         {suggestion}
                       </Button>
                     ))}
