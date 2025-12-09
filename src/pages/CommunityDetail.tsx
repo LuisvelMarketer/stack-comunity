@@ -8,14 +8,14 @@ import { UserMenu } from "@/components/UserMenu";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Users, BookOpen, MessageSquare, ArrowLeft, Circle, Video, Trophy, Crown, Loader2, Info, Images } from "lucide-react";
+import { Calendar, Users, GraduationCap, MessageSquare, ArrowLeft, Circle, Video, Trophy, Crown, Loader2, Info, Images } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { EventsList } from "@/components/community/EventsList";
 import { MembersList } from "@/components/community/MembersList";
 import { OnlineUsers } from "@/components/community/OnlineUsers";
 import { CommunityChat } from "@/components/community/CommunityChat";
 import { LiveSessions } from "@/components/community/LiveSessions";
-import { CommunityCourses } from "@/components/community/CommunityCourses";
+import { CommunityClassroom } from "@/components/community/CommunityClassroom";
 import { CommunityAchievementsLeaderboard } from "@/components/community/CommunityAchievementsLeaderboard";
 import { CommunityAbout } from "@/components/community/CommunityAbout";
 import { CommunityGallery } from "@/components/community/CommunityGallery";
@@ -291,9 +291,9 @@ export default function CommunityDetail() {
               <Calendar className="h-4 w-4" />
               Eventos
             </TabsTrigger>
-            <TabsTrigger value="courses" className="flex items-center gap-2">
-              <BookOpen className="h-4 w-4" />
-              Cursos
+            <TabsTrigger value="classroom" className="flex items-center gap-2">
+              <GraduationCap className="h-4 w-4" />
+              Classroom
             </TabsTrigger>
             <TabsTrigger value="achievements" className="flex items-center gap-2">
               <Trophy className="h-4 w-4" />
@@ -327,8 +327,8 @@ export default function CommunityDetail() {
               </div>}
           </TabsContent>
 
-          <TabsContent value="courses" className="mt-6">
-            <CommunityCourses communityId={community.id} isMember={!!community.is_member} />
+          <TabsContent value="classroom" className="mt-6">
+            <CommunityClassroom communityId={community.id} isMember={!!community.is_member} />
           </TabsContent>
 
           <TabsContent value="achievements" className="mt-6">
