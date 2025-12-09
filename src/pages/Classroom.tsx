@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useSubscription } from "@/hooks/useSubscription";
+import { useCommunitySubscription } from "@/hooks/useCommunitySubscription";
 import { useAIMentor } from "@/hooks/useAIMentor";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -46,12 +46,14 @@ export default function Classroom() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { isPremium } = useSubscription();
   const { logActivity, analyzeProgress } = useAIMentor();
   
   const [course, setCourse] = useState<Course | null>(null);
   const [community, setCommunity] = useState<Community | null>(null);
+  const [communityId, setCommunityId] = useState<string | undefined>(undefined);
   const [isCommunityMember, setIsCommunityMember] = useState(false);
+  const [communityIsPaid, setCommunityIsPaid] = useState(false);
+  const [communityPrice, setCommunityPrice] = useState<number | null>(null);
   const [modules, setModules] = useState<Module[]>([]);
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,11 +65,20 @@ export default function Classroom() {
   const moduleStartTime = useRef<Date | null>(null);
   const lastAnalysisTime = useRef<Date | null>(null);
 
+  // Use community subscription hook for paid communities
+  const { isSubscribed: isCommunitySubscribed, subscribe: subscribeToCommunity } = useCommunitySubscription(communityId);
+
   const isModuleAccessible = (module: Module) => {
     if (course?.community_id) {
+      // For paid communities, require subscription or membership
+      if (communityIsPaid) {
+        return isCommunityMember && isCommunitySubscribed;
+      }
+      // For free communities, just require membership
       return isCommunityMember;
     }
-    return module.is_free || isPremium;
+    // For courses without community, allow access if module is free
+    return module.is_free;
   };
 
   // Track module view time and detect if stuck
@@ -147,11 +158,14 @@ export default function Classroom() {
       if (courseData.community_id && user) {
         const { data: communityData } = await supabase
           .from("communities")
-          .select("id, name, slug")
+          .select("id, name, slug, is_paid, price_monthly")
           .eq("id", courseData.community_id)
           .single();
 
         setCommunity(communityData);
+        setCommunityId(communityData?.id);
+        setCommunityIsPaid(communityData?.is_paid || false);
+        setCommunityPrice(communityData?.price_monthly || null);
 
         const { data: membershipData } = await supabase
           .from("community_members")
@@ -343,7 +357,11 @@ export default function Classroom() {
   }
 
   // Check if user has access to the course
-  const hasAccess = course.community_id ? isCommunityMember : true;
+  // For paid communities: need membership + subscription
+  // For free communities: just need membership
+  const hasAccess = course.community_id 
+    ? (communityIsPaid ? isCommunityMember && isCommunitySubscribed : isCommunityMember) 
+    : true;
 
   if (!hasAccess) {
     return (
@@ -353,7 +371,16 @@ export default function Classroom() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Volver
           </Button>
-          <LockedContent />
+          <LockedContent 
+            title={communityIsPaid ? "Contenido de Pago" : "Únete a la comunidad"}
+            description={communityIsPaid 
+              ? `Este contenido requiere una suscripción a ${community?.name || 'la comunidad'}.` 
+              : `Debes unirte a ${community?.name || 'la comunidad'} para acceder a este contenido.`
+            }
+            communityName={community?.name}
+            price={communityIsPaid ? (communityPrice || undefined) : undefined}
+            onSubscribe={communityIsPaid ? subscribeToCommunity : undefined}
+          />
         </div>
       </div>
     );
@@ -412,18 +439,16 @@ export default function Classroom() {
             />
           ) : (
             <div className="flex-1 flex items-center justify-center p-8">
-              <div className="text-center space-y-4 max-w-md">
-                <div className="w-20 h-20 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto">
-                  <Lock className="h-10 w-10 text-amber-500" />
-                </div>
-                <h2 className="text-2xl font-bold">Contenido Premium</h2>
-                <p className="text-muted-foreground">
-                  Este módulo requiere una suscripción premium para acceder al contenido.
-                </p>
-                <Button onClick={() => navigate("/subscriptions")}>
-                  Ver planes
-                </Button>
-              </div>
+              <LockedContent 
+                title={communityIsPaid ? "Módulo Premium" : "Módulo Bloqueado"}
+                description={communityIsPaid 
+                  ? `Este módulo requiere una suscripción a ${community?.name || 'la comunidad'}.`
+                  : "Este módulo no está disponible en tu plan actual."
+                }
+                communityName={community?.name}
+                price={communityIsPaid ? (communityPrice || undefined) : undefined}
+                onSubscribe={communityIsPaid ? subscribeToCommunity : undefined}
+              />
             </div>
           )
         ) : (
