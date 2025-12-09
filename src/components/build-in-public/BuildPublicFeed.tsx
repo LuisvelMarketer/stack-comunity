@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { UserAvatar } from '@/components/UserAvatar';
+import { CreateProjectDialog } from './CreateProjectDialog';
 import { 
   Rocket, 
   Lightbulb, 
@@ -82,12 +83,15 @@ export function BuildPublicFeed() {
         
         // Fetch profiles for all unique user_ids
         const userIds = [...new Set(publicUpdates.map((u: any) => u.build_projects?.user_id).filter(Boolean))];
-        const { data: profilesData } = await supabase
-          .from('profiles')
-          .select('id, full_name, avatar_url')
-          .in('id', userIds);
-
-        const profilesMap = new Map((profilesData || []).map(p => [p.id, p]));
+        
+        let profilesMap = new Map();
+        if (userIds.length > 0) {
+          const { data: profilesData } = await supabase
+            .from('profiles')
+            .select('id, full_name, avatar_url')
+            .in('id', userIds);
+          profilesMap = new Map((profilesData || []).map(p => [p.id, p]));
+        }
         
         // Merge profiles into updates
         const updatesWithProfiles = publicUpdates.map((update: any) => ({
@@ -163,12 +167,7 @@ export function BuildPublicFeed() {
           <p className="text-muted-foreground mb-4">
             ¡Sé el primero en compartir tu progreso!
           </p>
-          <Link to="/build-in-public/new">
-            <Button>
-              <Rocket className="h-4 w-4 mr-2" />
-              Crear Proyecto
-            </Button>
-          </Link>
+          <CreateProjectDialog />
         </CardContent>
       </Card>
     );

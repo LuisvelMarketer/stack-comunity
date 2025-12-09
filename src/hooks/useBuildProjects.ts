@@ -100,12 +100,15 @@ export function useBuildProjects() {
       
       // Fetch profiles for all unique user_ids
       const userIds = [...new Set((projectsData || []).map(p => p.user_id))];
-      const { data: profilesData } = await supabase
-        .from('profiles')
-        .select('id, full_name, avatar_url')
-        .in('id', userIds);
-
-      const profilesMap = new Map((profilesData || []).map(p => [p.id, p]));
+      
+      let profilesMap = new Map();
+      if (userIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url')
+          .in('id', userIds);
+        profilesMap = new Map((profilesData || []).map(p => [p.id, p]));
+      }
       
       const projectsWithProfiles = (projectsData || []).map(project => ({
         ...project,
@@ -149,12 +152,15 @@ export function useBuildProjects() {
       
       // Fetch profiles for all unique user_ids
       const userIds = [...new Set((projectsData || []).map(p => p.user_id))];
-      const { data: profilesData } = await supabase
-        .from('profiles')
-        .select('id, full_name, avatar_url')
-        .in('id', userIds);
-
-      const profilesMap = new Map((profilesData || []).map(p => [p.id, p]));
+      
+      let profilesMap = new Map();
+      if (userIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url')
+          .in('id', userIds);
+        profilesMap = new Map((profilesData || []).map(p => [p.id, p]));
+      }
       
       const projectsWithProfiles = (projectsData || []).map(project => ({
         ...project,
