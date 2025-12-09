@@ -421,16 +421,18 @@ export const AIMentorChat: React.FC<AIMentorChatProps> = ({
                       )}
                       <div
                         className={cn(
-                          "max-w-[85%] rounded-lg px-3 py-2 text-sm",
+                          "rounded-lg px-3 py-2 text-sm overflow-hidden",
                           message.role === 'user'
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted'
+                            ? 'bg-primary text-primary-foreground max-w-[85%]'
+                            : 'bg-muted max-w-full'
                         )}
                       >
                         {message.role === 'assistant' ? (
-                          <MarkdownRenderer content={message.content || '...'} />
+                          <div className="prose prose-sm dark:prose-invert max-w-none break-words overflow-x-auto">
+                            <MarkdownRenderer content={message.content || '...'} />
+                          </div>
                         ) : (
-                          <p className="whitespace-pre-wrap">{message.content}</p>
+                          <p className="whitespace-pre-wrap break-words">{message.content}</p>
                         )}
                       </div>
                     </div>
