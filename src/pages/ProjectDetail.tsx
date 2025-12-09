@@ -44,7 +44,8 @@ import {
   MessageCircle,
   Users,
   Eye,
-  TrendingUp
+  TrendingUp,
+  Filter
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -53,6 +54,7 @@ import { ProjectStats } from '@/components/build-in-public/ProjectStats';
 import { UpdateComments } from '@/components/build-in-public/UpdateComments';
 import { FeedbackTicket as FeedbackTicketCard } from '@/components/build-in-public/FeedbackTicket';
 import { AddFeedbackForm as FeedbackForm } from '@/components/build-in-public/AddFeedbackForm';
+import { FeedbackFilters } from '@/components/build-in-public/FeedbackFilters';
 
 const statusLabels = {
   idea: 'Idea',
@@ -96,11 +98,25 @@ export default function ProjectDetail() {
   const [loading, setLoading] = useState(true);
   const [isLiked, setIsLiked] = useState(false);
   const [followersCount, setFollowersCount] = useState(0);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
 
   const { updates, createUpdate } = useProjectUpdates(projectId || '');
   const { feedback, addFeedback, fetchReplies } = useProjectFeedback(projectId || '');
 
   const isOwner = user?.id === project?.user_id;
+
+  // Filter feedback based on status and category
+  const filteredFeedback = feedback.filter((item) => {
+    const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
+    const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
+    return matchesStatus && matchesCategory;
+  });
+
+  const clearFilters = () => {
+    setStatusFilter('all');
+    setCategoryFilter('all');
+  };
 
   const handleAddReply = async (data: { content: string; parentId: string }) => {
     return addFeedback({ content: data.content, parentId: data.parentId });
@@ -320,6 +336,18 @@ export default function ProjectDetail() {
                 projectLiveUrl={project.live_url}
               />
               
+              {feedback.length > 0 && (
+                <FeedbackFilters
+                  statusFilter={statusFilter}
+                  categoryFilter={categoryFilter}
+                  onStatusChange={setStatusFilter}
+                  onCategoryChange={setCategoryFilter}
+                  onClearFilters={clearFilters}
+                  feedbackCount={feedback.length}
+                  filteredCount={filteredFeedback.length}
+                />
+              )}
+              
               {feedback.length === 0 ? (
                 <Card className="text-center py-8">
                   <CardContent>
@@ -329,9 +357,21 @@ export default function ProjectDetail() {
                     </p>
                   </CardContent>
                 </Card>
+              ) : filteredFeedback.length === 0 ? (
+                <Card className="text-center py-8">
+                  <CardContent>
+                    <Filter className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                    <p className="text-muted-foreground">
+                      No hay tickets que coincidan con los filtros
+                    </p>
+                    <Button variant="link" onClick={clearFilters} className="mt-2">
+                      Limpiar filtros
+                    </Button>
+                  </CardContent>
+                </Card>
               ) : (
                 <div className="space-y-3">
-                  {feedback.map((item) => (
+                  {filteredFeedback.map((item) => (
                     <FeedbackTicketCard 
                       key={item.id} 
                       feedback={item} 
