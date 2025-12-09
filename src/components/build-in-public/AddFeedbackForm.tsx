@@ -20,21 +20,29 @@ import {
   AlertTriangle,
   Image as ImageIcon,
   X,
-  Upload
+  Upload,
+  Plus
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+
+const MAX_SCREENSHOTS = 5;
 
 interface AddFeedbackFormProps {
   onAdd: (data: { 
     content: string; 
     category: string; 
     priority: string;
-    screenshot_url?: string;
+    screenshot_urls?: string[];
   }) => Promise<any>;
   disabled?: boolean;
   projectLiveUrl?: string;
+}
+
+interface ScreenshotFile {
+  file: File;
+  preview: string;
 }
 
 export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedbackFormProps) {
@@ -43,47 +51,45 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
   const [category, setCategory] = useState('bug');
   const [priority, setPriority] = useState('medium');
   const [loading, setLoading] = useState(false);
-  const [screenshot, setScreenshot] = useState<File | null>(null);
-  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
+  const [screenshots, setScreenshots] = useState<ScreenshotFile[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const addScreenshot = useCallback((file: File) => {
+    if (screenshots.length >= MAX_SCREENSHOTS) {
+      toast.error(`Máximo ${MAX_SCREENSHOTS} capturas permitidas`);
+      return;
+    }
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       toast.error('Solo se permiten imágenes');
       return;
     }
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast.error('La imagen no puede superar 5MB');
       return;
     }
 
-    setScreenshot(file);
-    setScreenshotPreview(URL.createObjectURL(file));
+    const preview = URL.createObjectURL(file);
+    setScreenshots(prev => [...prev, { file, preview }]);
+  }, [screenshots.length]);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    Array.from(files).forEach(file => addScreenshot(file));
+    
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handlePasteImage = useCallback((file: File) => {
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      return;
-    }
-
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('La imagen no puede superar 5MB');
-      return;
-    }
-
-    setScreenshot(file);
-    setScreenshotPreview(URL.createObjectURL(file));
+    addScreenshot(file);
     toast.success('Captura pegada desde portapapeles');
-  }, []);
+  }, [addScreenshot]);
 
   useEffect(() => {
     const handlePaste = (e: ClipboardEvent) => {
@@ -106,40 +112,44 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
     return () => document.removeEventListener('paste', handlePaste);
   }, [handlePasteImage]);
 
-  const removeScreenshot = () => {
-    setScreenshot(null);
-    if (screenshotPreview) {
-      URL.revokeObjectURL(screenshotPreview);
-      setScreenshotPreview(null);
-    }
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+  const removeScreenshot = (index: number) => {
+    setScreenshots(prev => {
+      const updated = [...prev];
+      URL.revokeObjectURL(updated[index].preview);
+      updated.splice(index, 1);
+      return updated;
+    });
   };
 
-  const uploadScreenshot = async (): Promise<string | null> => {
-    if (!screenshot || !user) return null;
+  const uploadScreenshots = async (): Promise<string[]> => {
+    if (screenshots.length === 0 || !user) return [];
 
     setUploadingImage(true);
+    const urls: string[] = [];
+
     try {
-      const fileExt = screenshot.name.split('.').pop();
-      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+      for (const screenshot of screenshots) {
+        const fileExt = screenshot.file.name.split('.').pop() || 'png';
+        const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('feedback-screenshots')
-        .upload(fileName, screenshot);
+        const { error: uploadError } = await supabase.storage
+          .from('feedback-screenshots')
+          .upload(fileName, screenshot.file);
 
-      if (uploadError) throw uploadError;
+        if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage
-        .from('feedback-screenshots')
-        .getPublicUrl(fileName);
+        const { data: urlData } = supabase.storage
+          .from('feedback-screenshots')
+          .getPublicUrl(fileName);
 
-      return urlData.publicUrl;
+        urls.push(urlData.publicUrl);
+      }
+
+      return urls;
     } catch (error) {
-      console.error('Error uploading screenshot:', error);
-      toast.error('Error al subir la captura');
-      return null;
+      console.error('Error uploading screenshots:', error);
+      toast.error('Error al subir las capturas');
+      return urls;
     } finally {
       setUploadingImage(false);
     }
@@ -154,25 +164,21 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
 
     setLoading(true);
     try {
-      // Upload screenshot if exists
-      let screenshotUrl: string | undefined;
-      if (screenshot) {
-        const url = await uploadScreenshot();
-        if (url) screenshotUrl = url;
-      }
+      const screenshotUrls = await uploadScreenshots();
 
       await onAdd({
         content: content.trim(),
         category,
         priority,
-        screenshot_url: screenshotUrl,
+        screenshot_urls: screenshotUrls.length > 0 ? screenshotUrls : undefined,
       });
 
       // Reset form
       setContent('');
       setCategory('bug');
       setPriority('medium');
-      removeScreenshot();
+      screenshots.forEach(s => URL.revokeObjectURL(s.preview));
+      setScreenshots([]);
       toast.success('Feedback enviado');
     } catch (error) {
       console.error('Error adding feedback:', error);
@@ -267,26 +273,42 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
 
           {/* Screenshot Upload */}
           <div className="space-y-2">
-            <Label>Captura de pantalla (opcional)</Label>
+            <Label>Capturas de pantalla (máx. {MAX_SCREENSHOTS})</Label>
             
-            {screenshotPreview ? (
-              <div className="relative inline-block">
-                <img 
-                  src={screenshotPreview} 
-                  alt="Preview" 
-                  className="max-h-40 rounded-lg border"
-                />
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="icon"
-                  className="absolute -top-2 -right-2 h-6 w-6"
-                  onClick={removeScreenshot}
+            <div className="flex flex-wrap gap-2">
+              {/* Preview existing screenshots */}
+              {screenshots.map((screenshot, index) => (
+                <div key={index} className="relative">
+                  <img 
+                    src={screenshot.preview} 
+                    alt={`Preview ${index + 1}`} 
+                    className="h-20 w-20 object-cover rounded-lg border"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute -top-2 -right-2 h-5 w-5"
+                    onClick={() => removeScreenshot(index)}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ))}
+
+              {/* Add more button */}
+              {screenshots.length < MAX_SCREENSHOTS && (
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="h-20 w-20 border-2 border-dashed border-muted-foreground/25 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors"
                 >
-                  <X className="h-3 w-3" />
-                </Button>
-              </div>
-            ) : (
+                  <Plus className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-[10px] text-muted-foreground mt-1">Agregar</span>
+                </div>
+              )}
+            </div>
+
+            {screenshots.length === 0 && (
               <div
                 onClick={() => fileInputRef.current?.click()}
                 className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors"
@@ -296,7 +318,7 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
                   Clic para subir o <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">Ctrl+V</kbd> para pegar
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  PNG, JPG hasta 5MB
+                  PNG, JPG hasta 5MB cada una
                 </p>
               </div>
             )}
@@ -305,6 +327,7 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
               ref={fileInputRef}
               type="file"
               accept="image/*"
+              multiple
               onChange={handleFileSelect}
               className="hidden"
             />
