@@ -3,21 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Bug, 
   Lightbulb, 
   Palette,
   MessageSquare,
   Send,
-  AlertTriangle,
   Image as ImageIcon,
   X,
   Upload,
@@ -53,11 +44,21 @@ interface ScreenshotFile {
   preview: string;
 }
 
+interface FeedbackFields {
+  bug: string;
+  improvement: string;
+  design: string;
+  general: string;
+}
+
 export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedbackFormProps) {
   const { user } = useAuth();
-  const [content, setContent] = useState('');
-  const [category, setCategory] = useState('bug');
-  const [priority, setPriority] = useState('medium');
+  const [fields, setFields] = useState<FeedbackFields>({
+    bug: '',
+    improvement: '',
+    design: '',
+    general: ''
+  });
   const [loading, setLoading] = useState(false);
   const [screenshots, setScreenshots] = useState<ScreenshotFile[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -69,6 +70,10 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
   const fileInputRef = useRef<HTMLInputElement>(null);
   const screenRecorderRef = useRef<ScreenRecorder | null>(null);
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const updateField = (field: keyof FeedbackFields, value: string) => {
+    setFields(prev => ({ ...prev, [field]: value }));
+  };
 
   const addScreenshot = useCallback((file: File) => {
     if (screenshots.length >= MAX_SCREENSHOTS) {
@@ -139,7 +144,6 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
   const handleAnnotationSave = async (annotatedImageUrl: string) => {
     if (annotatingIndex === null) return;
 
-    // Convert base64 to blob
     const response = await fetch(annotatedImageUrl);
     const blob = await response.blob();
     const file = new File([blob], `annotated-${Date.now()}.png`, { type: 'image/png' });
@@ -277,8 +281,11 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!content.trim()) {
-      toast.error('Escribe algo de feedback');
+    
+    // Check if at least one field has content
+    const hasContent = Object.values(fields).some(v => v.trim() !== '');
+    if (!hasContent) {
+      toast.error('Rellena al menos un campo de feedback');
       return;
     }
 
@@ -289,22 +296,51 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
         uploadVideo()
       ]);
 
-      await onAdd({
-        content: content.trim(),
-        category,
-        priority,
-        screenshot_urls: screenshotUrls.length > 0 ? screenshotUrls : undefined,
-        video_url: videoUrl || undefined,
-      });
+      // Submit each non-empty field as separate feedback
+      const submissions = [];
+      
+      if (fields.bug.trim()) {
+        submissions.push(onAdd({
+          content: fields.bug.trim(),
+          category: 'bug',
+          priority: 'medium',
+          screenshot_urls: screenshotUrls.length > 0 ? screenshotUrls : undefined,
+          video_url: videoUrl || undefined,
+        }));
+      }
+      
+      if (fields.improvement.trim()) {
+        submissions.push(onAdd({
+          content: fields.improvement.trim(),
+          category: 'improvement',
+          priority: 'medium',
+        }));
+      }
+      
+      if (fields.design.trim()) {
+        submissions.push(onAdd({
+          content: fields.design.trim(),
+          category: 'design',
+          priority: 'medium',
+        }));
+      }
+      
+      if (fields.general.trim()) {
+        submissions.push(onAdd({
+          content: fields.general.trim(),
+          category: 'general',
+          priority: 'low',
+        }));
+      }
+
+      await Promise.all(submissions);
 
       // Reset form
-      setContent('');
-      setCategory('bug');
-      setPriority('medium');
+      setFields({ bug: '', improvement: '', design: '', general: '' });
       screenshots.forEach(s => URL.revokeObjectURL(s.preview));
       setScreenshots([]);
       removeVideo();
-      toast.success('Feedback enviado');
+      toast.success(`${submissions.length} feedback(s) enviado(s)`);
     } catch (error) {
       console.error('Error adding feedback:', error);
       toast.error('Error al enviar feedback');
@@ -340,7 +376,7 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <MessageSquare className="h-4 w-4" />
-          Reportar Bug o Sugerencia
+          Deja tu Feedback
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -361,50 +397,67 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Category Tabs */}
-          <div className="space-y-2">
-            <Label>Tipo de feedback</Label>
-            <Tabs value={category} onValueChange={setCategory}>
-              <TabsList className="grid grid-cols-4 w-full">
-                <TabsTrigger value="bug" className="gap-1.5 text-xs sm:text-sm">
-                  <Bug className="h-3.5 w-3.5 text-red-500" />
-                  <span className="hidden sm:inline">Bug</span>
-                </TabsTrigger>
-                <TabsTrigger value="improvement" className="gap-1.5 text-xs sm:text-sm">
-                  <Lightbulb className="h-3.5 w-3.5 text-yellow-500" />
-                  <span className="hidden sm:inline">Mejora</span>
-                </TabsTrigger>
-                <TabsTrigger value="design" className="gap-1.5 text-xs sm:text-sm">
-                  <Palette className="h-3.5 w-3.5 text-purple-500" />
-                  <span className="hidden sm:inline">Diseño</span>
-                </TabsTrigger>
-                <TabsTrigger value="general" className="gap-1.5 text-xs sm:text-sm">
-                  <MessageSquare className="h-3.5 w-3.5 text-blue-500" />
-                  <span className="hidden sm:inline">Otro</span>
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-
-          {/* Content */}
-          <div className="space-y-2">
-            <Label htmlFor="content">
-              {category === 'bug' && 'Describe el bug (pasos para reproducir, qué esperabas vs qué pasó)'}
-              {category === 'improvement' && 'Describe tu sugerencia de mejora'}
-              {category === 'design' && 'Describe el problema de diseño o tu propuesta'}
-              {category === 'general' && 'Tu comentario o pregunta'}
+          {/* Bug Field */}
+          <div className="space-y-2 p-3 rounded-lg border border-red-200 dark:border-red-900/30 bg-red-50/50 dark:bg-red-950/20">
+            <Label htmlFor="bug" className="flex items-center gap-2 text-red-700 dark:text-red-400">
+              <Bug className="h-4 w-4" />
+              Bugs encontrados
             </Label>
             <Textarea
-              id="content"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder={
-                category === 'bug' 
-                  ? "1. Fui a la página X\n2. Hice clic en Y\n3. Esperaba Z pero pasó W" 
-                  : "Escribe aquí..."
-              }
-              rows={4}
-              className="resize-none"
+              id="bug"
+              value={fields.bug}
+              onChange={(e) => updateField('bug', e.target.value)}
+              placeholder="1. Fui a la página X&#10;2. Hice clic en Y&#10;3. Esperaba Z pero pasó W"
+              rows={3}
+              className="resize-none bg-background"
+            />
+          </div>
+
+          {/* Improvement Field */}
+          <div className="space-y-2 p-3 rounded-lg border border-yellow-200 dark:border-yellow-900/30 bg-yellow-50/50 dark:bg-yellow-950/20">
+            <Label htmlFor="improvement" className="flex items-center gap-2 text-yellow-700 dark:text-yellow-400">
+              <Lightbulb className="h-4 w-4" />
+              Mejoras sugeridas
+            </Label>
+            <Textarea
+              id="improvement"
+              value={fields.improvement}
+              onChange={(e) => updateField('improvement', e.target.value)}
+              placeholder="Sería útil agregar... / Podrían mejorar..."
+              rows={3}
+              className="resize-none bg-background"
+            />
+          </div>
+
+          {/* Design Field */}
+          <div className="space-y-2 p-3 rounded-lg border border-purple-200 dark:border-purple-900/30 bg-purple-50/50 dark:bg-purple-950/20">
+            <Label htmlFor="design" className="flex items-center gap-2 text-purple-700 dark:text-purple-400">
+              <Palette className="h-4 w-4" />
+              Comentarios de diseño
+            </Label>
+            <Textarea
+              id="design"
+              value={fields.design}
+              onChange={(e) => updateField('design', e.target.value)}
+              placeholder="El botón está muy pequeño... / Los colores no contrastan bien..."
+              rows={3}
+              className="resize-none bg-background"
+            />
+          </div>
+
+          {/* General Field */}
+          <div className="space-y-2 p-3 rounded-lg border border-blue-200 dark:border-blue-900/30 bg-blue-50/50 dark:bg-blue-950/20">
+            <Label htmlFor="general" className="flex items-center gap-2 text-blue-700 dark:text-blue-400">
+              <MessageSquare className="h-4 w-4" />
+              Otros comentarios
+            </Label>
+            <Textarea
+              id="general"
+              value={fields.general}
+              onChange={(e) => updateField('general', e.target.value)}
+              placeholder="Cualquier otro comentario, pregunta o sugerencia..."
+              rows={3}
+              className="resize-none bg-background"
             />
           </div>
 
@@ -504,103 +557,64 @@ export function AddFeedbackForm({ onAdd, disabled, projectLiveUrl }: AddFeedback
                   </Button>
                 </div>
               ) : isRecording ? (
-                <div className="border-2 border-red-500 rounded-lg p-4 text-center bg-red-500/5">
-                  <div className="flex items-center justify-center gap-2 mb-2">
-                    <span className="h-3 w-3 rounded-full bg-red-500 animate-pulse" />
-                    <span className="text-sm font-medium text-red-500">
-                      Grabando... {recordingTime}s / 30s
-                    </span>
-                  </div>
+                <div className="flex items-center gap-3 p-3 bg-red-50 dark:bg-red-950/30 rounded-lg border border-red-200 dark:border-red-900">
+                  <div className="h-3 w-3 rounded-full bg-red-500 animate-pulse" />
+                  <span className="text-sm font-medium text-red-700 dark:text-red-400">
+                    Grabando... {recordingTime}s / 30s
+                  </span>
                   <Button
                     type="button"
                     variant="destructive"
                     size="sm"
                     onClick={stopRecording}
-                    className="gap-2"
+                    className="ml-auto"
                   >
-                    <Square className="h-3 w-3" />
-                    Detener grabación
+                    <Square className="h-3 w-3 mr-1.5" />
+                    Detener
                   </Button>
                 </div>
               ) : (
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full gap-2"
+                  size="sm"
                   onClick={startRecording}
+                  className="w-full"
                 >
-                  <Video className="h-4 w-4 text-red-500" />
-                  Grabar pantalla
+                  <Video className="h-4 w-4 mr-2" />
+                  Iniciar grabación de pantalla
                 </Button>
               )}
             </div>
           )}
 
-          {/* Priority */}
-          <div className="flex items-center gap-4">
-            <div className="space-y-2 flex-1">
-              <Label>Prioridad</Label>
-              <Select value={priority} onValueChange={setPriority}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">
-                    <span className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-slate-500" />
-                      Baja
-                    </span>
-                  </SelectItem>
-                  <SelectItem value="medium">
-                    <span className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-yellow-500" />
-                      Media
-                    </span>
-                  </SelectItem>
-                  <SelectItem value="high">
-                    <span className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-orange-500" />
-                      Alta
-                    </span>
-                  </SelectItem>
-                  <SelectItem value="critical">
-                    <span className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-red-500" />
-                      <AlertTriangle className="h-3 w-3" />
-                      Crítica
-                    </span>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <Button 
-              type="submit" 
-              disabled={loading || uploadingImage || isRecording || !content.trim()}
-              className="mt-6"
-            >
-              {uploadingImage || loading ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  {uploadingImage ? 'Subiendo...' : 'Enviando...'}
-                </>
-              ) : (
-                <>
-                  <Send className="h-4 w-4 mr-2" />
-                  Enviar
-                </>
-              )}
-            </Button>
-          </div>
+          {/* Submit Button */}
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={loading || uploadingImage}
+          >
+            {loading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Enviando...
+              </>
+            ) : (
+              <>
+                <Send className="h-4 w-4 mr-2" />
+                Enviar Feedback
+              </>
+            )}
+          </Button>
         </form>
 
-        {/* Screenshot Annotator */}
+        {/* Screenshot Annotator Modal */}
         {annotatingIndex !== null && screenshots[annotatingIndex] && (
           <ScreenshotAnnotator
             imageUrl={screenshots[annotatingIndex].preview}
-            open={true}
             onSave={handleAnnotationSave}
             onCancel={() => setAnnotatingIndex(null)}
+            open={true}
           />
         )}
       </CardContent>
