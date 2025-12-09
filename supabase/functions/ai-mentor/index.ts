@@ -81,7 +81,7 @@ serve(async (req) => {
       // Get user's progress data
       const { data: progress, error: progressError } = await supabaseClient
         .from('user_progress')
-        .select('*, course_modules(id, title, course_id, order_index)')
+        .select('*, course_modules(id, title, course_id, order_index, courses(title))')
         .eq('user_id', effectiveUserId);
 
       if (progressError) throw progressError;
@@ -99,7 +99,7 @@ serve(async (req) => {
 
       if (activityError) throw activityError;
 
-      // Get user profile
+      // Get user profile and streak
       const { data: profile, error: profileError } = await supabaseClient
         .from('profiles')
         .select('full_name, level, points')
@@ -107,6 +107,32 @@ serve(async (req) => {
         .single();
 
       if (profileError) throw profileError;
+
+      // Get user streak
+      const { data: streak } = await supabaseClient
+        .from('user_streaks')
+        .select('current_streak, longest_streak, last_activity_date')
+        .eq('user_id', effectiveUserId)
+        .single();
+
+      // Get incomplete challenges
+      const { data: challenges } = await supabaseClient
+        .from('weekly_challenges')
+        .select('*, user_challenge_progress!inner(*)')
+        .eq('user_challenge_progress.user_id', effectiveUserId)
+        .eq('user_challenge_progress.completed', false)
+        .eq('is_active', true)
+        .limit(3);
+
+      // Get next incomplete module
+      const { data: nextModule } = await supabaseClient
+        .from('user_progress')
+        .select('*, course_modules(id, title, order_index, courses(id, title))')
+        .eq('user_id', effectiveUserId)
+        .eq('completed', false)
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .maybeSingle();
 
       // Build context for AI
       const completedModules = progress?.filter(p => p.completed).length || 0;
@@ -116,31 +142,49 @@ serve(async (req) => {
         ? Math.floor((Date.now() - new Date(lastActivity).getTime()) / (1000 * 60 * 60 * 24))
         : 999;
 
-      // Detect if user is blocked
-      const isBlocked = daysSinceLastActivity > 3 || 
-        (activityLogs?.filter(a => a.activity_type === 'quiz_attempt').length || 0) > 5;
+      // Detect patterns
+      const isBlocked = daysSinceLastActivity > 3;
+      const streakAtRisk = streak?.current_streak && streak.current_streak > 0 && daysSinceLastActivity >= 1;
+      const hasActiveChallenges = challenges && challenges.length > 0;
+      const isNearMilestone = completedModules > 0 && (completedModules % 5 === 4); // About to hit a milestone
 
-      const systemPrompt = `Eres un mentor de IA amigable y motivador para una plataforma de aprendizaje de programación llamada "Código Cero". Tu objetivo es ayudar a los estudiantes a superar bloqueos y mantenerlos motivados.
+      // Determine suggestion type based on context
+      let suggestionContext = "general";
+      if (isBlocked) suggestionContext = "blocked";
+      else if (streakAtRisk) suggestionContext = "streak_risk";
+      else if (isNearMilestone) suggestionContext = "near_milestone";
+      else if (hasActiveChallenges) suggestionContext = "challenge_reminder";
+      else if (nextModule) suggestionContext = "continue_learning";
 
-Contexto del estudiante:
-- Nombre: ${profile?.full_name || 'Estudiante'}
-- Nivel: ${profile?.level || 1}
-- Puntos: ${profile?.points || 0}
+      const systemPrompt = `Eres un mentor de IA amigable y motivador para "Código Cero", una plataforma de aprendizaje de programación. Tu objetivo es ser PROACTIVO y ayudar a los estudiantes.
+
+Contexto del estudiante "${profile?.full_name || 'Estudiante'}":
+- Nivel: ${profile?.level || 1} | Puntos: ${profile?.points || 0}
 - Módulos completados: ${completedModules}/${totalModules}
-- Días desde última actividad: ${daysSinceLastActivity}
-- Parece bloqueado: ${isBlocked ? 'Sí' : 'No'}
+- Días sin actividad: ${daysSinceLastActivity}
+- Racha actual: ${streak?.current_streak || 0} días (récord: ${streak?.longest_streak || 0})
+- Desafíos activos: ${challenges?.length || 0}
+${nextModule ? `- Próximo módulo: "${nextModule.course_modules?.title}" del curso "${nextModule.course_modules?.courses?.title}"` : ''}
 
-Genera una sugerencia personalizada en español que sea:
-1. Específica y accionable
-2. Motivadora pero no condescendiente
-3. Corta (máximo 2-3 oraciones)
+SITUACIÓN ACTUAL: ${suggestionContext}
+${streakAtRisk ? '⚠️ ¡Racha en riesgo de perderse!' : ''}
+${isNearMilestone ? '🎯 ¡A punto de alcanzar un hito!' : ''}
+${hasActiveChallenges ? `📋 Desafíos pendientes: ${challenges?.map(c => c.title).join(', ')}` : ''}
 
-Responde SOLO en formato JSON con esta estructura:
+Genera UNA sugerencia PROACTIVA y ESPECÍFICA que:
+1. Sea contextual a la situación actual
+2. Tenga una acción clara que el usuario pueda tomar
+3. Sea motivadora pero directa (max 2 oraciones)
+4. Incluya un dato específico del contexto
+
+Responde SOLO en JSON:
 {
-  "suggestion_type": "blocked" | "encouragement" | "tip" | "milestone",
-  "title": "título corto",
-  "content": "contenido de la sugerencia",
-  "priority": "low" | "medium" | "high"
+  "suggestion_type": "blocked" | "streak" | "milestone" | "challenge" | "tip" | "encouragement",
+  "title": "título corto y llamativo (max 40 chars)",
+  "content": "mensaje personalizado con acción clara",
+  "priority": "low" | "medium" | "high",
+  "action_type": "continue_course" | "view_challenges" | "view_streak" | "explore_courses" | null,
+  "action_data": { "course_id": "...", "module_id": "..." } // opcional
 }`;
 
       const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -158,7 +202,7 @@ Responde SOLO en formato JSON con esta estructura:
           model: "google/gemini-2.5-flash",
           messages: [
             { role: "system", content: systemPrompt },
-            { role: "user", content: "Genera una sugerencia personalizada para este estudiante basándote en su progreso." }
+            { role: "user", content: "Genera una sugerencia proactiva basada en el contexto actual." }
           ],
         }),
       });
@@ -166,6 +210,20 @@ Responde SOLO en formato JSON con esta estructura:
       if (!aiResponse.ok) {
         const errorText = await aiResponse.text();
         console.error("[AI-MENTOR] AI Gateway error:", errorText);
+        
+        if (aiResponse.status === 429) {
+          return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
+            status: 429,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        if (aiResponse.status === 402) {
+          return new Response(JSON.stringify({ error: "AI credits exhausted. Please add credits." }), {
+            status: 402,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        
         throw new Error("AI Gateway error");
       }
 
@@ -181,10 +239,14 @@ Responde SOLO en formato JSON con esta estructura:
       } catch (e) {
         console.error("[AI-MENTOR] Failed to parse AI response:", e);
         suggestion = {
-          suggestion_type: isBlocked ? 'blocked' : 'encouragement',
-          title: '¡Sigue adelante!',
-          content: 'Cada paso cuenta. ¿Qué tal si retomamos donde lo dejaste?',
-          priority: isBlocked ? 'high' : 'medium'
+          suggestion_type: isBlocked ? 'blocked' : streakAtRisk ? 'streak' : 'encouragement',
+          title: streakAtRisk ? '¡Tu racha está en riesgo!' : '¡Sigue adelante!',
+          content: streakAtRisk 
+            ? `Tienes ${streak?.current_streak || 0} días de racha. ¡Completa una lección hoy para mantenerla!`
+            : 'Cada paso cuenta. ¿Qué tal si retomamos donde lo dejaste?',
+          priority: isBlocked || streakAtRisk ? 'high' : 'medium',
+          action_type: nextModule ? 'continue_course' : null,
+          action_data: nextModule ? { course_id: nextModule.course_modules?.courses?.id, module_id: nextModule.module_id } : null
         };
       }
 
@@ -193,13 +255,13 @@ Responde SOLO en formato JSON con esta estructura:
         .from('ai_mentor_suggestions')
         .insert({
           user_id: effectiveUserId,
-          course_id: course_id || null,
-          module_id: module_id || null,
+          course_id: suggestion.action_data?.course_id || course_id || null,
+          module_id: suggestion.action_data?.module_id || module_id || null,
           suggestion_type: suggestion.suggestion_type,
           title: suggestion.title,
           content: suggestion.content,
           priority: suggestion.priority,
-          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours
+          expires_at: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString() // 12 hours
         })
         .select()
         .single();
@@ -208,14 +270,25 @@ Responde SOLO en formato JSON con esta estructura:
         console.error("[AI-MENTOR] Save error:", saveError);
       }
 
+      // Enrich suggestion with action data
+      const enrichedSuggestion = savedSuggestion ? {
+        ...savedSuggestion,
+        action_type: suggestion.action_type,
+        action_data: suggestion.action_data
+      } : suggestion;
+
       return new Response(JSON.stringify({ 
         success: true, 
-        suggestion: savedSuggestion || suggestion,
+        suggestion: enrichedSuggestion,
         analysis: {
           completedModules,
           totalModules,
           daysSinceLastActivity,
-          isBlocked
+          isBlocked,
+          streakAtRisk,
+          currentStreak: streak?.current_streak || 0,
+          activeChallenges: challenges?.length || 0,
+          suggestionContext
         }
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
