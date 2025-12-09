@@ -4,9 +4,9 @@ import { useAuth } from './useAuth';
 
 // Premium product configuration
 export const PREMIUM_PRODUCT = {
-  product_id: "prod_TYW3r17q9Ydnbm",
-  price_id: "price_1SbP0xPj8vjAHltsYMhU4iWg",
-  name: "DevAcademy Premium",
+  product_id: "prod_TZgd1fKmbpcWYM",
+  price_id: "price_1ScXGPPj8vjAHltscNz2jo9R",
+  name: "Skoolify Premium",
   price: 29.99,
 };
 
