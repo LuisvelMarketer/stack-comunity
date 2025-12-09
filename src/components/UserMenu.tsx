@@ -16,6 +16,7 @@ import { NotificationCenter } from "@/components/NotificationCenter";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { UserAvatar } from "@/components/UserAvatar";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 interface UserMenuProps {
   showAdminLink?: boolean;
@@ -24,6 +25,7 @@ interface UserMenuProps {
 export const UserMenu = ({ showAdminLink = false }: UserMenuProps) => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { isAdmin } = useIsAdmin();
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null; level: number }>({
     full_name: null,
     avatar_url: null,
@@ -220,13 +222,15 @@ export const UserMenu = ({ showAdminLink = false }: UserMenuProps) => {
             <span>Programa de Afiliados</span>
           </DropdownMenuItem>
 
-          <DropdownMenuItem 
-            onClick={() => navigate("/my-communities")}
-            className="cursor-pointer"
-          >
-            <Users className="mr-2 h-4 w-4" />
-            <span>Mis Comunidades</span>
-          </DropdownMenuItem>
+          {isAdmin && (
+            <DropdownMenuItem 
+              onClick={() => navigate("/my-communities")}
+              className="cursor-pointer"
+            >
+              <Users className="mr-2 h-4 w-4" />
+              <span>Mis Comunidades</span>
+            </DropdownMenuItem>
+          )}
 
           <DropdownMenuItem 
             onClick={() => navigate("/subscriptions")}
