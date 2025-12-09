@@ -17,6 +17,7 @@ import Profile from "./pages/Profile";
 import UserProfile from "./pages/UserProfile";
 import Communities from "./pages/Communities";
 import CommunityDetail from "./pages/CommunityDetail";
+import CommunityLanding from "./pages/CommunityLanding";
 import ResetPassword from "./pages/ResetPassword";
 import Onboarding from "./pages/Onboarding";
 import Messages from "./pages/Messages";
@@ -41,6 +42,8 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            {/* Public community landing page - SEO optimized */}
+            <Route path="/c/:slug" element={<CommunityLanding />} />
             <Route
               path="/onboarding"
               element={

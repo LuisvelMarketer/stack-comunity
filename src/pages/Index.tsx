@@ -143,7 +143,7 @@ const Index = () => {
                 <Card 
                   key={community.id} 
                   className="group cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
-                  onClick={() => navigate(`/communities/${community.slug}`)}
+                  onClick={() => navigate(`/c/${community.slug}`)}
                 >
                   <CardContent className="p-6">
                     <div className="flex items-start gap-4 mb-4">
