@@ -16,7 +16,7 @@ import { UpcomingLives } from "@/components/social/UpcomingLives";
 import { AIMentorWidget } from "@/components/AIMentorWidget";
 import { UserStreakCard } from "@/components/gamification/UserStreakCard";
 import { AIMentorChat, AIMentorChatButton } from "@/components/AIMentorChat";
-import { Home, Users, BookOpen, Calendar, Search, Rocket } from "lucide-react";
+import { Home, Users, GraduationCap, Calendar, Search, Rocket } from "lucide-react";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { toast } from "sonner";
 
@@ -85,8 +85,8 @@ const Dashboard = () => {
                   Comunidades
                 </Button>
                 <Button variant="ghost" size="sm" onClick={() => navigate("/courses")}>
-                  <BookOpen className="w-4 h-4 mr-2" />
-                  Cursos
+                  <GraduationCap className="w-4 h-4 mr-2" />
+                  Classroom
                 </Button>
                 <Button variant="ghost" size="sm" onClick={() => navigate("/calendar")}>
                   <Calendar className="w-4 h-4 mr-2" />
