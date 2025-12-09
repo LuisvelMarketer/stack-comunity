@@ -55,7 +55,8 @@ export function BuildPublicFeed() {
   useEffect(() => {
     const fetchFeed = async () => {
       try {
-        const { data, error } = await supabase
+        // First fetch updates with projects
+        const { data: updatesData, error: updatesError } = await supabase
           .from('project_updates')
           .select(`
             *,
@@ -65,25 +66,40 @@ export function BuildPublicFeed() {
               status,
               likes_count,
               visibility,
-              user_id,
-              profiles:user_id (id, full_name, avatar_url)
+              user_id
             ),
             project_update_comments (id)
           `)
           .order('created_at', { ascending: false })
           .limit(20);
 
-        if (error) throw error;
+        if (updatesError) throw updatesError;
         
-        // Filter only public projects and add comments count
-        const publicUpdates = (data || [])
-          .filter((update: any) => update.build_projects?.visibility === 'public')
-          .map((update: any) => ({
-            ...update,
-            comments_count: update.project_update_comments?.length || 0,
-          }));
+        // Filter only public projects
+        const publicUpdates = (updatesData || []).filter(
+          (update: any) => update.build_projects?.visibility === 'public'
+        );
         
-        setUpdates(publicUpdates as unknown as FeedUpdate[]);
+        // Fetch profiles for all unique user_ids
+        const userIds = [...new Set(publicUpdates.map((u: any) => u.build_projects?.user_id).filter(Boolean))];
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url')
+          .in('id', userIds);
+
+        const profilesMap = new Map((profilesData || []).map(p => [p.id, p]));
+        
+        // Merge profiles into updates
+        const updatesWithProfiles = publicUpdates.map((update: any) => ({
+          ...update,
+          comments_count: update.project_update_comments?.length || 0,
+          build_projects: {
+            ...update.build_projects,
+            profiles: profilesMap.get(update.build_projects?.user_id) || null,
+          },
+        }));
+        
+        setUpdates(updatesWithProfiles as unknown as FeedUpdate[]);
       } catch (error) {
         console.error('Error fetching feed:', error);
       } finally {

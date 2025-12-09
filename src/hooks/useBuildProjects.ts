@@ -89,18 +89,30 @@ export function useBuildProjects() {
 
   const fetchProjects = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: projectsData, error: projectsError } = await supabase
         .from('build_projects')
-        .select(`
-          *,
-          profiles:user_id (id, full_name, avatar_url)
-        `)
+        .select('*')
         .eq('visibility', 'public')
         .order('updated_at', { ascending: false })
         .limit(50);
 
-      if (error) throw error;
-      setProjects((data as unknown as BuildProject[]) || []);
+      if (projectsError) throw projectsError;
+      
+      // Fetch profiles for all unique user_ids
+      const userIds = [...new Set((projectsData || []).map(p => p.user_id))];
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url')
+        .in('id', userIds);
+
+      const profilesMap = new Map((profilesData || []).map(p => [p.id, p]));
+      
+      const projectsWithProfiles = (projectsData || []).map(project => ({
+        ...project,
+        profiles: profilesMap.get(project.user_id) || null,
+      }));
+      
+      setProjects(projectsWithProfiles as unknown as BuildProject[]);
     } catch (error) {
       console.error('Error fetching projects:', error);
     }
@@ -125,19 +137,31 @@ export function useBuildProjects() {
 
   const fetchFeaturedProjects = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: projectsData, error: projectsError } = await supabase
         .from('build_projects')
-        .select(`
-          *,
-          profiles:user_id (id, full_name, avatar_url)
-        `)
+        .select('*')
         .eq('is_featured', true)
         .eq('visibility', 'public')
         .order('featured_at', { ascending: false })
         .limit(5);
 
-      if (error) throw error;
-      setFeaturedProjects((data as unknown as BuildProject[]) || []);
+      if (projectsError) throw projectsError;
+      
+      // Fetch profiles for all unique user_ids
+      const userIds = [...new Set((projectsData || []).map(p => p.user_id))];
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url')
+        .in('id', userIds);
+
+      const profilesMap = new Map((profilesData || []).map(p => [p.id, p]));
+      
+      const projectsWithProfiles = (projectsData || []).map(project => ({
+        ...project,
+        profiles: profilesMap.get(project.user_id) || null,
+      }));
+      
+      setFeaturedProjects(projectsWithProfiles as unknown as BuildProject[]);
     } catch (error) {
       console.error('Error fetching featured projects:', error);
     }
