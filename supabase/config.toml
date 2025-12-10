@@ -47,3 +47,6 @@ verify_jwt = false
 
 [functions.feature-weekly-projects]
 verify_jwt = false
+
+[functions.get-calendly-link]
+verify_jwt = false

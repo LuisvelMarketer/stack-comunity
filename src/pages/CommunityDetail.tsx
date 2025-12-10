@@ -8,7 +8,7 @@ import { UserMenu } from "@/components/UserMenu";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Users, GraduationCap, MessageSquare, ArrowLeft, Circle, Video, Trophy, Crown, Loader2, Info, Images } from "lucide-react";
+import { Calendar, Users, GraduationCap, MessageSquare, ArrowLeft, Circle, Video, Trophy, Crown, Loader2, Info, Images, Phone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { EventsList } from "@/components/community/EventsList";
 import { MembersList } from "@/components/community/MembersList";
@@ -20,6 +20,10 @@ import { CommunityAchievementsLeaderboard } from "@/components/community/Communi
 import { CommunityAbout } from "@/components/community/CommunityAbout";
 import { CommunityGallery } from "@/components/community/CommunityGallery";
 import { toast as sonnerToast } from "sonner";
+
+// High-ticket community slugs that use Calendly instead of direct subscription
+const HIGH_TICKET_COMMUNITIES = ["codigo-quantum"];
+
 interface Community {
   id: string;
   name: string;
@@ -231,9 +235,13 @@ export default function CommunityDetail() {
                     <Users className="h-3 w-3" />
                     {community.member_count} miembros
                   </Badge>
-                  {community.is_paid && community.price_monthly && community.price_monthly > 0 && <Badge className="flex items-center gap-1 bg-gradient-to-r from-amber-500 to-orange-500">
+                  {community.is_paid && community.price_monthly && community.price_monthly > 0 && !HIGH_TICKET_COMMUNITIES.includes(community.slug) && <Badge className="flex items-center gap-1 bg-gradient-to-r from-amber-500 to-orange-500">
                       <Crown className="h-3 w-3" />
                       ${community.price_monthly}/mes
+                    </Badge>}
+                  {HIGH_TICKET_COMMUNITIES.includes(community.slug) && <Badge className="flex items-center gap-1 bg-gradient-to-r from-purple-600 to-indigo-600">
+                      <Crown className="h-3 w-3" />
+                      Programa Premium
                     </Badge>}
                   {onlineCount > 0 && <Badge variant="outline" className="flex items-center gap-1 text-green-600 border-green-600/30">
                       <Circle className="h-2 w-2 fill-green-500 text-green-500" />
@@ -243,32 +251,74 @@ export default function CommunityDetail() {
               </div>
             </div>
             <div className="flex flex-col gap-2">
-              {community.is_member ? <Button variant="outline" onClick={handleLeaveCommunity}>
+              {community.is_member ? (
+                <Button variant="outline" onClick={handleLeaveCommunity}>
                   Salir de la Comunidad
-                </Button> : community.is_paid && !isSubscribed ? <div className="text-center">
+                </Button>
+              ) : HIGH_TICKET_COMMUNITIES.includes(community.slug) && !isSubscribed ? (
+                <div className="text-center">
+                  <Button 
+                    onClick={async () => {
+                      if (!user) {
+                        navigate("/auth");
+                        return;
+                      }
+                      setSubscribing(true);
+                      try {
+                        const { data, error } = await supabase.functions.invoke('get-calendly-link');
+                        if (error) throw error;
+                        if (data?.url) {
+                          window.open(data.url, '_blank');
+                        }
+                      } catch (error) {
+                        console.error(error);
+                        toast({
+                          title: "Error",
+                          description: "No se pudo obtener el enlace de calendario",
+                          variant: "destructive"
+                        });
+                      } finally {
+                        setSubscribing(false);
+                      }
+                    }} 
+                    disabled={subscribing} 
+                    className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+                  >
+                    {subscribing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Phone className="mr-2 h-4 w-4" />}
+                    Agendar Llamada
+                  </Button>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Agenda una llamada con nuestro equipo
+                  </p>
+                </div>
+              ) : community.is_paid && !isSubscribed ? (
+                <div className="text-center">
                   <Button onClick={async () => {
-                if (!user) {
-                  navigate("/auth");
-                  return;
-                }
-                setSubscribing(true);
-                try {
-                  await subscribe();
-                } catch (error) {
-                  console.error(error);
-                } finally {
-                  setSubscribing(false);
-                }
-              }} disabled={subscribing || subLoading} className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600">
+                    if (!user) {
+                      navigate("/auth");
+                      return;
+                    }
+                    setSubscribing(true);
+                    try {
+                      await subscribe();
+                    } catch (error) {
+                      console.error(error);
+                    } finally {
+                      setSubscribing(false);
+                    }
+                  }} disabled={subscribing || subLoading} className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600">
                     {subscribing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Crown className="mr-2 h-4 w-4" />}
                     Suscribirse por ${community.price_monthly}/mes
                   </Button>
                   <p className="text-xs text-muted-foreground mt-1">
                     Acceso completo a todo el contenido
                   </p>
-                </div> : <Button onClick={handleJoinCommunity}>
+                </div>
+              ) : (
+                <Button onClick={handleJoinCommunity}>
                   Unirse a la Comunidad
-                </Button>}
+                </Button>
+              )}
             </div>
           </div>
         </div>
