@@ -175,7 +175,7 @@ const Index = () => {
 
             {/* Main headline */}
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-8 animate-fade-in" style={{ animationDelay: "0.2s" }}>
-              <span className="block">Construye tu</span>
+              <span className="block text-foreground">Construye tu</span>
               <span className="block text-gradient glow-text">imperio educativo</span>
             </h1>
 
