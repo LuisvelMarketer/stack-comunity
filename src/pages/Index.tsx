@@ -422,12 +422,11 @@ const Index = () => {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((feature, i) => <div key={i} className="group relative p-6 rounded-2xl bg-card/50 border border-border/50 hover:border-primary/50 hover:bg-card/80 transition-all duration-300 animate-on-scroll" style={{
-            transitionDelay: `${i * 100}ms`,
-            boxShadow: '0 0 30px rgba(139, 92, 246, 0.15), inset 0 1px 0 rgba(139, 92, 246, 0.1)'
+            transitionDelay: `${i * 100}ms`
           }}>
-                {/* Glow effect - permanent subtle + hover enhanced */}
-                <div className="absolute inset-0 -z-10 transition-opacity duration-500">
-                  <div className="absolute inset-0 bg-primary/10 blur-xl rounded-2xl opacity-50 group-hover:opacity-100 group-hover:bg-primary/25" />
+                {/* Backlight glow effect - illuminated from behind */}
+                <div className="absolute -inset-1 -z-10 rounded-2xl">
+                  <div className="absolute inset-0 bg-primary/30 blur-2xl rounded-2xl" />
                 </div>
                 <div className="w-14 h-14 rounded-xl bg-gradient-primary flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300">
                   <feature.icon className="h-7 w-7 text-primary-foreground" />
