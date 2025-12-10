@@ -679,7 +679,7 @@ const Index = () => {
               <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
                 <Sparkles className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="text-lg font-bold">Skoolify</span>
+              <span className="text-xl font-bold bg-gradient-to-r from-purple-400 via-violet-400 to-indigo-400 bg-clip-text text-transparent">Skoolify</span>
             </div>
             <div className="flex items-center gap-8 text-sm text-muted-foreground">
               <a href="#" className="hover:text-foreground transition-colors">Términos</a>
