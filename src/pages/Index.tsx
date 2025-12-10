@@ -200,7 +200,9 @@ const Index = () => {
         <div className="container mx-auto">
           <div className="max-w-4xl mx-auto text-center">
             {/* Badge */}
-            <div className="relative inline-block mb-8 animate-fade-in" style={{ animationDelay: "0.1s" }}>
+            <div className="relative inline-block mb-8 animate-fade-in" style={{
+            animationDelay: "0.1s"
+          }}>
               <div className="absolute inset-0 -z-10">
                 <div className="absolute inset-0 bg-primary/30 blur-xl rounded-full" />
               </div>
@@ -217,8 +219,12 @@ const Index = () => {
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-8 animate-fade-in" style={{
             animationDelay: "0.2s"
           }}>
-              <span className="block text-[#b58ff2]" style={{ textShadow: '0 0 40px rgba(181, 143, 242, 0.5), 0 0 80px rgba(181, 143, 242, 0.3)' }}>Construye tu</span>
-              <span className="block text-gradient glow-text" style={{ textShadow: '0 0 60px rgba(139, 92, 246, 0.6), 0 0 100px rgba(139, 92, 246, 0.4)' }}>imperio educativo</span>
+              <span className="block text-[#b58ff2]" style={{
+              textShadow: '0 0 40px rgba(181, 143, 242, 0.5), 0 0 80px rgba(181, 143, 242, 0.3)'
+            }}>Construye tu</span>
+              <span className="block text-gradient glow-text" style={{
+              textShadow: '0 0 60px rgba(139, 92, 246, 0.6), 0 0 100px rgba(139, 92, 246, 0.4)'
+            }}>imperio educativo</span>
             </h1>
 
             {/* Subheadline */}
@@ -304,8 +310,8 @@ const Index = () => {
             </div>
             
             <div className="gradient-border rounded-2xl overflow-hidden shadow-glow-lg relative group cursor-pointer" style={{
-              boxShadow: '0 0 100px rgba(139, 92, 246, 0.4), 0 0 50px rgba(139, 92, 246, 0.25)'
-            }}>
+            boxShadow: '0 0 100px rgba(139, 92, 246, 0.4), 0 0 50px rgba(139, 92, 246, 0.25)'
+          }}>
               <div className="bg-card/90 backdrop-blur-sm p-1">
                 {/* Browser mockup header */}
                 <div className="flex items-center gap-2 px-4 py-3 bg-muted/50 rounded-t-xl">
@@ -338,13 +344,15 @@ const Index = () => {
                     {/* Play button with glow */}
                     <div className="relative group/play">
                       {/* Pulsing ring */}
-                      <div className="absolute inset-0 -m-4 bg-primary/30 rounded-full animate-ping" style={{ animationDuration: '2s' }} />
+                      <div className="absolute inset-0 -m-4 bg-primary/30 rounded-full animate-ping" style={{
+                      animationDuration: '2s'
+                    }} />
                       <div className="absolute inset-0 -m-2 bg-primary/20 rounded-full animate-pulse" />
                       
                       {/* Main play button */}
                       <div className="relative w-20 h-20 md:w-28 md:h-28 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center shadow-glow transition-transform duration-300 group-hover/play:scale-110" style={{
-                        boxShadow: '0 0 40px rgba(139, 92, 246, 0.5)'
-                      }}>
+                      boxShadow: '0 0 40px rgba(139, 92, 246, 0.5)'
+                    }}>
                         <Play className="w-8 h-8 md:w-12 md:h-12 text-primary-foreground fill-primary-foreground ml-1" />
                       </div>
                     </div>
@@ -527,7 +535,7 @@ const Index = () => {
               <TrendingUp className="w-3 h-3 mr-1" />
               Precios
             </Badge>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+            <h2 className="text-4xl font-bold mb-6 md:text-6xl">
               Empieza gratis,<br />
               <span className="text-gradient">crece sin límites</span>
             </h2>
