@@ -18,6 +18,20 @@ interface FeedbackEmailRequest {
   commenter_id: string;
 }
 
+// Verify the request comes from an authorized source (service role or internal trigger)
+const verifyAuthorization = (req: Request): boolean => {
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader) return false;
+  
+  const token = authHeader.replace("Bearer ", "");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+  
+  // Accept service role key (for admin calls) or anon key (for trigger calls)
+  // The anon key is used by the database trigger - this is intentional
+  return token === serviceRoleKey || token === anonKey;
+};
+
 serve(async (req: Request) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
@@ -25,6 +39,15 @@ serve(async (req: Request) => {
   }
 
   try {
+    // Verify authorization
+    if (!verifyAuthorization(req)) {
+      console.error("[SEND-FEEDBACK-EMAIL] Unauthorized access attempt");
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -38,9 +61,28 @@ serve(async (req: Request) => {
       commenter_id,
     }: FeedbackEmailRequest = await req.json();
 
-    console.log("Processing feedback email for project:", project_id);
+    // Validate required fields
+    if (!project_id || !feedback_id || !feedback_content || !commenter_id) {
+      console.error("[SEND-FEEDBACK-EMAIL] Missing required fields");
+      return new Response(
+        JSON.stringify({ error: "Missing required fields" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
 
-    // Get project details and owner
+    // Validate UUID format for IDs
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(project_id) || !uuidRegex.test(feedback_id) || !uuidRegex.test(commenter_id)) {
+      console.error("[SEND-FEEDBACK-EMAIL] Invalid UUID format");
+      return new Response(
+        JSON.stringify({ error: "Invalid ID format" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log("[SEND-FEEDBACK-EMAIL] Processing feedback email for project:", project_id);
+
+    // Get project details and owner - also validates project exists
     const { data: project, error: projectError } = await supabase
       .from("build_projects")
       .select("title, user_id")
@@ -48,8 +90,26 @@ serve(async (req: Request) => {
       .single();
 
     if (projectError || !project) {
-      console.error("Project not found:", projectError);
-      throw new Error("Project not found");
+      console.error("[SEND-FEEDBACK-EMAIL] Project not found:", projectError);
+      return new Response(
+        JSON.stringify({ error: "Project not found" }),
+        { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Validate commenter exists
+    const { data: commenterExists, error: commenterError } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("id", commenter_id)
+      .single();
+
+    if (commenterError || !commenterExists) {
+      console.error("[SEND-FEEDBACK-EMAIL] Commenter not found:", commenterError);
+      return new Response(
+        JSON.stringify({ error: "Commenter not found" }),
+        { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
     // Get project owner's email
@@ -58,13 +118,16 @@ serve(async (req: Request) => {
     );
 
     if (ownerAuthError || !ownerAuth.user?.email) {
-      console.error("Owner email not found:", ownerAuthError);
-      throw new Error("Owner email not found");
+      console.error("[SEND-FEEDBACK-EMAIL] Owner email not found:", ownerAuthError);
+      return new Response(
+        JSON.stringify({ error: "Owner email not found" }),
+        { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
     // Don't send email if commenter is the project owner
     if (commenter_id === project.user_id) {
-      console.log("Skipping email - commenter is project owner");
+      console.log("[SEND-FEEDBACK-EMAIL] Skipping email - commenter is project owner");
       return new Response(JSON.stringify({ skipped: true }), {
         status: 200,
         headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -94,6 +157,14 @@ serve(async (req: Request) => {
 
     const categoryLabel = categoryLabels[feedback_category] || feedback_category;
     const priorityLabel = priorityLabels[feedback_priority] || feedback_priority;
+
+    // Sanitize feedback content for HTML (basic XSS prevention)
+    const sanitizedContent = feedback_content
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
 
     // Send email
     const emailResponse = await resend.emails.send({
@@ -131,7 +202,7 @@ serve(async (req: Request) => {
                 <span class="badge badge-category">${categoryLabel}</span>
                 <span class="badge badge-priority">Prioridad: ${priorityLabel}</span>
               </div>
-              <p style="margin: 0; white-space: pre-wrap;">${feedback_content}</p>
+              <p style="margin: 0; white-space: pre-wrap;">${sanitizedContent}</p>
             </div>
             
             <p>Revisa el feedback y responde a tu compañero para seguir mejorando tu proyecto.</p>
@@ -150,14 +221,14 @@ serve(async (req: Request) => {
       `,
     });
 
-    console.log("Email sent successfully:", emailResponse);
+    console.log("[SEND-FEEDBACK-EMAIL] Email sent successfully:", emailResponse);
 
     return new Response(JSON.stringify({ success: true, emailResponse }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   } catch (error: any) {
-    console.error("Error sending feedback email:", error);
+    console.error("[SEND-FEEDBACK-EMAIL] Error sending feedback email:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
