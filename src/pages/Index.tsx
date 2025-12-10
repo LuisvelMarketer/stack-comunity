@@ -280,21 +280,31 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Hero Image / Demo Preview */}
+          {/* VSL Video Placeholder */}
           <div id="demo" className="mt-20 relative animate-fade-in-up" style={{
           animationDelay: "0.6s"
         }}>
-            {/* Glow effect behind the card */}
-            <div className="absolute inset-0 -z-10">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[60%] bg-primary/30 blur-[100px] rounded-full animate-pulse" />
-              <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[40%] h-[40%] bg-purple-500/20 blur-[80px] rounded-full" />
-              <div className="absolute top-1/2 right-1/4 -translate-x-1/2 -translate-y-1/2 w-[30%] h-[30%] bg-blue-500/15 blur-[60px] rounded-full" />
+            {/* Title and subtitle */}
+            <div className="text-center mb-8">
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
+                Descubre el poder de Skoolify
+              </h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                En menos de 3 minutos entenderás por qué miles de creadores eligen nuestra plataforma
+              </p>
             </div>
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-10 pointer-events-none" />
-            <div className="gradient-border rounded-2xl overflow-hidden shadow-glow-lg relative" style={{
-            boxShadow: '0 0 80px rgba(139, 92, 246, 0.3), 0 0 40px rgba(139, 92, 246, 0.2)'
-          }}>
-              <div className="bg-card p-1">
+
+            {/* Glow effect behind the video */}
+            <div className="absolute inset-0 -z-10 top-20">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] h-[80%] bg-primary/40 blur-[120px] rounded-full animate-pulse" />
+              <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[50%] h-[50%] bg-purple-500/25 blur-[100px] rounded-full" />
+              <div className="absolute top-1/2 right-1/4 -translate-x-1/2 -translate-y-1/2 w-[40%] h-[40%] bg-blue-500/20 blur-[80px] rounded-full" />
+            </div>
+            
+            <div className="gradient-border rounded-2xl overflow-hidden shadow-glow-lg relative group cursor-pointer" style={{
+              boxShadow: '0 0 100px rgba(139, 92, 246, 0.4), 0 0 50px rgba(139, 92, 246, 0.25)'
+            }}>
+              <div className="bg-card/90 backdrop-blur-sm p-1">
                 {/* Browser mockup header */}
                 <div className="flex items-center gap-2 px-4 py-3 bg-muted/50 rounded-t-xl">
                   <div className="flex gap-1.5">
@@ -304,105 +314,71 @@ const Index = () => {
                   </div>
                   <div className="flex-1 flex justify-center">
                     <div className="px-4 py-1 bg-background/50 rounded-md text-xs text-muted-foreground">
-                      app.skoolify.com/dashboard
+                      skoolify.com/demo
                     </div>
                   </div>
                 </div>
-                {/* Dashboard mockup */}
-                <div className="aspect-[16/9] bg-gradient-to-br from-muted/30 to-background p-6 rounded-b-xl">
-                  <div className="grid grid-cols-12 gap-4 h-full">
-                    {/* Sidebar mockup */}
-                    <div className="col-span-2 bg-card/80 rounded-lg p-3 space-y-3 border border-border/30">
-                      <div className="h-8 rounded-md bg-primary/30 flex items-center gap-2 px-2">
-                        <div className="w-4 h-4 rounded bg-primary/50" />
-                        <div className="h-3 flex-1 bg-primary/20 rounded" />
+                
+                {/* Video placeholder */}
+                <div className="aspect-[16/9] bg-gradient-to-br from-muted/50 via-background to-muted/30 rounded-b-xl relative overflow-hidden">
+                  {/* Gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-background/30" />
+                  
+                  {/* Decorative elements */}
+                  <div className="absolute inset-0 opacity-30">
+                    <div className="absolute top-10 left-10 w-32 h-32 bg-primary/20 rounded-full blur-3xl" />
+                    <div className="absolute bottom-10 right-10 w-40 h-40 bg-purple-500/15 rounded-full blur-3xl" />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-primary/10 rounded-full blur-[80px]" />
+                  </div>
+                  
+                  {/* Play button container */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
+                    {/* Play button with glow */}
+                    <div className="relative group/play">
+                      {/* Pulsing ring */}
+                      <div className="absolute inset-0 -m-4 bg-primary/30 rounded-full animate-ping" style={{ animationDuration: '2s' }} />
+                      <div className="absolute inset-0 -m-2 bg-primary/20 rounded-full animate-pulse" />
+                      
+                      {/* Main play button */}
+                      <div className="relative w-20 h-20 md:w-28 md:h-28 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center shadow-glow transition-transform duration-300 group-hover/play:scale-110" style={{
+                        boxShadow: '0 0 40px rgba(139, 92, 246, 0.5)'
+                      }}>
+                        <Play className="w-8 h-8 md:w-12 md:h-12 text-primary-foreground fill-primary-foreground ml-1" />
                       </div>
-                      {['Feed', 'Cursos', 'Eventos', 'Chat'].map((item, i) => <div key={i} className="h-8 rounded-md bg-muted/30 flex items-center gap-2 px-2 hover:bg-muted/50 transition-colors">
-                          <div className="w-4 h-4 rounded bg-muted-foreground/20" />
-                          <span className="text-[10px] text-muted-foreground/60">{item}</span>
-                        </div>)}
                     </div>
-                    {/* Main content mockup - Feed */}
-                    <div className="col-span-7 space-y-3">
-                      {/* Welcome banner */}
-                      <div className="h-20 bg-gradient-to-r from-primary/30 via-primary/20 to-primary/10 rounded-lg p-3 flex items-center gap-3 border border-primary/20">
-                        <div className="w-10 h-10 rounded-full bg-primary/40 flex items-center justify-center">
-                          <Sparkles className="w-5 h-5 text-primary-foreground/80" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="h-3 w-32 bg-foreground/30 rounded mb-1.5" />
-                          <div className="h-2 w-48 bg-muted-foreground/20 rounded" />
-                        </div>
-                      </div>
-                      {/* Post cards - más contenido */}
-                      {[1, 2, 3].map(i => <div key={i} className="bg-card/60 rounded-lg p-3 border border-border/30">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/40 to-primary/20" />
-                            <div className="flex-1">
-                              <div className="h-2.5 w-20 bg-foreground/30 rounded mb-1" />
-                              <div className="h-2 w-12 bg-muted-foreground/20 rounded" />
-                            </div>
-                          </div>
-                          <div className="space-y-1.5 mb-2">
-                            <div className="h-2.5 w-full bg-muted-foreground/15 rounded" />
-                            <div className="h-2.5 w-4/5 bg-muted-foreground/15 rounded" />
-                          </div>
-                          {/* Image placeholder en algunos posts */}
-                          {i === 1 && <div className="h-24 w-full bg-gradient-to-br from-primary/10 to-muted/20 rounded-md mb-2 flex items-center justify-center">
-                            <div className="w-8 h-8 rounded bg-primary/20 flex items-center justify-center">
-                              <Play className="w-4 h-4 text-primary/50" />
-                            </div>
-                          </div>}
-                          <div className="flex items-center gap-3 pt-2 border-t border-border/20">
-                            <div className="flex items-center gap-1">
-                              <Heart className="w-3 h-3 text-primary/40" />
-                              <span className="text-[9px] text-muted-foreground/50">{12 + i * 8}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <MessageSquare className="w-3 h-3 text-muted-foreground/40" />
-                              <span className="text-[9px] text-muted-foreground/50">{3 + i * 2}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Share2 className="w-3 h-3 text-muted-foreground/30" />
-                            </div>
-                          </div>
-                        </div>)}
-                    </div>
-                    {/* Right sidebar mockup */}
-                    <div className="col-span-3 space-y-3">
-                      {/* Leaderboard */}
-                      <div className="bg-card/60 rounded-lg p-3 border border-border/30">
-                        <div className="flex items-center gap-2 mb-3">
-                          <Trophy className="w-4 h-4 text-yellow-500/70" />
-                          <span className="text-xs text-foreground/70 font-medium">Leaderboard</span>
-                        </div>
-                        {[1, 2, 3].map(i => <div key={i} className="flex items-center gap-2 mb-2 py-1">
-                            <span className="text-[10px] text-muted-foreground/50 w-4">{i}.</span>
-                            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary/40 to-primary/20" />
-                            <div className="flex-1 h-3 bg-muted/30 rounded" />
-                            <span className="text-[10px] text-primary/70">{500 - i * 80}pts</span>
-                          </div>)}
-                      </div>
-                      {/* Upcoming events */}
-                      <div className="bg-card/60 rounded-lg p-3 border border-border/30">
-                        <div className="flex items-center gap-2 mb-3">
-                          <Calendar className="w-4 h-4 text-primary/70" />
-                          <span className="text-xs text-foreground/70 font-medium">Próximos</span>
-                        </div>
-                        {[1, 2].map(i => <div key={i} className="flex items-center gap-2 mb-2 py-1">
-                            <div className="w-8 h-8 rounded bg-primary/10 flex flex-col items-center justify-center">
-                              <span className="text-[8px] text-primary/70">DIC</span>
-                              <span className="text-[10px] text-foreground/70 font-bold">{10 + i}</span>
-                            </div>
-                            <div className="flex-1">
-                              <div className="h-2 w-16 bg-foreground/20 rounded mb-1" />
-                              <div className="h-2 w-10 bg-muted-foreground/15 rounded" />
-                            </div>
-                          </div>)}
-                      </div>
+                    
+                    {/* Duration badge */}
+                    <div className="mt-6 px-4 py-2 bg-background/80 backdrop-blur-sm rounded-full border border-border/50 flex items-center gap-2">
+                      <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                      <span className="text-sm text-muted-foreground">3:24</span>
                     </div>
                   </div>
+                  
+                  {/* Hover text */}
+                  <div className="absolute bottom-6 left-0 right-0 text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <span className="text-sm text-muted-foreground bg-background/60 backdrop-blur-sm px-4 py-2 rounded-full">
+                      Haz clic para reproducir
+                    </span>
+                  </div>
                 </div>
+              </div>
+            </div>
+            
+            {/* Social proof below video */}
+            <div className="flex flex-wrap items-center justify-center gap-6 mt-8 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-primary" />
+                <span>+50,000 visualizaciones</span>
+              </div>
+              <div className="hidden sm:block w-px h-4 bg-border" />
+              <div className="flex items-center gap-2">
+                <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                <span>Valoración 4.9/5</span>
+              </div>
+              <div className="hidden sm:block w-px h-4 bg-border" />
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-primary" />
+                <span>Tutorial completo</span>
               </div>
             </div>
           </div>
