@@ -268,7 +268,9 @@ const Index = () => {
               <div className="absolute top-1/2 right-1/4 -translate-x-1/2 -translate-y-1/2 w-[30%] h-[30%] bg-blue-500/15 blur-[60px] rounded-full" />
             </div>
             <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-10 pointer-events-none" />
-            <div className="gradient-border rounded-2xl overflow-hidden shadow-glow-lg relative" style={{ boxShadow: '0 0 80px rgba(139, 92, 246, 0.3), 0 0 40px rgba(139, 92, 246, 0.2)' }}>
+            <div className="gradient-border rounded-2xl overflow-hidden shadow-glow-lg relative" style={{
+            boxShadow: '0 0 80px rgba(139, 92, 246, 0.3), 0 0 40px rgba(139, 92, 246, 0.2)'
+          }}>
               <div className="bg-card p-1">
                 {/* Browser mockup header */}
                 <div className="flex items-center gap-2 px-4 py-3 bg-muted/50 rounded-t-xl">
@@ -408,7 +410,7 @@ const Index = () => {
               <Zap className="w-3 h-3 mr-1" />
               Características
             </Badge>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+            <h2 className="text-4xl font-bold mb-6 text-muted-foreground md:text-6xl">
               Todo lo que necesitas,<br />
               <span className="text-gradient">nada que te sobre</span>
             </h2>
