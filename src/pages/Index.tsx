@@ -418,9 +418,13 @@ const Index = () => {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, i) => <div key={i} className="group p-6 rounded-2xl bg-card/50 border border-border/50 hover:border-primary/50 hover:bg-card/80 transition-all duration-300 animate-on-scroll" style={{
+            {features.map((feature, i) => <div key={i} className="group relative p-6 rounded-2xl bg-card/50 border border-border/50 hover:border-primary/50 hover:bg-card/80 transition-all duration-300 animate-on-scroll" style={{
             transitionDelay: `${i * 100}ms`
           }}>
+                {/* Glow effect */}
+                <div className="absolute inset-0 -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                  <div className="absolute inset-0 bg-primary/20 blur-xl rounded-2xl" />
+                </div>
                 <div className="w-14 h-14 rounded-xl bg-gradient-primary flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300">
                   <feature.icon className="h-7 w-7 text-primary-foreground" />
                 </div>
@@ -453,9 +457,14 @@ const Index = () => {
             </div>
 
             <div className="grid md:grid-cols-3 gap-6">
-              {communities.map((community, i) => <Card key={community.id} className="group cursor-pointer bg-card/50 border-border/50 hover:border-primary/50 hover:bg-card/80 transition-all duration-300 overflow-hidden animate-on-scroll" style={{
+              {communities.map((community, i) => <div key={community.id} className="relative group animate-on-scroll" style={{
             transitionDelay: `${i * 150}ms`
-          }} onClick={() => navigate(`/c/${community.slug}`)}>
+          }}>
+                  {/* Glow effect */}
+                  <div className="absolute inset-0 -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                    <div className="absolute inset-0 bg-primary/25 blur-xl rounded-2xl" />
+                  </div>
+                  <Card className="cursor-pointer bg-card/50 border-border/50 hover:border-primary/50 hover:bg-card/80 transition-all duration-300 overflow-hidden h-full" onClick={() => navigate(`/c/${community.slug}`)}>
                   <CardContent className="p-6">
                     <div className="flex items-start gap-4 mb-4">
                       <Avatar className="h-16 w-16 rounded-xl ring-2 ring-primary/20 group-hover:ring-primary/50 transition-all">
@@ -489,7 +498,8 @@ const Index = () => {
                       </Button>
                     </div>
                   </CardContent>
-                </Card>)}
+                </Card>
+                </div>)}
             </div>
 
             <div className="text-center mt-12 animate-on-scroll">
@@ -520,9 +530,13 @@ const Index = () => {
 
           <div className="grid md:grid-cols-2 gap-8">
             {/* Free Plan */}
-            <div className="relative animate-on-scroll" style={{
+            <div className="relative animate-on-scroll group" style={{
             transitionDelay: "100ms"
           }}>
+              {/* Glow effect */}
+              <div className="absolute inset-0 -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                <div className="absolute inset-0 bg-primary/20 blur-xl rounded-2xl" />
+              </div>
               <Card className="h-full bg-card/50 border-border/50 hover:border-primary/30 transition-colors">
                 <CardContent className="p-8">
                   <div className="flex items-center gap-3 mb-6">
@@ -557,9 +571,13 @@ const Index = () => {
             </div>
 
             {/* Creator Plan */}
-            <div className="relative animate-on-scroll" style={{
+            <div className="relative animate-on-scroll group" style={{
             transitionDelay: "200ms"
           }}>
+              {/* Glow effect - siempre visible para este plan */}
+              <div className="absolute inset-0 -z-10">
+                <div className="absolute inset-0 bg-primary/30 blur-xl rounded-2xl group-hover:bg-primary/40 transition-colors" />
+              </div>
               <div className="absolute -inset-px bg-gradient-primary rounded-2xl opacity-50 blur-sm" />
               <Card className="relative h-full bg-card border-primary/50">
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2">
