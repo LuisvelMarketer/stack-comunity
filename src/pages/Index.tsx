@@ -473,7 +473,7 @@ const Index = () => {
           }}>
                   {/* Glow effect - subtle backlight */}
                   <div className="absolute -inset-1 -z-10 rounded-2xl">
-                    <div className="absolute inset-0 bg-primary/25 blur-2xl rounded-2xl opacity-60 group-hover:opacity-100 group-hover:bg-primary/35 transition-all duration-500" />
+                    <div className="absolute inset-0 bg-primary/40 blur-2xl rounded-2xl opacity-50 group-hover:opacity-100 group-hover:bg-primary/45 transition-all duration-500" />
                   </div>
                   <Card className="cursor-pointer bg-card/50 border-border/50 hover:border-primary/50 hover:bg-card/80 transition-all duration-300 overflow-hidden h-full" onClick={() => navigate(`/c/${community.slug}`)}>
                   <CardContent className="p-6">
