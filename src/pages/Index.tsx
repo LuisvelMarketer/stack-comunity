@@ -286,12 +286,10 @@ const Index = () => {
                         <div className="w-4 h-4 rounded bg-primary/50" />
                         <div className="h-3 flex-1 bg-primary/20 rounded" />
                       </div>
-                      {['Feed', 'Cursos', 'Eventos', 'Chat'].map((item, i) => (
-                        <div key={i} className="h-8 rounded-md bg-muted/30 flex items-center gap-2 px-2 hover:bg-muted/50 transition-colors">
+                      {['Feed', 'Cursos', 'Eventos', 'Chat'].map((item, i) => <div key={i} className="h-8 rounded-md bg-muted/30 flex items-center gap-2 px-2 hover:bg-muted/50 transition-colors">
                           <div className="w-4 h-4 rounded bg-muted-foreground/20" />
                           <span className="text-[10px] text-muted-foreground/60">{item}</span>
-                        </div>
-                      ))}
+                        </div>)}
                     </div>
                     {/* Main content mockup - Feed */}
                     <div className="col-span-7 space-y-4">
@@ -306,8 +304,7 @@ const Index = () => {
                         </div>
                       </div>
                       {/* Post cards */}
-                      {[1, 2].map(i => (
-                        <div key={i} className="bg-card/60 rounded-lg p-4 border border-border/30">
+                      {[1, 2].map(i => <div key={i} className="bg-card/60 rounded-lg p-4 border border-border/30">
                           <div className="flex items-center gap-3 mb-3">
                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/40 to-primary/20" />
                             <div className="flex-1">
@@ -329,8 +326,7 @@ const Index = () => {
                               <span className="text-[10px] text-muted-foreground/50">{3 + i}</span>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        </div>)}
                     </div>
                     {/* Right sidebar mockup */}
                     <div className="col-span-3 space-y-3">
@@ -340,14 +336,12 @@ const Index = () => {
                           <Trophy className="w-4 h-4 text-yellow-500/70" />
                           <span className="text-xs text-foreground/70 font-medium">Leaderboard</span>
                         </div>
-                        {[1, 2, 3].map(i => (
-                          <div key={i} className="flex items-center gap-2 mb-2 py-1">
+                        {[1, 2, 3].map(i => <div key={i} className="flex items-center gap-2 mb-2 py-1">
                             <span className="text-[10px] text-muted-foreground/50 w-4">{i}.</span>
                             <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary/40 to-primary/20" />
                             <div className="flex-1 h-3 bg-muted/30 rounded" />
                             <span className="text-[10px] text-primary/70">{500 - i * 80}pts</span>
-                          </div>
-                        ))}
+                          </div>)}
                       </div>
                       {/* Upcoming events */}
                       <div className="bg-card/60 rounded-lg p-3 border border-border/30">
@@ -355,8 +349,7 @@ const Index = () => {
                           <Calendar className="w-4 h-4 text-primary/70" />
                           <span className="text-xs text-foreground/70 font-medium">Próximos</span>
                         </div>
-                        {[1, 2].map(i => (
-                          <div key={i} className="flex items-center gap-2 mb-2 py-1">
+                        {[1, 2].map(i => <div key={i} className="flex items-center gap-2 mb-2 py-1">
                             <div className="w-8 h-8 rounded bg-primary/10 flex flex-col items-center justify-center">
                               <span className="text-[8px] text-primary/70">DIC</span>
                               <span className="text-[10px] text-foreground/70 font-bold">{10 + i}</span>
@@ -365,8 +358,7 @@ const Index = () => {
                               <div className="h-2 w-16 bg-foreground/20 rounded mb-1" />
                               <div className="h-2 w-10 bg-muted-foreground/15 rounded" />
                             </div>
-                          </div>
-                        ))}
+                          </div>)}
                       </div>
                     </div>
                   </div>
@@ -436,7 +428,7 @@ const Index = () => {
                 <Globe className="w-3 h-3 mr-1" />
                 Comunidades
               </Badge>
-              <h2 className="text-4xl md:text-5xl font-bold mb-6">
+              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-muted-foreground">
                 Únete a comunidades<br />
                 <span className="text-gradient">que te inspiran</span>
               </h2>
