@@ -6,12 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
-import { 
-  BookOpen, Users, Trophy, Zap, Star, ArrowRight, Check, 
-  MessageCircle, Video, Calendar, Award, ChevronRight, Play,
-  Sparkles, Globe, Lock, TrendingUp, BarChart3, Shield
-} from "lucide-react";
-
+import { BookOpen, Users, Trophy, Zap, Star, ArrowRight, Check, MessageCircle, Video, Calendar, Award, ChevronRight, Play, Sparkles, Globe, Lock, TrendingUp, BarChart3, Shield } from "lucide-react";
 interface Community {
   id: string;
   name: string;
@@ -26,100 +21,124 @@ interface Community {
 // Hook for scroll animation
 const useScrollAnimation = () => {
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("visible");
-          }
-        });
-      },
-      { threshold: 0.1, rootMargin: "0px 0px -50px 0px" }
-    );
-
-    document.querySelectorAll(".animate-on-scroll").forEach((el) => {
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("visible");
+        }
+      });
+    }, {
+      threshold: 0.1,
+      rootMargin: "0px 0px -50px 0px"
+    });
+    document.querySelectorAll(".animate-on-scroll").forEach(el => {
       observer.observe(el);
     });
-
     return () => observer.disconnect();
   }, []);
 };
 
 // Animated counter component
-const AnimatedCounter = ({ end, duration = 2000, suffix = "" }: { end: number; duration?: number; suffix?: string }) => {
+const AnimatedCounter = ({
+  end,
+  duration = 2000,
+  suffix = ""
+}: {
+  end: number;
+  duration?: number;
+  suffix?: string;
+}) => {
   const [count, setCount] = useState(0);
   const ref = useRef<HTMLSpanElement>(null);
   const [hasAnimated, setHasAnimated] = useState(false);
-
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && !hasAnimated) {
-          setHasAnimated(true);
-          let start = 0;
-          const increment = end / (duration / 16);
-          const timer = setInterval(() => {
-            start += increment;
-            if (start >= end) {
-              setCount(end);
-              clearInterval(timer);
-            } else {
-              setCount(Math.floor(start));
-            }
-          }, 16);
-        }
-      },
-      { threshold: 0.5 }
-    );
-
+    const observer = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && !hasAnimated) {
+        setHasAnimated(true);
+        let start = 0;
+        const increment = end / (duration / 16);
+        const timer = setInterval(() => {
+          start += increment;
+          if (start >= end) {
+            setCount(end);
+            clearInterval(timer);
+          } else {
+            setCount(Math.floor(start));
+          }
+        }, 16);
+      }
+    }, {
+      threshold: 0.5
+    });
     if (ref.current) observer.observe(ref.current);
     return () => observer.disconnect();
   }, [end, duration, hasAnimated]);
-
   return <span ref={ref}>{count.toLocaleString()}{suffix}</span>;
 };
-
 const Index = () => {
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const navigate = useNavigate();
   const [communities, setCommunities] = useState<Community[]>([]);
-
   useScrollAnimation();
-
   useEffect(() => {
     if (user) {
       navigate("/dashboard");
     }
     fetchCommunities();
   }, [user, navigate]);
-
   const fetchCommunities = async () => {
-    const { data } = await supabase
-      .from("communities")
-      .select("*")
-      .limit(3)
-      .order("member_count", { ascending: false });
+    const {
+      data
+    } = await supabase.from("communities").select("*").limit(3).order("member_count", {
+      ascending: false
+    });
     if (data) setCommunities(data);
   };
-
-  const features = [
-    { icon: Users, title: "Comunidades Ilimitadas", desc: "Crea y gestiona comunidades con miles de miembros activos" },
-    { icon: BookOpen, title: "Cursos Premium", desc: "Cursos estructurados con videos HD, quizzes y certificados" },
-    { icon: MessageCircle, title: "Chat en Tiempo Real", desc: "Mensajería instantánea con reacciones y threads" },
-    { icon: Video, title: "Lives Integrados", desc: "Sesiones en vivo con YouTube y Zoom sin salir de la plataforma" },
-    { icon: Trophy, title: "Gamificación Total", desc: "Puntos, niveles, logros, rachas y tablas de clasificación" },
-    { icon: Lock, title: "Contenido Protegido", desc: "Control total sobre quién accede a tu contenido premium" },
-  ];
-
-  const stats = [
-    { value: 10000, suffix: "+", label: "Estudiantes activos" },
-    { value: 500, suffix: "+", label: "Cursos creados" },
-    { value: 50, suffix: "+", label: "Comunidades" },
-    { value: 98, suffix: "%", label: "Satisfacción" },
-  ];
-
-  return (
-    <div className="min-h-screen bg-background dark overflow-hidden">
+  const features = [{
+    icon: Users,
+    title: "Comunidades Ilimitadas",
+    desc: "Crea y gestiona comunidades con miles de miembros activos"
+  }, {
+    icon: BookOpen,
+    title: "Cursos Premium",
+    desc: "Cursos estructurados con videos HD, quizzes y certificados"
+  }, {
+    icon: MessageCircle,
+    title: "Chat en Tiempo Real",
+    desc: "Mensajería instantánea con reacciones y threads"
+  }, {
+    icon: Video,
+    title: "Lives Integrados",
+    desc: "Sesiones en vivo con YouTube y Zoom sin salir de la plataforma"
+  }, {
+    icon: Trophy,
+    title: "Gamificación Total",
+    desc: "Puntos, niveles, logros, rachas y tablas de clasificación"
+  }, {
+    icon: Lock,
+    title: "Contenido Protegido",
+    desc: "Control total sobre quién accede a tu contenido premium"
+  }];
+  const stats = [{
+    value: 10000,
+    suffix: "+",
+    label: "Estudiantes activos"
+  }, {
+    value: 500,
+    suffix: "+",
+    label: "Cursos creados"
+  }, {
+    value: 50,
+    suffix: "+",
+    label: "Comunidades"
+  }, {
+    value: 98,
+    suffix: "%",
+    label: "Satisfacción"
+  }];
+  return <div className="min-h-screen bg-background dark overflow-hidden">
       {/* Background effects */}
       <div className="fixed inset-0 bg-gradient-hero pointer-events-none" />
       <div className="fixed inset-0 grid-pattern opacity-30 pointer-events-none" />
@@ -139,13 +158,19 @@ const Index = () => {
             <span className="text-xl font-bold bg-gradient-to-r from-purple-400 via-violet-400 to-indigo-400 bg-clip-text text-transparent">Skoolify</span>
           </div>
           <nav className="hidden md:flex items-center gap-8">
-            <button onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <button onClick={() => document.getElementById("features")?.scrollIntoView({
+            behavior: "smooth"
+          })} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Características
             </button>
-            <button onClick={() => document.getElementById("communities")?.scrollIntoView({ behavior: "smooth" })} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <button onClick={() => document.getElementById("communities")?.scrollIntoView({
+            behavior: "smooth"
+          })} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Comunidades
             </button>
-            <button onClick={() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" })} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <button onClick={() => document.getElementById("pricing")?.scrollIntoView({
+            behavior: "smooth"
+          })} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Precios
             </button>
           </nav>
@@ -165,7 +190,9 @@ const Index = () => {
         <div className="container mx-auto">
           <div className="max-w-4xl mx-auto text-center">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8 animate-fade-in" style={{ animationDelay: "0.1s" }}>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8 animate-fade-in" style={{
+            animationDelay: "0.1s"
+          }}>
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
@@ -174,61 +201,56 @@ const Index = () => {
             </div>
 
             {/* Main headline */}
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-8 animate-fade-in" style={{ animationDelay: "0.2s" }}>
-              <span className="block text-foreground">Construye tu</span>
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-8 animate-fade-in" style={{
+            animationDelay: "0.2s"
+          }}>
+              <span className="block text-[#b58ff2]/[0.97]">Construye tu</span>
               <span className="block text-gradient glow-text">imperio educativo</span>
             </h1>
 
             {/* Subheadline */}
-            <p className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed animate-fade-in" style={{ animationDelay: "0.3s" }}>
+            <p className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed animate-fade-in" style={{
+            animationDelay: "0.3s"
+          }}>
               La plataforma todo-en-uno para crear, monetizar y escalar tu comunidad de aprendizaje. 
               Sin límites. Sin complicaciones.
             </p>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16 animate-fade-in" style={{ animationDelay: "0.4s" }}>
-              <Button 
-                size="lg" 
-                className="h-14 px-8 text-lg bg-gradient-primary hover:opacity-90 transition-opacity glow-primary" 
-                onClick={() => navigate("/auth")}
-              >
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16 animate-fade-in" style={{
+            animationDelay: "0.4s"
+          }}>
+              <Button size="lg" className="h-14 px-8 text-lg bg-gradient-primary hover:opacity-90 transition-opacity glow-primary" onClick={() => navigate("/auth")}>
                 Empezar Gratis
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="h-14 px-8 text-lg border-primary/50 text-foreground hover:bg-primary/10 hover:border-primary" 
-                onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })}
-              >
+              <Button size="lg" variant="outline" className="h-14 px-8 text-lg border-primary/50 text-foreground hover:bg-primary/10 hover:border-primary" onClick={() => document.getElementById("demo")?.scrollIntoView({
+              behavior: "smooth"
+            })}>
                 <Play className="mr-2 h-5 w-5" />
                 Ver Demo
               </Button>
             </div>
 
             {/* Social proof */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-8 text-sm text-muted-foreground animate-fade-in" style={{ animationDelay: "0.5s" }}>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-8 text-sm text-muted-foreground animate-fade-in" style={{
+            animationDelay: "0.5s"
+          }}>
               <div className="flex items-center gap-3">
                 <div className="flex -space-x-3">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <div 
-                      key={i} 
-                      className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/40 to-primary/20 border-2 border-background flex items-center justify-center"
-                      style={{ transform: `rotate(${i * 10}deg)` }}
-                    >
+                  {[1, 2, 3, 4, 5].map(i => <div key={i} className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/40 to-primary/20 border-2 border-background flex items-center justify-center" style={{
+                  transform: `rotate(${i * 10}deg)`
+                }}>
                       <span className="text-xs font-medium text-primary-foreground">
-                        {["JD", "MA", "CR", "LP", "AS"][i-1]}
+                        {["JD", "MA", "CR", "LP", "AS"][i - 1]}
                       </span>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
                 <span className="font-medium text-foreground">+10,000 estudiantes</span>
               </div>
               <div className="hidden sm:block w-px h-6 bg-border" />
               <div className="flex items-center gap-2">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <Star key={i} className="h-5 w-5 fill-yellow-500 text-yellow-500" />
-                ))}
+                {[1, 2, 3, 4, 5].map(i => <Star key={i} className="h-5 w-5 fill-yellow-500 text-yellow-500" />)}
                 <span className="ml-1 font-medium text-foreground">4.9/5</span>
                 <span className="text-muted-foreground">(500+ reviews)</span>
               </div>
@@ -236,7 +258,9 @@ const Index = () => {
           </div>
 
           {/* Hero Image / Demo Preview */}
-          <div id="demo" className="mt-20 relative animate-fade-in-up" style={{ animationDelay: "0.6s" }}>
+          <div id="demo" className="mt-20 relative animate-fade-in-up" style={{
+          animationDelay: "0.6s"
+        }}>
             <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-10 pointer-events-none" />
             <div className="gradient-border rounded-2xl overflow-hidden shadow-glow-lg">
               <div className="bg-card p-1">
@@ -258,17 +282,13 @@ const Index = () => {
                   <div className="grid grid-cols-12 gap-4 h-full">
                     {/* Sidebar mockup */}
                     <div className="col-span-2 bg-card/50 rounded-lg p-3 space-y-3">
-                      {[1, 2, 3, 4, 5].map((i) => (
-                        <div key={i} className={`h-8 rounded-md ${i === 1 ? 'bg-primary/20' : 'bg-muted/50'}`} />
-                      ))}
+                      {[1, 2, 3, 4, 5].map(i => <div key={i} className={`h-8 rounded-md ${i === 1 ? 'bg-primary/20' : 'bg-muted/50'}`} />)}
                     </div>
                     {/* Main content mockup */}
                     <div className="col-span-7 space-y-4">
                       <div className="h-32 bg-gradient-to-r from-primary/20 to-primary/5 rounded-lg shimmer" />
                       <div className="grid grid-cols-3 gap-3">
-                        {[1, 2, 3].map((i) => (
-                          <div key={i} className="h-24 bg-card/50 rounded-lg" />
-                        ))}
+                        {[1, 2, 3].map(i => <div key={i} className="h-24 bg-card/50 rounded-lg" />)}
                       </div>
                       <div className="h-40 bg-card/50 rounded-lg" />
                     </div>
@@ -276,12 +296,10 @@ const Index = () => {
                     <div className="col-span-3 space-y-3">
                       <div className="h-48 bg-card/50 rounded-lg p-3">
                         <div className="h-4 w-24 bg-muted/50 rounded mb-3" />
-                        {[1, 2, 3].map((i) => (
-                          <div key={i} className="flex items-center gap-2 mb-2">
+                        {[1, 2, 3].map(i => <div key={i} className="flex items-center gap-2 mb-2">
                             <div className="w-8 h-8 rounded-full bg-primary/20" />
                             <div className="flex-1 h-4 bg-muted/30 rounded" />
-                          </div>
-                        ))}
+                          </div>)}
                       </div>
                       <div className="h-32 bg-card/50 rounded-lg" />
                     </div>
@@ -297,18 +315,14 @@ const Index = () => {
       <section className="py-24 px-4 relative">
         <div className="container mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, i) => (
-              <div 
-                key={i} 
-                className="text-center animate-on-scroll"
-                style={{ transitionDelay: `${i * 100}ms` }}
-              >
+            {stats.map((stat, i) => <div key={i} className="text-center animate-on-scroll" style={{
+            transitionDelay: `${i * 100}ms`
+          }}>
                 <div className="text-4xl md:text-6xl font-bold text-gradient mb-2">
                   <AnimatedCounter end={stat.value} suffix={stat.suffix} />
                 </div>
                 <p className="text-muted-foreground">{stat.label}</p>
-              </div>
-            ))}
+              </div>)}
           </div>
         </div>
       </section>
@@ -331,12 +345,9 @@ const Index = () => {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, i) => (
-              <div 
-                key={i} 
-                className="group p-6 rounded-2xl bg-card/50 border border-border/50 hover:border-primary/50 hover:bg-card/80 transition-all duration-300 animate-on-scroll"
-                style={{ transitionDelay: `${i * 100}ms` }}
-              >
+            {features.map((feature, i) => <div key={i} className="group p-6 rounded-2xl bg-card/50 border border-border/50 hover:border-primary/50 hover:bg-card/80 transition-all duration-300 animate-on-scroll" style={{
+            transitionDelay: `${i * 100}ms`
+          }}>
                 <div className="w-14 h-14 rounded-xl bg-gradient-primary flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300">
                   <feature.icon className="h-7 w-7 text-primary-foreground" />
                 </div>
@@ -346,15 +357,13 @@ const Index = () => {
                 <p className="text-muted-foreground leading-relaxed">
                   {feature.desc}
                 </p>
-              </div>
-            ))}
+              </div>)}
           </div>
         </div>
       </section>
 
       {/* Featured Communities */}
-      {communities.length > 0 && (
-        <section id="communities" className="py-24 px-4 relative">
+      {communities.length > 0 && <section id="communities" className="py-24 px-4 relative">
           <div className="container mx-auto">
             <div className="text-center mb-16 animate-on-scroll">
               <Badge variant="secondary" className="mb-4 bg-primary/10 text-primary border-primary/20">
@@ -371,13 +380,9 @@ const Index = () => {
             </div>
 
             <div className="grid md:grid-cols-3 gap-6">
-              {communities.map((community, i) => (
-                <Card 
-                  key={community.id} 
-                  className="group cursor-pointer bg-card/50 border-border/50 hover:border-primary/50 hover:bg-card/80 transition-all duration-300 overflow-hidden animate-on-scroll"
-                  style={{ transitionDelay: `${i * 150}ms` }}
-                  onClick={() => navigate(`/c/${community.slug}`)}
-                >
+              {communities.map((community, i) => <Card key={community.id} className="group cursor-pointer bg-card/50 border-border/50 hover:border-primary/50 hover:bg-card/80 transition-all duration-300 overflow-hidden animate-on-scroll" style={{
+            transitionDelay: `${i * 150}ms`
+          }} onClick={() => navigate(`/c/${community.slug}`)}>
                   <CardContent className="p-6">
                     <div className="flex items-start gap-4 mb-4">
                       <Avatar className="h-16 w-16 rounded-xl ring-2 ring-primary/20 group-hover:ring-primary/50 transition-all">
@@ -400,39 +405,28 @@ const Index = () => {
                       {community.description || "Una comunidad increíble de aprendizaje"}
                     </p>
                     <div className="flex items-center justify-between">
-                      {community.is_paid ? (
-                        <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
+                      {community.is_paid ? <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
                           ${community.price_monthly}/mes
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary" className="bg-green-500/10 text-green-500 border-green-500/20">
+                        </Badge> : <Badge variant="secondary" className="bg-green-500/10 text-green-500 border-green-500/20">
                           Gratis
-                        </Badge>
-                      )}
+                        </Badge>}
                       <Button variant="ghost" size="sm" className="group-hover:text-primary">
                         Explorar
                         <ChevronRight className="ml-1 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                       </Button>
                     </div>
                   </CardContent>
-                </Card>
-              ))}
+                </Card>)}
             </div>
 
             <div className="text-center mt-12 animate-on-scroll">
-              <Button 
-                variant="outline" 
-                size="lg" 
-                className="border-border/50 hover:bg-muted/50"
-                onClick={() => navigate("/communities")}
-              >
+              <Button variant="outline" size="lg" className="border-border/50 hover:bg-muted/50" onClick={() => navigate("/communities")}>
                 Ver todas las comunidades
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
           </div>
-        </section>
-      )}
+        </section>}
 
       {/* Pricing Section */}
       <section id="pricing" className="py-24 px-4 relative">
@@ -453,7 +447,9 @@ const Index = () => {
 
           <div className="grid md:grid-cols-2 gap-8">
             {/* Free Plan */}
-            <div className="relative animate-on-scroll" style={{ transitionDelay: "100ms" }}>
+            <div className="relative animate-on-scroll" style={{
+            transitionDelay: "100ms"
+          }}>
               <Card className="h-full bg-card/50 border-border/50 hover:border-primary/30 transition-colors">
                 <CardContent className="p-8">
                   <div className="flex items-center gap-3 mb-6">
@@ -472,21 +468,12 @@ const Index = () => {
                   </div>
 
                   <ul className="space-y-4 mb-8">
-                    {[
-                      "Acceso a comunidades gratuitas",
-                      "Cursos disponibles sin costo",
-                      "Chat y networking ilimitado",
-                      "Gamificación y logros",
-                      "Eventos y lives",
-                      "Paga solo por contenido premium"
-                    ].map((item) => (
-                      <li key={item} className="flex items-center gap-3">
+                    {["Acceso a comunidades gratuitas", "Cursos disponibles sin costo", "Chat y networking ilimitado", "Gamificación y logros", "Eventos y lives", "Paga solo por contenido premium"].map(item => <li key={item} className="flex items-center gap-3">
                         <div className="w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
                           <Check className="h-3 w-3 text-green-500" />
                         </div>
                         <span className="text-muted-foreground">{item}</span>
-                      </li>
-                    ))}
+                      </li>)}
                   </ul>
 
                   <Button className="w-full h-12" onClick={() => navigate("/auth")}>
@@ -497,7 +484,9 @@ const Index = () => {
             </div>
 
             {/* Creator Plan */}
-            <div className="relative animate-on-scroll" style={{ transitionDelay: "200ms" }}>
+            <div className="relative animate-on-scroll" style={{
+            transitionDelay: "200ms"
+          }}>
               <div className="absolute -inset-px bg-gradient-primary rounded-2xl opacity-50 blur-sm" />
               <Card className="relative h-full bg-card border-primary/50">
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2">
@@ -523,29 +512,15 @@ const Index = () => {
                   </div>
 
                   <ul className="space-y-4 mb-8">
-                    {[
-                      "Tu propia comunidad privada",
-                      "Cursos y contenido ilimitado",
-                      "Cobra a tus miembros",
-                      "Lives con YouTube/Zoom",
-                      "Sistema de afiliados",
-                      "Analytics y reportes",
-                      "Soporte prioritario 24/7"
-                    ].map((item) => (
-                      <li key={item} className="flex items-center gap-3">
+                    {["Tu propia comunidad privada", "Cursos y contenido ilimitado", "Cobra a tus miembros", "Lives con YouTube/Zoom", "Sistema de afiliados", "Analytics y reportes", "Soporte prioritario 24/7"].map(item => <li key={item} className="flex items-center gap-3">
                         <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
                           <Check className="h-3 w-3 text-primary" />
                         </div>
                         <span>{item}</span>
-                      </li>
-                    ))}
+                      </li>)}
                   </ul>
 
-                  <Button 
-                    variant="outline" 
-                    className="w-full h-12 border-primary/50 hover:bg-primary/10"
-                    onClick={() => navigate("/auth")}
-                  >
+                  <Button variant="outline" className="w-full h-12 border-primary/50 hover:bg-primary/10" onClick={() => navigate("/auth")}>
                     Próximamente
                   </Button>
                 </CardContent>
@@ -569,11 +544,7 @@ const Index = () => {
           <p className="text-xl text-muted-foreground mb-10 max-w-xl mx-auto">
             Únete a miles de creadores que ya están monetizando su conocimiento con Skoolify
           </p>
-          <Button 
-            size="lg" 
-            className="h-14 px-10 text-lg bg-gradient-primary hover:opacity-90 transition-opacity glow-primary"
-            onClick={() => navigate("/auth")}
-          >
+          <Button size="lg" className="h-14 px-10 text-lg bg-gradient-primary hover:opacity-90 transition-opacity glow-primary" onClick={() => navigate("/auth")}>
             Empezar Gratis
             <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
@@ -604,8 +575,6 @@ const Index = () => {
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
