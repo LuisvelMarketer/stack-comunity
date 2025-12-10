@@ -21,6 +21,7 @@ import { AIMentorChat, AIMentorChatButton } from "@/components/AIMentorChat";
 import { Home, Users, GraduationCap, Calendar, Rocket, Briefcase } from "lucide-react";
 import { PushNotificationPrompt } from "@/components/PushNotificationPrompt";
 import { toast } from "sonner";
+import skoolifyLogo from "@/assets/skoolify-logo.png";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -70,9 +71,7 @@ const Dashboard = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-8">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
-                  <span className="text-primary-foreground font-bold text-sm">S</span>
-                </div>
+                <img src={skoolifyLogo} alt="Skoolify" className="w-8 h-8 rounded-lg" />
                 <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
                   Skoolify
                 </h1>
