@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import skoolifyLogo from "@/assets/skoolify-logo.png";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -117,9 +118,12 @@ const Auth = () => {
           <div className="absolute bottom-20 right-20 w-96 h-96 bg-white rounded-full blur-3xl" />
         </div>
         
-        <div className="relative z-10">
-          <h1 className="text-4xl font-bold text-white mb-2">Skoolify</h1>
-          <p className="text-white/80 text-lg">La plataforma de comunidades de aprendizaje</p>
+        <div className="relative z-10 flex items-center gap-3">
+          <img src={skoolifyLogo} alt="Skoolify" className="w-12 h-12 rounded-lg" />
+          <div>
+            <h1 className="text-4xl font-bold text-white">Skoolify</h1>
+            <p className="text-white/80 text-lg">La plataforma de comunidades de aprendizaje</p>
+          </div>
         </div>
 
         <div className="relative z-10 space-y-8">
@@ -157,7 +161,8 @@ const Auth = () => {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-background">
         <div className="w-full max-w-md space-y-8">
           {/* Mobile logo */}
-          <div className="lg:hidden text-center mb-8">
+          <div className="lg:hidden text-center mb-8 flex items-center justify-center gap-2">
+            <img src={skoolifyLogo} alt="Skoolify" className="w-10 h-10 rounded-lg" />
             <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
               Skoolify
             </h1>

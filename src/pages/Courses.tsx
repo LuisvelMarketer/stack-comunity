@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import skoolifyLogo from "@/assets/skoolify-logo.png";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -143,12 +144,15 @@ export default function Courses() {
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <h1
+            <div 
               onClick={() => navigate("/dashboard")}
-              className="text-xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent cursor-pointer"
+              className="flex items-center gap-2 cursor-pointer"
             >
-              Skoolify
-            </h1>
+              <img src={skoolifyLogo} alt="Skoolify" className="w-8 h-8 rounded-lg" />
+              <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                Skoolify
+              </h1>
+            </div>
           </div>
           <UserMenu showAdminLink={isAdmin} />
         </div>
