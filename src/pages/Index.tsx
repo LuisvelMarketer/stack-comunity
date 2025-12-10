@@ -196,7 +196,7 @@ const Index = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 px-4 min-h-screen flex items-center">
+      <section className="relative pt-24 pb-12 px-4">
         <div className="container mx-auto">
           <div className="max-w-4xl mx-auto text-center">
             {/* Badge */}
@@ -279,11 +279,13 @@ const Index = () => {
               </div>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* VSL Video Placeholder */}
-          <div id="demo" className="mt-20 relative animate-fade-in-up" style={{
-          animationDelay: "0.6s"
-        }}>
+      {/* VSL Video Section */}
+      <section className="relative py-12 px-4">
+        <div className="container mx-auto">
+          <div id="demo" className="relative animate-fade-in-up">
             {/* Title and subtitle */}
             <div className="text-center mb-8">
               <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
