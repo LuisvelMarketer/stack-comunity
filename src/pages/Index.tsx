@@ -18,8 +18,8 @@ interface Community {
   price_monthly: number | null;
 }
 
-// Hook for scroll animation
-const useScrollAnimation = () => {
+// Hook for scroll animation with dependency array to re-observe when content changes
+const useScrollAnimation = (deps: any[] = []) => {
   useEffect(() => {
     const observer = new IntersectionObserver(entries => {
       entries.forEach(entry => {
@@ -31,11 +31,19 @@ const useScrollAnimation = () => {
       threshold: 0.1,
       rootMargin: "0px 0px -50px 0px"
     });
-    document.querySelectorAll(".animate-on-scroll").forEach(el => {
-      observer.observe(el);
-    });
-    return () => observer.disconnect();
-  }, []);
+    
+    // Small delay to ensure DOM is updated
+    const timeoutId = setTimeout(() => {
+      document.querySelectorAll(".animate-on-scroll").forEach(el => {
+        observer.observe(el);
+      });
+    }, 100);
+    
+    return () => {
+      clearTimeout(timeoutId);
+      observer.disconnect();
+    };
+  }, deps);
 };
 
 // Animated counter component
@@ -81,7 +89,7 @@ const Index = () => {
   } = useAuth();
   const navigate = useNavigate();
   const [communities, setCommunities] = useState<Community[]>([]);
-  useScrollAnimation();
+  useScrollAnimation([communities]);
   useEffect(() => {
     if (user) {
       navigate("/dashboard");
