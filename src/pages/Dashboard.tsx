@@ -18,8 +18,7 @@ import { UserStreakCard } from "@/components/gamification/UserStreakCard";
 import { DailyMissionsCard } from "@/components/gamification/DailyMissionsCard";
 import { LevelProgressCard } from "@/components/gamification/LevelProgressCard";
 import { AIMentorChat, AIMentorChatButton } from "@/components/AIMentorChat";
-import { Home, Users, GraduationCap, Calendar, Search, Rocket, Briefcase } from "lucide-react";
-import { NotificationCenter } from "@/components/NotificationCenter";
+import { Home, Users, GraduationCap, Calendar, Rocket, Briefcase } from "lucide-react";
 import { PushNotificationPrompt } from "@/components/PushNotificationPrompt";
 import { toast } from "sonner";
 
@@ -106,10 +105,6 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon">
-                <Search className="w-5 h-5" />
-              </Button>
-              <NotificationCenter />
               <UserMenu showAdminLink={isAdmin} />
             </div>
           </div>
