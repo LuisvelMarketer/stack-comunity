@@ -217,8 +217,8 @@ const Index = () => {
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-8 animate-fade-in" style={{
             animationDelay: "0.2s"
           }}>
-              <span className="block text-[#b58ff2]/[0.97]">Construye tu</span>
-              <span className="block text-gradient glow-text">imperio educativo</span>
+              <span className="block text-[#b58ff2]" style={{ textShadow: '0 0 40px rgba(181, 143, 242, 0.5), 0 0 80px rgba(181, 143, 242, 0.3)' }}>Construye tu</span>
+              <span className="block text-gradient glow-text" style={{ textShadow: '0 0 60px rgba(139, 92, 246, 0.6), 0 0 100px rgba(139, 92, 246, 0.4)' }}>imperio educativo</span>
             </h1>
 
             {/* Subheadline */}
