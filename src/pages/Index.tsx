@@ -6,7 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
-import { BookOpen, Users, Trophy, Zap, Star, ArrowRight, Check, MessageCircle, Video, Calendar, Award, ChevronRight, Play, Sparkles, Globe, Lock, TrendingUp, BarChart3, Shield, Heart, MessageSquare, Share2 } from "lucide-react";
+import { BookOpen, Users, Trophy, Zap, Star, ArrowRight, Check, MessageCircle, Video, Calendar, Award, ChevronRight, Play, Globe, Lock, TrendingUp, BarChart3, Shield, Heart, MessageSquare, Share2, Sparkles } from "lucide-react";
+import skoolifyLogo from "@/assets/skoolify-logo.png";
 interface Community {
   id: string;
   name: string;
@@ -160,9 +161,7 @@ const Index = () => {
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/60 backdrop-blur-xl border-b border-border/50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-primary-foreground" />
-            </div>
+            <img src={skoolifyLogo} alt="Skoolify" className="w-8 h-8 rounded-lg" />
             <span className="text-xl font-bold bg-gradient-to-r from-purple-400 via-violet-400 to-indigo-400 bg-clip-text text-transparent">Skoolify</span>
           </div>
           <nav className="hidden md:flex items-center gap-8">
@@ -684,9 +683,7 @@ const Index = () => {
         <div className="container mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-primary-foreground" />
-              </div>
+              <img src={skoolifyLogo} alt="Skoolify" className="w-8 h-8 rounded-lg" />
               <span className="text-xl font-bold bg-gradient-to-r from-purple-400 via-violet-400 to-indigo-400 bg-clip-text text-transparent">Skoolify</span>
             </div>
             <div className="flex items-center gap-8 text-sm text-muted-foreground">
