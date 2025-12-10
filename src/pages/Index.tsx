@@ -175,12 +175,22 @@ const Index = () => {
             </button>
           </nav>
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" onClick={() => navigate("/auth")}>
-              Iniciar Sesión
-            </Button>
-            <Button size="sm" className="glow-primary" onClick={() => navigate("/auth")}>
-              Empezar Gratis
-            </Button>
+            <div className="relative group">
+              <div className="absolute inset-0 -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="absolute inset-0 bg-primary/30 blur-lg rounded-lg" />
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => navigate("/auth")}>
+                Iniciar Sesión
+              </Button>
+            </div>
+            <div className="relative group">
+              <div className="absolute inset-0 -z-10">
+                <div className="absolute inset-0 bg-primary/40 blur-lg rounded-lg group-hover:bg-primary/60 transition-colors" />
+              </div>
+              <Button size="sm" className="relative" onClick={() => navigate("/auth")}>
+                Empezar Gratis
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -190,14 +200,17 @@ const Index = () => {
         <div className="container mx-auto">
           <div className="max-w-4xl mx-auto text-center">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8 animate-fade-in" style={{
-            animationDelay: "0.1s"
-          }}>
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-              </span>
-              <span className="text-sm text-primary font-medium">La plataforma #1 de comunidades de aprendizaje</span>
+            <div className="relative inline-block mb-8 animate-fade-in" style={{ animationDelay: "0.1s" }}>
+              <div className="absolute inset-0 -z-10">
+                <div className="absolute inset-0 bg-primary/30 blur-xl rounded-full" />
+              </div>
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                </span>
+                <span className="text-sm text-primary font-medium">La plataforma #1 de comunidades de aprendizaje</span>
+              </div>
             </div>
 
             {/* Main headline */}
@@ -220,16 +233,26 @@ const Index = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16 animate-fade-in" style={{
             animationDelay: "0.4s"
           }}>
-              <Button size="lg" className="h-14 px-8 text-lg bg-gradient-primary hover:opacity-90 transition-opacity glow-primary" onClick={() => navigate("/auth")}>
-                Empezar Gratis
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-              <Button size="lg" variant="outline" className="h-14 px-8 text-lg border-primary/50 text-foreground hover:bg-primary/10 hover:border-primary" onClick={() => document.getElementById("demo")?.scrollIntoView({
-              behavior: "smooth"
-            })}>
-                <Play className="mr-2 h-5 w-5" />
-                Ver Demo
-              </Button>
+              <div className="relative group">
+                <div className="absolute inset-0 -z-10">
+                  <div className="absolute inset-0 bg-primary/50 blur-xl rounded-xl group-hover:bg-primary/70 transition-colors" />
+                </div>
+                <Button size="lg" className="relative h-14 px-8 text-lg bg-gradient-primary hover:opacity-90 transition-opacity" onClick={() => navigate("/auth")}>
+                  Empezar Gratis
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </div>
+              <div className="relative group">
+                <div className="absolute inset-0 -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="absolute inset-0 bg-primary/30 blur-xl rounded-xl" />
+                </div>
+                <Button size="lg" variant="outline" className="relative h-14 px-8 text-lg border-primary/50 text-foreground hover:bg-primary/10 hover:border-primary" onClick={() => document.getElementById("demo")?.scrollIntoView({
+                behavior: "smooth"
+              })}>
+                  <Play className="mr-2 h-5 w-5" />
+                  Ver Demo
+                </Button>
+              </div>
             </div>
 
             {/* Social proof */}
@@ -505,10 +528,15 @@ const Index = () => {
             </div>
 
             <div className="text-center mt-12 animate-on-scroll">
-              <Button variant="outline" size="lg" className="border-border/50 hover:bg-muted/50" onClick={() => navigate("/communities")}>
-                Ver todas las comunidades
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
+              <div className="relative inline-block group">
+                <div className="absolute inset-0 -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="absolute inset-0 bg-primary/30 blur-xl rounded-xl" />
+                </div>
+                <Button variant="outline" size="lg" className="relative border-border/50 hover:bg-muted/50 hover:border-primary/50" onClick={() => navigate("/communities")}>
+                  Ver todas las comunidades
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </section>}
@@ -627,8 +655,13 @@ const Index = () => {
       <section className="py-32 px-4 relative">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-transparent" />
         <div className="container mx-auto text-center max-w-3xl relative animate-on-scroll">
-          <div className="w-20 h-20 rounded-2xl bg-gradient-primary flex items-center justify-center mx-auto mb-8 animate-float">
-            <Sparkles className="w-10 h-10 text-primary-foreground" />
+          <div className="relative inline-block mb-8">
+            <div className="absolute inset-0 -z-10">
+              <div className="absolute inset-0 bg-primary/50 blur-2xl rounded-full scale-150" />
+            </div>
+            <div className="w-20 h-20 rounded-2xl bg-gradient-primary flex items-center justify-center animate-float">
+              <Sparkles className="w-10 h-10 text-primary-foreground" />
+            </div>
           </div>
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
             ¿Listo para construir<br />
@@ -637,10 +670,15 @@ const Index = () => {
           <p className="text-xl text-muted-foreground mb-10 max-w-xl mx-auto">
             Únete a miles de creadores que ya están monetizando su conocimiento con Skoolify
           </p>
-          <Button size="lg" className="h-14 px-10 text-lg bg-gradient-primary hover:opacity-90 transition-opacity glow-primary" onClick={() => navigate("/auth")}>
-            Empezar Gratis
-            <ArrowRight className="ml-2 h-5 w-5" />
-          </Button>
+          <div className="relative inline-block group">
+            <div className="absolute inset-0 -z-10">
+              <div className="absolute inset-0 bg-primary/50 blur-2xl rounded-xl group-hover:bg-primary/70 transition-colors" />
+            </div>
+            <Button size="lg" className="relative h-14 px-10 text-lg bg-gradient-primary hover:opacity-90 transition-opacity" onClick={() => navigate("/auth")}>
+              Empezar Gratis
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          </div>
           <p className="text-sm text-muted-foreground mt-6">
             No requiere tarjeta de crédito • Setup en 2 minutos
           </p>
