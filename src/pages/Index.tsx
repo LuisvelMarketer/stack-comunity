@@ -281,27 +281,93 @@ const Index = () => {
                 <div className="aspect-[16/9] bg-gradient-to-br from-muted/30 to-background p-6 rounded-b-xl">
                   <div className="grid grid-cols-12 gap-4 h-full">
                     {/* Sidebar mockup */}
-                    <div className="col-span-2 bg-card/50 rounded-lg p-3 space-y-3">
-                      {[1, 2, 3, 4, 5].map(i => <div key={i} className={`h-8 rounded-md ${i === 1 ? 'bg-primary/20' : 'bg-muted/50'}`} />)}
-                    </div>
-                    {/* Main content mockup */}
-                    <div className="col-span-7 space-y-4">
-                      <div className="h-32 bg-gradient-to-r from-primary/20 to-primary/5 rounded-lg shimmer" />
-                      <div className="grid grid-cols-3 gap-3">
-                        {[1, 2, 3].map(i => <div key={i} className="h-24 bg-card/50 rounded-lg" />)}
+                    <div className="col-span-2 bg-card/80 rounded-lg p-3 space-y-3 border border-border/30">
+                      <div className="h-8 rounded-md bg-primary/30 flex items-center gap-2 px-2">
+                        <div className="w-4 h-4 rounded bg-primary/50" />
+                        <div className="h-3 flex-1 bg-primary/20 rounded" />
                       </div>
-                      <div className="h-40 bg-card/50 rounded-lg" />
+                      {['Feed', 'Cursos', 'Eventos', 'Chat'].map((item, i) => (
+                        <div key={i} className="h-8 rounded-md bg-muted/30 flex items-center gap-2 px-2 hover:bg-muted/50 transition-colors">
+                          <div className="w-4 h-4 rounded bg-muted-foreground/20" />
+                          <span className="text-[10px] text-muted-foreground/60">{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Main content mockup - Feed */}
+                    <div className="col-span-7 space-y-4">
+                      {/* Welcome banner */}
+                      <div className="h-24 bg-gradient-to-r from-primary/30 via-primary/20 to-primary/10 rounded-lg p-4 flex items-center gap-4 border border-primary/20">
+                        <div className="w-12 h-12 rounded-full bg-primary/40 flex items-center justify-center">
+                          <Sparkles className="w-6 h-6 text-primary-foreground/80" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="h-4 w-40 bg-foreground/20 rounded mb-2" />
+                          <div className="h-3 w-64 bg-muted-foreground/20 rounded" />
+                        </div>
+                      </div>
+                      {/* Post cards */}
+                      {[1, 2].map(i => (
+                        <div key={i} className="bg-card/60 rounded-lg p-4 border border-border/30">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/40 to-primary/20" />
+                            <div className="flex-1">
+                              <div className="h-3 w-24 bg-foreground/30 rounded mb-1" />
+                              <div className="h-2 w-16 bg-muted-foreground/20 rounded" />
+                            </div>
+                          </div>
+                          <div className="space-y-2 mb-3">
+                            <div className="h-3 w-full bg-muted-foreground/15 rounded" />
+                            <div className="h-3 w-3/4 bg-muted-foreground/15 rounded" />
+                          </div>
+                          <div className="flex items-center gap-4 pt-2 border-t border-border/20">
+                            <div className="flex items-center gap-1">
+                              <div className="w-4 h-4 rounded bg-primary/20" />
+                              <span className="text-[10px] text-muted-foreground/50">{12 + i * 5}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <div className="w-4 h-4 rounded bg-muted/30" />
+                              <span className="text-[10px] text-muted-foreground/50">{3 + i}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                     {/* Right sidebar mockup */}
                     <div className="col-span-3 space-y-3">
-                      <div className="h-48 bg-card/50 rounded-lg p-3">
-                        <div className="h-4 w-24 bg-muted/50 rounded mb-3" />
-                        {[1, 2, 3].map(i => <div key={i} className="flex items-center gap-2 mb-2">
-                            <div className="w-8 h-8 rounded-full bg-primary/20" />
-                            <div className="flex-1 h-4 bg-muted/30 rounded" />
-                          </div>)}
+                      {/* Leaderboard */}
+                      <div className="bg-card/60 rounded-lg p-3 border border-border/30">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Trophy className="w-4 h-4 text-yellow-500/70" />
+                          <span className="text-xs text-foreground/70 font-medium">Leaderboard</span>
+                        </div>
+                        {[1, 2, 3].map(i => (
+                          <div key={i} className="flex items-center gap-2 mb-2 py-1">
+                            <span className="text-[10px] text-muted-foreground/50 w-4">{i}.</span>
+                            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary/40 to-primary/20" />
+                            <div className="flex-1 h-3 bg-muted/30 rounded" />
+                            <span className="text-[10px] text-primary/70">{500 - i * 80}pts</span>
+                          </div>
+                        ))}
                       </div>
-                      <div className="h-32 bg-card/50 rounded-lg" />
+                      {/* Upcoming events */}
+                      <div className="bg-card/60 rounded-lg p-3 border border-border/30">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Calendar className="w-4 h-4 text-primary/70" />
+                          <span className="text-xs text-foreground/70 font-medium">Próximos</span>
+                        </div>
+                        {[1, 2].map(i => (
+                          <div key={i} className="flex items-center gap-2 mb-2 py-1">
+                            <div className="w-8 h-8 rounded bg-primary/10 flex flex-col items-center justify-center">
+                              <span className="text-[8px] text-primary/70">DIC</span>
+                              <span className="text-[10px] text-foreground/70 font-bold">{10 + i}</span>
+                            </div>
+                            <div className="flex-1">
+                              <div className="h-2 w-16 bg-foreground/20 rounded mb-1" />
+                              <div className="h-2 w-10 bg-muted-foreground/15 rounded" />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
