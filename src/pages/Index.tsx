@@ -198,7 +198,7 @@ const Index = () => {
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="h-14 px-8 text-lg border-border/50 hover:bg-muted/50" 
+                className="h-14 px-8 text-lg border-primary/50 text-foreground hover:bg-primary/10 hover:border-primary" 
                 onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })}
               >
                 <Play className="mr-2 h-5 w-5" />
