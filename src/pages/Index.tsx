@@ -179,7 +179,7 @@ const Index = () => {
               <div className="absolute inset-0 -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                 <div className="absolute inset-0 bg-primary/30 blur-lg rounded-lg" />
               </div>
-              <Button variant="ghost" size="sm" onClick={() => navigate("/auth")}>
+              <Button variant="ghost" size="sm" onClick={() => navigate("/auth")} className="text-muted-foreground">
                 Iniciar Sesión
               </Button>
             </div>
