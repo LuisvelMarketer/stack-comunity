@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
-import { BookOpen, Users, Trophy, Zap, Star, ArrowRight, Check, MessageCircle, Video, Calendar, Award, ChevronRight, Play, Sparkles, Globe, Lock, TrendingUp, BarChart3, Shield } from "lucide-react";
+import { BookOpen, Users, Trophy, Zap, Star, ArrowRight, Check, MessageCircle, Video, Calendar, Award, ChevronRight, Play, Sparkles, Globe, Lock, TrendingUp, BarChart3, Shield, Heart, MessageSquare, Share2 } from "lucide-react";
 interface Community {
   id: string;
   name: string;
@@ -261,8 +261,14 @@ const Index = () => {
           <div id="demo" className="mt-20 relative animate-fade-in-up" style={{
           animationDelay: "0.6s"
         }}>
+            {/* Glow effect behind the card */}
+            <div className="absolute inset-0 -z-10">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[60%] bg-primary/30 blur-[100px] rounded-full animate-pulse" />
+              <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[40%] h-[40%] bg-purple-500/20 blur-[80px] rounded-full" />
+              <div className="absolute top-1/2 right-1/4 -translate-x-1/2 -translate-y-1/2 w-[30%] h-[30%] bg-blue-500/15 blur-[60px] rounded-full" />
+            </div>
             <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-10 pointer-events-none" />
-            <div className="gradient-border rounded-2xl overflow-hidden shadow-glow-lg">
+            <div className="gradient-border rounded-2xl overflow-hidden shadow-glow-lg relative" style={{ boxShadow: '0 0 80px rgba(139, 92, 246, 0.3), 0 0 40px rgba(139, 92, 246, 0.2)' }}>
               <div className="bg-card p-1">
                 {/* Browser mockup header */}
                 <div className="flex items-center gap-2 px-4 py-3 bg-muted/50 rounded-t-xl">
@@ -292,38 +298,47 @@ const Index = () => {
                         </div>)}
                     </div>
                     {/* Main content mockup - Feed */}
-                    <div className="col-span-7 space-y-4">
+                    <div className="col-span-7 space-y-3">
                       {/* Welcome banner */}
-                      <div className="h-24 bg-gradient-to-r from-primary/30 via-primary/20 to-primary/10 rounded-lg p-4 flex items-center gap-4 border border-primary/20">
-                        <div className="w-12 h-12 rounded-full bg-primary/40 flex items-center justify-center">
-                          <Sparkles className="w-6 h-6 text-primary-foreground/80" />
+                      <div className="h-20 bg-gradient-to-r from-primary/30 via-primary/20 to-primary/10 rounded-lg p-3 flex items-center gap-3 border border-primary/20">
+                        <div className="w-10 h-10 rounded-full bg-primary/40 flex items-center justify-center">
+                          <Sparkles className="w-5 h-5 text-primary-foreground/80" />
                         </div>
                         <div className="flex-1">
-                          <div className="h-4 w-40 bg-foreground/20 rounded mb-2" />
-                          <div className="h-3 w-64 bg-muted-foreground/20 rounded" />
+                          <div className="h-3 w-32 bg-foreground/30 rounded mb-1.5" />
+                          <div className="h-2 w-48 bg-muted-foreground/20 rounded" />
                         </div>
                       </div>
-                      {/* Post cards */}
-                      {[1, 2].map(i => <div key={i} className="bg-card/60 rounded-lg p-4 border border-border/30">
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/40 to-primary/20" />
+                      {/* Post cards - más contenido */}
+                      {[1, 2, 3].map(i => <div key={i} className="bg-card/60 rounded-lg p-3 border border-border/30">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/40 to-primary/20" />
                             <div className="flex-1">
-                              <div className="h-3 w-24 bg-foreground/30 rounded mb-1" />
-                              <div className="h-2 w-16 bg-muted-foreground/20 rounded" />
+                              <div className="h-2.5 w-20 bg-foreground/30 rounded mb-1" />
+                              <div className="h-2 w-12 bg-muted-foreground/20 rounded" />
                             </div>
                           </div>
-                          <div className="space-y-2 mb-3">
-                            <div className="h-3 w-full bg-muted-foreground/15 rounded" />
-                            <div className="h-3 w-3/4 bg-muted-foreground/15 rounded" />
+                          <div className="space-y-1.5 mb-2">
+                            <div className="h-2.5 w-full bg-muted-foreground/15 rounded" />
+                            <div className="h-2.5 w-4/5 bg-muted-foreground/15 rounded" />
                           </div>
-                          <div className="flex items-center gap-4 pt-2 border-t border-border/20">
+                          {/* Image placeholder en algunos posts */}
+                          {i === 1 && <div className="h-24 w-full bg-gradient-to-br from-primary/10 to-muted/20 rounded-md mb-2 flex items-center justify-center">
+                            <div className="w-8 h-8 rounded bg-primary/20 flex items-center justify-center">
+                              <Play className="w-4 h-4 text-primary/50" />
+                            </div>
+                          </div>}
+                          <div className="flex items-center gap-3 pt-2 border-t border-border/20">
                             <div className="flex items-center gap-1">
-                              <div className="w-4 h-4 rounded bg-primary/20" />
-                              <span className="text-[10px] text-muted-foreground/50">{12 + i * 5}</span>
+                              <Heart className="w-3 h-3 text-primary/40" />
+                              <span className="text-[9px] text-muted-foreground/50">{12 + i * 8}</span>
                             </div>
                             <div className="flex items-center gap-1">
-                              <div className="w-4 h-4 rounded bg-muted/30" />
-                              <span className="text-[10px] text-muted-foreground/50">{3 + i}</span>
+                              <MessageSquare className="w-3 h-3 text-muted-foreground/40" />
+                              <span className="text-[9px] text-muted-foreground/50">{3 + i * 2}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Share2 className="w-3 h-3 text-muted-foreground/30" />
                             </div>
                           </div>
                         </div>)}
