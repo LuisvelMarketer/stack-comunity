@@ -540,7 +540,7 @@ const Index = () => {
                 <div className="absolute inset-0 -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <div className="absolute inset-0 bg-primary/30 blur-xl rounded-xl" />
                 </div>
-                <Button variant="outline" size="lg" className="relative border-border/50 hover:bg-muted/50 hover:border-primary/50" onClick={() => navigate("/communities")}>
+                <Button variant="outline" size="lg" className="relative border-primary/50 text-foreground hover:bg-primary/10 hover:border-primary" onClick={() => navigate("/communities")}>
                   Ver todas las comunidades
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
