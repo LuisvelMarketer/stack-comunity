@@ -32,6 +32,7 @@ import ProjectEdit from "./pages/ProjectEdit";
 import Marketplace from "./pages/Marketplace";
 import Incubator from "./pages/Incubator";
 import Courses from "./pages/Courses";
+import CodigoQuantumLanding from "./pages/CodigoQuantumLanding";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -48,8 +49,9 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            {/* Public community landing page - SEO optimized */}
+            {/* Public community landing pages - SEO optimized */}
             <Route path="/c/:slug" element={<CommunityLanding />} />
+            <Route path="/codigo-quantum" element={<CodigoQuantumLanding />} />
             <Route
               path="/onboarding"
               element={
