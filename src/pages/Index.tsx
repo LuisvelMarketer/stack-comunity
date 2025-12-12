@@ -19,9 +19,16 @@ interface Community {
   price_monthly: number | null;
 }
 
-// Hook for scroll animation with dependency array to re-observe when content changes
+// Hook for advanced scroll animations with multiple animation types
 const useScrollAnimation = (deps: any[] = []) => {
   useEffect(() => {
+    const animationClasses = [
+      'scroll-fade-up', 'scroll-fade-down', 'scroll-fade-left', 'scroll-fade-right',
+      'scroll-scale', 'scroll-scale-bounce', 'scroll-blur', 'scroll-rotate',
+      'scroll-flip', 'scroll-tilt', 'scroll-zoom-blur', 'scroll-spring',
+      'scroll-clip', 'animate-on-scroll'
+    ];
+    
     const observer = new IntersectionObserver(entries => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -30,13 +37,15 @@ const useScrollAnimation = (deps: any[] = []) => {
       });
     }, {
       threshold: 0.1,
-      rootMargin: "0px 0px -50px 0px"
+      rootMargin: "0px 0px -80px 0px"
     });
     
     // Small delay to ensure DOM is updated
     const timeoutId = setTimeout(() => {
-      document.querySelectorAll(".animate-on-scroll").forEach(el => {
-        observer.observe(el);
+      animationClasses.forEach(className => {
+        document.querySelectorAll(`.${className}`).forEach(el => {
+          observer.observe(el);
+        });
       });
     }, 100);
     
@@ -45,6 +54,22 @@ const useScrollAnimation = (deps: any[] = []) => {
       observer.disconnect();
     };
   }, deps);
+};
+
+// Parallax hook for depth effect
+const useParallax = () => {
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      document.querySelectorAll('[data-parallax]').forEach((el) => {
+        const speed = parseFloat((el as HTMLElement).dataset.parallax || '0.5');
+        (el as HTMLElement).style.transform = `translateY(${scrollY * speed}px)`;
+      });
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 };
 
 // Animated counter component
@@ -91,6 +116,8 @@ const Index = () => {
   const navigate = useNavigate();
   const [communities, setCommunities] = useState<Community[]>([]);
   useScrollAnimation([communities]);
+  useParallax();
+
   useEffect(() => {
     if (user) {
       navigate("/dashboard");
@@ -148,14 +175,14 @@ const Index = () => {
     label: "Satisfacción"
   }];
   return <div className="min-h-screen bg-background dark overflow-hidden">
-      {/* Background effects */}
+      {/* Background effects with parallax */}
       <div className="fixed inset-0 bg-gradient-hero pointer-events-none" />
       <div className="fixed inset-0 grid-pattern opacity-30 pointer-events-none" />
       
-      {/* Floating orbs */}
-      <div className="fixed top-1/4 -left-32 w-96 h-96 bg-primary/20 rounded-full blur-[120px] pointer-events-none" />
-      <div className="fixed top-1/2 -right-32 w-96 h-96 bg-primary/15 rounded-full blur-[120px] pointer-events-none" />
-      <div className="fixed bottom-1/4 left-1/3 w-64 h-64 bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
+      {/* Floating orbs with parallax and glow */}
+      <div data-parallax="-0.15" className="fixed top-1/4 -left-32 w-96 h-96 bg-primary/20 rounded-full blur-[120px] pointer-events-none animate-glow-breathe" />
+      <div data-parallax="-0.1" className="fixed top-1/2 -right-32 w-96 h-96 bg-primary/15 rounded-full blur-[120px] pointer-events-none animate-glow-breathe" style={{ animationDelay: '1s' }} />
+      <div data-parallax="-0.2" className="fixed bottom-1/4 left-1/3 w-64 h-64 bg-primary/10 rounded-full blur-[100px] pointer-events-none animate-glow-breathe" style={{ animationDelay: '2s' }} />
 
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/60 backdrop-blur-xl border-b border-border/50">
@@ -207,25 +234,25 @@ const Index = () => {
         <div className="container mx-auto">
           <div className="max-w-4xl mx-auto text-center">
             {/* Badge */}
-            <div className="relative inline-block mb-8 animate-fade-in" style={{
+            <div className="scroll-scale-bounce stagger-1" style={{
             animationDelay: "0.1s"
           }}>
-              <div className="absolute inset-0 -z-10">
-                <div className="absolute inset-0 bg-primary/30 blur-xl rounded-full" />
-              </div>
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-                </span>
-                <span className="text-sm text-primary font-medium">La plataforma #1 de comunidades de aprendizaje</span>
+              <div className="relative inline-block mb-8">
+                <div className="absolute inset-0 -z-10">
+                  <div className="absolute inset-0 bg-primary/30 blur-xl rounded-full animate-glow-breathe" />
+                </div>
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                  </span>
+                  <span className="text-sm text-primary font-medium">La plataforma #1 de comunidades de aprendizaje</span>
+                </div>
               </div>
             </div>
 
-            {/* Main headline */}
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-8 animate-fade-in" style={{
-            animationDelay: "0.2s"
-          }}>
+            {/* Main headline with blur in effect */}
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-8 scroll-blur stagger-2">
               <span className="block text-[#b58ff2]" style={{
               textShadow: '0 0 40px rgba(181, 143, 242, 0.5), 0 0 80px rgba(181, 143, 242, 0.3)'
             }}>Construye tu</span>
@@ -235,20 +262,16 @@ const Index = () => {
             </h1>
 
             {/* Subheadline */}
-            <p className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed animate-fade-in" style={{
-            animationDelay: "0.3s"
-          }}>
+            <p className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed scroll-fade-up stagger-3">
               La plataforma todo-en-uno para crear, monetizar y escalar tu comunidad de aprendizaje. 
               Sin límites. Sin complicaciones.
             </p>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16 animate-fade-in" style={{
-            animationDelay: "0.4s"
-          }}>
-              <div className="relative group">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16 scroll-spring stagger-4">
+              <div className="relative group hover-lift">
                 <div className="absolute inset-0 -z-10">
-                  <div className="absolute inset-0 bg-primary/50 blur-xl rounded-xl group-hover:bg-primary/70 transition-colors" />
+                  <div className="absolute inset-0 bg-primary/50 blur-xl rounded-xl group-hover:bg-primary/70 transition-colors animate-pulse-glow" />
                 </div>
                 <Button size="lg" className="relative h-14 px-8 text-lg bg-gradient-primary hover:opacity-90 transition-opacity" onClick={() => navigate("/auth")}>
                   Empezar Gratis
@@ -269,9 +292,7 @@ const Index = () => {
             </div>
 
             {/* Social proof */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-8 text-sm text-muted-foreground animate-fade-in" style={{
-            animationDelay: "0.5s"
-          }}>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-8 text-sm text-muted-foreground scroll-fade-up stagger-5">
               <div className="flex items-center gap-3">
                 <div className="flex -space-x-3">
                   {[1, 2, 3, 4, 5].map(i => <div key={i} className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/40 to-primary/20 border-2 border-background flex items-center justify-center" style={{
@@ -298,7 +319,7 @@ const Index = () => {
       {/* VSL Video Section */}
       <section className="relative py-12 px-4">
         <div className="container mx-auto">
-          <div id="demo" className="relative animate-fade-in-up">
+          <div id="demo" className="relative scroll-zoom-blur">
             {/* Title and subtitle */}
             <div className="text-center mb-8">
               <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
@@ -406,9 +427,7 @@ const Index = () => {
       <section className="py-24 px-4 relative">
         <div className="container mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, i) => <div key={i} className="text-center animate-on-scroll" style={{
-            transitionDelay: `${i * 100}ms`
-          }}>
+            {stats.map((stat, i) => <div key={i} className={`text-center scroll-scale-bounce stagger-${i + 1}`}>
                 <div className="text-4xl md:text-6xl font-bold text-gradient mb-2">
                   <AnimatedCounter end={stat.value} suffix={stat.suffix} />
                 </div>
@@ -421,7 +440,7 @@ const Index = () => {
       {/* Features Section */}
       <section id="features" className="py-24 px-4 relative">
         <div className="container mx-auto">
-          <div className="text-center mb-16 animate-on-scroll">
+          <div className="text-center mb-16 scroll-blur">
             <Badge variant="secondary" className="mb-4 bg-primary/10 text-primary border-primary/20">
               <Zap className="w-3 h-3 mr-1" />
               Características
@@ -436,14 +455,12 @@ const Index = () => {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, i) => <div key={i} className="group relative p-6 rounded-2xl bg-card/50 border border-border/50 hover:border-primary/50 hover:bg-card/80 transition-all duration-300 animate-on-scroll" style={{
-            transitionDelay: `${i * 100}ms`
-          }}>
+            {features.map((feature, i) => <div key={i} className={`group relative p-6 rounded-2xl bg-card/50 border border-border/50 hover:border-primary/50 hover:bg-card/80 transition-all duration-300 hover-lift ${i < 3 ? 'scroll-flip' : 'scroll-tilt'} stagger-${(i % 6) + 1}`}>
                 {/* Backlight glow effect - illuminated from behind */}
-                <div className="absolute -inset-1 -z-10 rounded-2xl">
-                  <div className="absolute inset-0 bg-primary/30 blur-2xl rounded-2xl" />
+                <div className="absolute -inset-1 -z-10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                  <div className="absolute inset-0 bg-primary/30 blur-2xl rounded-2xl animate-glow-breathe" />
                 </div>
-                <div className="w-14 h-14 rounded-xl bg-gradient-primary flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300">
+                <div className="w-14 h-14 rounded-xl bg-gradient-primary flex items-center justify-center mb-5 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
                   <feature.icon className="h-7 w-7 text-primary-foreground" />
                 </div>
                 <h3 className="text-xl font-semibold mb-3 text-muted-foreground group-hover:text-primary transition-colors">
@@ -460,7 +477,7 @@ const Index = () => {
       {/* Featured Communities */}
       {communities.length > 0 && <section id="communities" className="py-24 px-4 relative">
           <div className="container mx-auto">
-            <div className="text-center mb-16 animate-on-scroll">
+            <div className="text-center mb-16 scroll-fade-up">
               <Badge variant="secondary" className="mb-4 bg-primary/10 text-primary border-primary/20">
                 <Globe className="w-3 h-3 mr-1" />
                 Comunidades
@@ -475,17 +492,15 @@ const Index = () => {
             </div>
 
             <div className="grid md:grid-cols-3 gap-6">
-              {communities.map((community, i) => <div key={community.id} className="relative group animate-on-scroll" style={{
-            transitionDelay: `${i * 150}ms`
-          }}>
+              {communities.map((community, i) => <div key={community.id} className={`relative group scroll-rotate hover-lift stagger-${i + 1}`}>
                   {/* Glow effect - subtle backlight */}
-                  <div className="absolute -inset-1 -z-10 rounded-2xl">
-                    <div className="absolute inset-0 bg-primary/40 blur-2xl rounded-2xl opacity-50 group-hover:opacity-100 group-hover:bg-primary/45 transition-all duration-500" />
+                  <div className="absolute -inset-1 -z-10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                    <div className="absolute inset-0 bg-primary/40 blur-2xl rounded-2xl animate-glow-breathe" />
                   </div>
                   <Card className="cursor-pointer bg-card/50 border-border/50 hover:border-primary/50 hover:bg-card/80 transition-all duration-300 overflow-hidden h-full" onClick={() => navigate(`/c/${community.slug}`)}>
                   <CardContent className="p-6">
                     <div className="flex items-start gap-4 mb-4">
-                      <Avatar className="h-16 w-16 rounded-xl ring-2 ring-primary/20 group-hover:ring-primary/50 transition-all">
+                      <Avatar className="h-16 w-16 rounded-xl ring-2 ring-primary/20 group-hover:ring-primary/50 group-hover:scale-105 transition-all">
                         {community.image_url && <AvatarImage src={community.image_url} />}
                         <AvatarFallback className="rounded-xl bg-gradient-primary text-primary-foreground text-xl font-bold">
                           {community.name.charAt(0)}
@@ -520,8 +535,8 @@ const Index = () => {
                 </div>)}
             </div>
 
-            <div className="text-center mt-12 animate-on-scroll">
-              <div className="relative inline-block group">
+            <div className="text-center mt-12 scroll-scale stagger-4">
+              <div className="relative inline-block group hover-lift">
                 <div className="absolute inset-0 -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <div className="absolute inset-0 bg-primary/30 blur-xl rounded-xl" />
                 </div>
@@ -537,7 +552,7 @@ const Index = () => {
       {/* Pricing Section */}
       <section id="pricing" className="py-24 px-4 relative">
         <div className="container mx-auto max-w-5xl">
-          <div className="text-center mb-16 animate-on-scroll">
+          <div className="text-center mb-16 scroll-blur">
             <Badge variant="secondary" className="mb-4 bg-primary/10 text-primary border-primary/20">
               <TrendingUp className="w-3 h-3 mr-1" />
               Precios
@@ -553,9 +568,7 @@ const Index = () => {
 
           <div className="grid md:grid-cols-2 gap-8">
             {/* Free Plan */}
-            <div className="relative animate-on-scroll group" style={{
-            transitionDelay: "100ms"
-          }}>
+            <div className="relative scroll-fade-left stagger-1 group hover-lift">
               {/* Glow effect */}
               <div className="absolute inset-0 -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                 <div className="absolute inset-0 bg-primary/20 blur-xl rounded-2xl" />
@@ -578,7 +591,7 @@ const Index = () => {
                   </div>
 
                   <ul className="space-y-4 mb-8">
-                    {["Acceso a comunidades gratuitas", "Cursos disponibles sin costo", "Chat y networking ilimitado", "Gamificación y logros", "Eventos y lives", "Paga solo por contenido premium"].map(item => <li key={item} className="flex items-center gap-3">
+                    {["Acceso a comunidades gratuitas", "Cursos disponibles sin costo", "Chat y networking ilimitado", "Gamificación y logros", "Eventos y lives", "Paga solo por contenido premium"].map((item, i) => <li key={item} className="flex items-center gap-3" style={{ animationDelay: `${i * 0.1}s` }}>
                         <div className="w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
                           <Check className="h-3 w-3 text-green-500" />
                         </div>
@@ -586,7 +599,7 @@ const Index = () => {
                       </li>)}
                   </ul>
 
-                  <Button className="w-full h-12" onClick={() => navigate("/auth")}>
+                  <Button className="w-full h-12 hover-glow" onClick={() => navigate("/auth")}>
                     Crear cuenta gratis
                   </Button>
                 </CardContent>
@@ -594,17 +607,15 @@ const Index = () => {
             </div>
 
             {/* Creator Plan */}
-            <div className="relative animate-on-scroll group" style={{
-            transitionDelay: "200ms"
-          }}>
+            <div className="relative scroll-fade-right stagger-2 group hover-lift">
               {/* Glow effect - siempre visible para este plan */}
               <div className="absolute inset-0 -z-10">
-                <div className="absolute inset-0 bg-primary/30 blur-xl rounded-2xl group-hover:bg-primary/40 transition-colors" />
+                <div className="absolute inset-0 bg-primary/30 blur-xl rounded-2xl group-hover:bg-primary/40 transition-colors animate-glow-breathe" />
               </div>
               <div className="absolute -inset-px bg-gradient-primary rounded-2xl opacity-50 blur-sm" />
               <Card className="relative h-full bg-card border-primary/50">
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                  <Badge className="bg-gradient-primary text-primary-foreground border-0 px-4 py-1">
+                  <Badge className="bg-gradient-primary text-primary-foreground border-0 px-4 py-1 animate-pulse-scale">
                     <Sparkles className="w-3 h-3 mr-1" />
                     Popular
                   </Badge>
@@ -626,7 +637,7 @@ const Index = () => {
                   </div>
 
                   <ul className="space-y-4 mb-8">
-                    {["Tu propia comunidad privada", "Cursos y contenido ilimitado", "Cobra a tus miembros", "Lives con YouTube/Zoom", "Sistema de afiliados", "Analytics y reportes", "Soporte prioritario 24/7"].map(item => <li key={item} className="flex items-center gap-3">
+                    {["Tu propia comunidad privada", "Cursos y contenido ilimitado", "Cobra a tus miembros", "Lives con YouTube/Zoom", "Sistema de afiliados", "Analytics y reportes", "Soporte prioritario 24/7"].map((item, i) => <li key={item} className="flex items-center gap-3" style={{ animationDelay: `${i * 0.1}s` }}>
                         <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
                           <Check className="h-3 w-3 text-primary" />
                         </div>
@@ -634,7 +645,7 @@ const Index = () => {
                       </li>)}
                   </ul>
 
-                  <Button variant="outline" className="w-full h-12 border-primary/50 hover:bg-primary/10" onClick={() => navigate("/auth")}>
+                  <Button variant="outline" className="w-full h-12 border-primary/50 hover:bg-primary/10 hover-glow" onClick={() => navigate("/auth")}>
                     Próximamente
                   </Button>
                 </CardContent>
@@ -645,14 +656,18 @@ const Index = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-32 px-4 relative">
+      <section className="py-32 px-4 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-transparent" />
-        <div className="container mx-auto text-center max-w-3xl relative animate-on-scroll">
+        {/* Animated background orbs */}
+        <div className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/20 rounded-full blur-[150px] animate-glow-breathe pointer-events-none" />
+        <div className="absolute top-1/2 right-1/4 translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-purple-500/15 rounded-full blur-[120px] animate-glow-breathe pointer-events-none" style={{ animationDelay: '1.5s' }} />
+        
+        <div className="container mx-auto text-center max-w-3xl relative scroll-spring">
           <div className="relative inline-block mb-8">
             <div className="absolute inset-0 -z-10">
-              <div className="absolute inset-0 bg-primary/50 blur-2xl rounded-full scale-150" />
+              <div className="absolute inset-0 bg-primary/50 blur-2xl rounded-full scale-150 animate-glow-breathe" />
             </div>
-            <div className="w-20 h-20 rounded-2xl bg-gradient-primary flex items-center justify-center animate-float">
+            <div className="w-20 h-20 rounded-2xl bg-gradient-primary flex items-center justify-center animate-float-rotate">
               <Sparkles className="w-10 h-10 text-primary-foreground" />
             </div>
           </div>
@@ -663,13 +678,13 @@ const Index = () => {
           <p className="text-xl text-muted-foreground mb-10 max-w-xl mx-auto">
             Únete a miles de creadores que ya están monetizando su conocimiento con Skoolify
           </p>
-          <div className="relative inline-block group">
+          <div className="relative inline-block group hover-lift">
             <div className="absolute inset-0 -z-10">
-              <div className="absolute inset-0 bg-primary/50 blur-2xl rounded-xl group-hover:bg-primary/70 transition-colors" />
+              <div className="absolute inset-0 bg-primary/50 blur-2xl rounded-xl group-hover:bg-primary/70 transition-colors animate-pulse-glow" />
             </div>
             <Button size="lg" className="relative h-14 px-10 text-lg bg-gradient-primary hover:opacity-90 transition-opacity" onClick={() => navigate("/auth")}>
               Empezar Gratis
-              <ArrowRight className="ml-2 h-5 w-5" />
+              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Button>
           </div>
           <p className="text-sm text-muted-foreground mt-6">
