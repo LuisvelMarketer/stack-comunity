@@ -445,7 +445,7 @@ const Index = () => {
               <Zap className="w-3 h-3 mr-1" />
               Características
             </Badge>
-            <h2 className="text-4xl font-bold mb-6 text-muted-foreground md:text-6xl">
+            <h2 className="text-4xl font-bold mb-6 text-foreground md:text-6xl">
               Todo lo que necesitas,<br />
               <span className="text-gradient">nada que te sobre</span>
             </h2>
@@ -463,7 +463,7 @@ const Index = () => {
                 <div className="w-14 h-14 rounded-xl bg-gradient-primary flex items-center justify-center mb-5 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
                   <feature.icon className="h-7 w-7 text-primary-foreground" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3 text-muted-foreground group-hover:text-primary transition-colors">
+                <h3 className="text-xl font-semibold mb-3 text-foreground group-hover:text-primary transition-colors">
                   {feature.title}
                 </h3>
                 <p className="text-muted-foreground leading-relaxed">
@@ -482,7 +482,7 @@ const Index = () => {
                 <Globe className="w-3 h-3 mr-1" />
                 Comunidades
               </Badge>
-              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-muted-foreground">
+              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-foreground">
                 Únete a comunidades<br />
                 <span className="text-gradient">que te inspiran</span>
               </h2>
@@ -507,7 +507,7 @@ const Index = () => {
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-lg truncate group-hover:text-primary transition-colors">
+                        <h3 className="font-bold text-lg truncate text-foreground group-hover:text-primary transition-colors">
                           {community.name}
                         </h3>
                         <p className="text-sm text-muted-foreground flex items-center gap-1">
@@ -557,7 +557,7 @@ const Index = () => {
               <TrendingUp className="w-3 h-3 mr-1" />
               Precios
             </Badge>
-            <h2 className="text-4xl font-bold mb-6 md:text-6xl">
+            <h2 className="text-4xl font-bold mb-6 md:text-6xl text-foreground">
               Empieza gratis,<br />
               <span className="text-gradient">crece sin límites</span>
             </h2>
@@ -641,7 +641,7 @@ const Index = () => {
                         <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
                           <Check className="h-3 w-3 text-primary" />
                         </div>
-                        <span>{item}</span>
+                        <span className="text-foreground">{item}</span>
                       </li>)}
                   </ul>
 
@@ -671,7 +671,7 @@ const Index = () => {
               <Sparkles className="w-10 h-10 text-primary-foreground" />
             </div>
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-muted-foreground lg:text-5xl">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-foreground lg:text-5xl">
             ¿Listo para construir<br />
             <span className="text-gradient">tu comunidad?</span>
           </h2>
