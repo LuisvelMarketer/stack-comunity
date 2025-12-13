@@ -182,55 +182,56 @@ export default function CodigoQuantumLanding() {
       <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled ? 'bg-[#0a0a0f]/90 backdrop-blur-lg border-b border-[#d4af37]/20' : ''
       }`}>
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between">
           <button 
             onClick={() => navigate("/")}
-            className="flex items-center gap-3"
+            className="flex items-center gap-2 sm:gap-3"
           >
-            <img src={codigoQuantumLogo} alt="Código Quantum" className="h-10 w-auto" />
-            <span className="text-xl font-bold bg-gradient-to-r from-[#d4af37] to-[#f4e5b2] bg-clip-text text-transparent">
+            <img src={codigoQuantumLogo} alt="Código Quantum" className="h-8 sm:h-10 w-auto" />
+            <span className="text-base sm:text-xl font-bold bg-gradient-to-r from-[#d4af37] to-[#f4e5b2] bg-clip-text text-transparent hidden xs:inline">
               Código Quantum
             </span>
           </button>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <Button 
               variant="ghost" 
-              className="text-white/80 hover:text-white hover:bg-white/5"
+              className="text-white/80 hover:text-white hover:bg-white/5 text-sm sm:text-base px-2 sm:px-4 hidden sm:flex"
               onClick={() => navigate("/auth")}
             >
               Iniciar Sesión
             </Button>
             <Button 
               onClick={handleScheduleCall}
-              className="bg-gradient-to-r from-[#d4af37] to-[#c9a227] hover:from-[#c9a227] hover:to-[#b8922a] text-black font-semibold"
+              className="bg-gradient-to-r from-[#d4af37] to-[#c9a227] hover:from-[#c9a227] hover:to-[#b8922a] text-black font-semibold text-xs sm:text-sm px-3 sm:px-4"
             >
-              <Phone className="w-4 h-4 mr-2" />
-              Agendar Llamada
+              <Phone className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Agendar Llamada</span>
+              <span className="sm:hidden">Agendar</span>
             </Button>
           </div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center pt-20 z-10">
-        <div className="container mx-auto px-4 py-20 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+      <section className="relative min-h-screen flex items-center pt-16 sm:pt-20 z-10">
+        <div className="container mx-auto px-4 py-12 sm:py-20 relative z-10">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             <motion.div 
-              className="space-y-8"
+              className="space-y-5 sm:space-y-8 text-center lg:text-left"
               initial="initial"
               animate="animate"
               variants={staggerContainer}
             >
-              <motion.div variants={fadeInUp}>
-                <Badge className="bg-[#d4af37]/10 text-[#d4af37] border-[#d4af37]/30 px-4 py-2 text-sm mb-6">
-                  <Sparkles className="w-4 h-4 mr-2" />
+              <motion.div variants={fadeInUp} className="flex justify-center lg:justify-start">
+                <Badge className="bg-[#d4af37]/10 text-[#d4af37] border-[#d4af37]/30 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm mb-4 sm:mb-6">
+                  <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
                   Programa de Aceleración Exclusivo
                 </Badge>
               </motion.div>
 
               <motion.h1 
                 variants={fadeInUp}
-                className="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight"
+                className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight"
               >
                 El{" "}
                 <span className="bg-gradient-to-r from-[#d4af37] via-[#f4e5b2] to-[#d4af37] bg-clip-text text-transparent">
@@ -242,56 +243,56 @@ export default function CodigoQuantumLanding() {
 
               <motion.p 
                 variants={fadeInUp}
-                className="text-xl text-white/60 max-w-xl"
+                className="text-base sm:text-xl text-white/60 max-w-xl mx-auto lg:mx-0"
               >
                 Accede al programa de aceleración más exclusivo para desarrolladores. 
                 Tecnología avanzada, mentoría personalizada y conexiones que transformarán tu carrera.
               </motion.p>
 
-              <motion.div variants={fadeInUp} className="flex flex-wrap gap-4">
+              <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 justify-center lg:justify-start">
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <Button 
                     size="lg"
                     onClick={handleScheduleCall}
-                    className="bg-gradient-to-r from-[#d4af37] to-[#c9a227] hover:from-[#c9a227] hover:to-[#b8922a] text-black font-bold text-lg px-8 py-6 rounded-xl shadow-[0_0_40px_rgba(212,175,55,0.3)]"
+                    className="w-full sm:w-auto bg-gradient-to-r from-[#d4af37] to-[#c9a227] hover:from-[#c9a227] hover:to-[#b8922a] text-black font-bold text-sm sm:text-lg px-6 sm:px-8 py-5 sm:py-6 rounded-xl shadow-[0_0_40px_rgba(212,175,55,0.3)]"
                   >
                     Agendar Llamada de Admisión
-                    <ArrowRight className="ml-2 h-5 w-5" />
+                    <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
                   </Button>
                 </motion.div>
                 <Button 
                   size="lg" 
                   variant="outline"
-                  className="border-[#d4af37]/30 text-[#d4af37] hover:bg-[#d4af37]/10 px-8 py-6 rounded-xl"
+                  className="w-full sm:w-auto border-[#d4af37]/30 text-[#d4af37] hover:bg-[#d4af37]/10 px-6 sm:px-8 py-5 sm:py-6 rounded-xl"
                 >
-                  <Play className="mr-2 h-5 w-5" />
+                  <Play className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                   Ver Presentación
                 </Button>
               </motion.div>
 
               <motion.div 
                 variants={fadeInUp}
-                className="flex items-center gap-6 pt-4"
+                className="flex items-center gap-4 sm:gap-6 pt-4 justify-center lg:justify-start"
               >
-                <div className="flex -space-x-3">
+                <div className="flex -space-x-2 sm:-space-x-3">
                   {[1,2,3,4,5].map((i) => (
                     <div 
                       key={i}
-                      className="w-10 h-10 rounded-full border-2 border-[#0a0a0f] bg-gradient-to-br from-[#d4af37]/40 to-[#d4af37]/20 flex items-center justify-center"
+                      className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-[#0a0a0f] bg-gradient-to-br from-[#d4af37]/40 to-[#d4af37]/20 flex items-center justify-center"
                     >
-                      <span className="text-xs font-bold text-[#d4af37]">{i}</span>
+                      <span className="text-[10px] sm:text-xs font-bold text-[#d4af37]">{i}</span>
                     </div>
                   ))}
                 </div>
                 <div>
-                  <p className="text-sm text-white/60">
+                  <p className="text-xs sm:text-sm text-white/60">
                     <span className="text-[#d4af37] font-semibold">+500</span> desarrolladores transformados
                   </p>
                   <div className="flex items-center gap-1">
                     {[1,2,3,4,5].map((i) => (
-                      <Star key={i} className="w-4 h-4 fill-[#d4af37] text-[#d4af37]" />
+                      <Star key={i} className="w-3 h-3 sm:w-4 sm:h-4 fill-[#d4af37] text-[#d4af37]" />
                     ))}
-                    <span className="text-sm text-white/60 ml-2">4.9/5</span>
+                    <span className="text-xs sm:text-sm text-white/60 ml-2">4.9/5</span>
                   </div>
                 </div>
               </motion.div>
@@ -299,13 +300,13 @@ export default function CodigoQuantumLanding() {
 
             {/* Hero Image */}
             <motion.div 
-              className="relative"
+              className="relative mt-8 lg:mt-0"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.2 }}
             >
               <motion.div 
-                className="relative rounded-2xl overflow-hidden border border-[#d4af37]/30"
+                className="relative rounded-xl sm:rounded-2xl overflow-hidden border border-[#d4af37]/30"
                 animate={glowPulse}
               >
                 <img 
@@ -318,33 +319,33 @@ export default function CodigoQuantumLanding() {
               
               {/* Floating badges */}
               <motion.div 
-                className="absolute -top-4 -right-4 bg-[#0a0a0f] border border-[#d4af37]/30 rounded-xl p-4 shadow-xl"
+                className="absolute -top-2 -right-2 sm:-top-4 sm:-right-4 bg-[#0a0a0f] border border-[#d4af37]/30 rounded-lg sm:rounded-xl p-2 sm:p-4 shadow-xl"
                 animate={{ y: [0, -10, 0] }}
                 transition={{ duration: 3, repeat: Infinity }}
               >
-                <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 rounded-full bg-[#d4af37]/20 flex items-center justify-center">
-                    <Rocket className="w-5 h-5 text-[#d4af37]" />
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-[#d4af37]/20 flex items-center justify-center">
+                    <Rocket className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-[#d4af37]" />
                   </div>
                   <div>
-                    <p className="text-xs text-white/60">Aceleración</p>
-                    <p className="text-lg font-bold text-[#d4af37]">10x</p>
+                    <p className="text-[10px] sm:text-xs text-white/60">Aceleración</p>
+                    <p className="text-sm sm:text-lg font-bold text-[#d4af37]">10x</p>
                   </div>
                 </div>
               </motion.div>
 
               <motion.div 
-                className="absolute -bottom-4 -left-4 bg-[#0a0a0f] border border-[#d4af37]/30 rounded-xl p-4 shadow-xl"
+                className="absolute -bottom-2 -left-2 sm:-bottom-4 sm:-left-4 bg-[#0a0a0f] border border-[#d4af37]/30 rounded-lg sm:rounded-xl p-2 sm:p-4 shadow-xl"
                 animate={{ y: [0, 10, 0] }}
                 transition={{ duration: 3, repeat: Infinity, delay: 1.5 }}
               >
-                <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 rounded-full bg-[#d4af37]/20 flex items-center justify-center">
-                    <TrendingUp className="w-5 h-5 text-[#d4af37]" />
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-[#d4af37]/20 flex items-center justify-center">
+                    <TrendingUp className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-[#d4af37]" />
                   </div>
                   <div>
-                    <p className="text-xs text-white/60">Salario promedio</p>
-                    <p className="text-lg font-bold text-[#d4af37]">+200%</p>
+                    <p className="text-[10px] sm:text-xs text-white/60">Salario promedio</p>
+                    <p className="text-sm sm:text-lg font-bold text-[#d4af37]">+200%</p>
                   </div>
                 </div>
               </motion.div>
@@ -354,9 +355,9 @@ export default function CodigoQuantumLanding() {
       </section>
 
       {/* Stats Section */}
-      <section className="relative py-20 border-y border-[#d4af37]/10">
+      <section className="relative py-12 sm:py-20 border-y border-[#d4af37]/10">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8">
             {stats.map((stat, index) => (
               <motion.div 
                 key={index}
@@ -366,10 +367,10 @@ export default function CodigoQuantumLanding() {
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
               >
-                <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-[#d4af37] to-[#f4e5b2] bg-clip-text text-transparent mb-2">
+                <div className="text-2xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-[#d4af37] to-[#f4e5b2] bg-clip-text text-transparent mb-1 sm:mb-2">
                   {stat.value}
                 </div>
-                <p className="text-white/60">{stat.label}</p>
+                <p className="text-white/60 text-xs sm:text-base">{stat.label}</p>
               </motion.div>
             ))}
           </div>
@@ -377,29 +378,29 @@ export default function CodigoQuantumLanding() {
       </section>
 
       {/* Features Section */}
-      <section className="relative py-24">
+      <section className="relative py-16 sm:py-24">
         <div className="container mx-auto px-4">
           <motion.div 
-            className="text-center mb-16"
+            className="text-center mb-10 sm:mb-16"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <Badge className="bg-[#d4af37]/10 text-[#d4af37] border-[#d4af37]/30 mb-4">
+            <Badge className="bg-[#d4af37]/10 text-[#d4af37] border-[#d4af37]/30 mb-3 sm:mb-4 text-xs sm:text-sm">
               ¿Qué incluye?
             </Badge>
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
+            <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 px-2">
               Todo lo que necesitas para{" "}
               <span className="bg-gradient-to-r from-[#d4af37] to-[#f4e5b2] bg-clip-text text-transparent">
                 acelerar
               </span>
             </h2>
-            <p className="text-xl text-white/60 max-w-2xl mx-auto">
+            <p className="text-base sm:text-xl text-white/60 max-w-2xl mx-auto px-2">
               Un programa diseñado para llevarte al siguiente nivel en tiempo récord
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {features.map((feature, index) => (
               <motion.div
                 key={index}
@@ -409,12 +410,12 @@ export default function CodigoQuantumLanding() {
                 transition={{ delay: index * 0.1 }}
               >
                 <Card className="bg-[#0a0a0f] border-[#d4af37]/20 hover:border-[#d4af37]/50 transition-all duration-300 h-full group">
-                  <CardContent className="p-6">
-                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#d4af37]/20 to-[#d4af37]/5 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                      <feature.icon className="w-7 h-7 text-[#d4af37]" />
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl bg-gradient-to-br from-[#d4af37]/20 to-[#d4af37]/5 flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform">
+                      <feature.icon className="w-5 h-5 sm:w-7 sm:h-7 text-[#d4af37]" />
                     </div>
-                    <h3 className="text-xl font-bold mb-2 text-white">{feature.title}</h3>
-                    <p className="text-white/60">{feature.description}</p>
+                    <h3 className="text-lg sm:text-xl font-bold mb-1.5 sm:mb-2 text-white">{feature.title}</h3>
+                    <p className="text-white/60 text-sm sm:text-base">{feature.description}</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -424,18 +425,18 @@ export default function CodigoQuantumLanding() {
       </section>
 
       {/* Testimonials Section */}
-      <section className="relative py-24 bg-gradient-to-b from-transparent via-[#d4af37]/5 to-transparent">
+      <section className="relative py-16 sm:py-24 bg-gradient-to-b from-transparent via-[#d4af37]/5 to-transparent">
         <div className="container mx-auto px-4">
           <motion.div 
-            className="text-center mb-16"
+            className="text-center mb-10 sm:mb-16"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <Badge className="bg-[#d4af37]/10 text-[#d4af37] border-[#d4af37]/30 mb-4">
+            <Badge className="bg-[#d4af37]/10 text-[#d4af37] border-[#d4af37]/30 mb-3 sm:mb-4 text-xs sm:text-sm">
               Historias de éxito
             </Badge>
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
+            <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 px-2">
               Ellos ya dieron el{" "}
               <span className="bg-gradient-to-r from-[#d4af37] to-[#f4e5b2] bg-clip-text text-transparent">
                 salto cuántico
@@ -443,7 +444,7 @@ export default function CodigoQuantumLanding() {
             </h2>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-8">
             {testimonials.map((testimonial, index) => (
               <motion.div
                 key={index}
@@ -453,24 +454,24 @@ export default function CodigoQuantumLanding() {
                 transition={{ delay: index * 0.15 }}
               >
                 <Card className="bg-[#0a0a0f] border-[#d4af37]/20 h-full">
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-4 mb-4">
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
                       <img 
                         src={testimonial.image} 
                         alt={testimonial.name}
-                        className="w-14 h-14 rounded-full border-2 border-[#d4af37]/30"
+                        className="w-10 h-10 sm:w-14 sm:h-14 rounded-full border-2 border-[#d4af37]/30"
                       />
                       <div>
-                        <h4 className="font-bold text-white">{testimonial.name}</h4>
-                        <p className="text-sm text-[#d4af37]">{testimonial.role}</p>
+                        <h4 className="font-bold text-white text-sm sm:text-base">{testimonial.name}</h4>
+                        <p className="text-xs sm:text-sm text-[#d4af37]">{testimonial.role}</p>
                       </div>
                     </div>
-                    <div className="flex mb-4">
+                    <div className="flex mb-3 sm:mb-4">
                       {[1,2,3,4,5].map((i) => (
-                        <Star key={i} className="w-4 h-4 fill-[#d4af37] text-[#d4af37]" />
+                        <Star key={i} className="w-3 h-3 sm:w-4 sm:h-4 fill-[#d4af37] text-[#d4af37]" />
                       ))}
                     </div>
-                    <p className="text-white/70 italic">"{testimonial.content}"</p>
+                    <p className="text-white/70 italic text-sm sm:text-base">"{testimonial.content}"</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -480,37 +481,38 @@ export default function CodigoQuantumLanding() {
       </section>
 
       {/* Benefits Section */}
-      <section className="relative py-24">
+      <section className="relative py-16 sm:py-24">
         <div className="container mx-auto px-4">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             <motion.div
               initial={{ opacity: 0, x: -40 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
+              className="text-center lg:text-left"
             >
-              <Badge className="bg-[#d4af37]/10 text-[#d4af37] border-[#d4af37]/30 mb-4">
+              <Badge className="bg-[#d4af37]/10 text-[#d4af37] border-[#d4af37]/30 mb-3 sm:mb-4 text-xs sm:text-sm">
                 Acceso completo
               </Badge>
-              <h2 className="text-4xl md:text-5xl font-bold mb-6">
+              <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">
                 Todo incluido en tu{" "}
                 <span className="bg-gradient-to-r from-[#d4af37] to-[#f4e5b2] bg-clip-text text-transparent">
                   membresía
                 </span>
               </h2>
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {benefits.map((benefit, index) => (
                   <motion.div 
                     key={index}
-                    className="flex items-center gap-3"
+                    className="flex items-center gap-2 sm:gap-3 justify-center lg:justify-start"
                     initial={{ opacity: 0, x: -20 }}
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: index * 0.05 }}
                   >
-                    <div className="w-6 h-6 rounded-full bg-[#d4af37]/20 flex items-center justify-center flex-shrink-0">
-                      <Check className="w-4 h-4 text-[#d4af37]" />
+                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[#d4af37]/20 flex items-center justify-center flex-shrink-0">
+                      <Check className="w-3 h-3 sm:w-4 sm:h-4 text-[#d4af37]" />
                     </div>
-                    <span className="text-white/80">{benefit}</span>
+                    <span className="text-white/80 text-sm sm:text-base">{benefit}</span>
                   </motion.div>
                 ))}
               </div>
@@ -522,29 +524,29 @@ export default function CodigoQuantumLanding() {
               viewport={{ once: true }}
             >
               <Card className="bg-gradient-to-br from-[#d4af37]/10 to-[#0a0a0f] border-[#d4af37]/30 overflow-hidden">
-                <CardContent className="p-8 text-center">
-                  <div className="mb-6">
-                    <Sparkles className="w-16 h-16 text-[#d4af37] mx-auto mb-4" />
-                    <h3 className="text-2xl font-bold mb-2">Programa Exclusivo</h3>
-                    <p className="text-white/60">Plazas limitadas - Proceso de admisión</p>
+                <CardContent className="p-5 sm:p-8 text-center">
+                  <div className="mb-4 sm:mb-6">
+                    <Sparkles className="w-12 h-12 sm:w-16 sm:h-16 text-[#d4af37] mx-auto mb-3 sm:mb-4" />
+                    <h3 className="text-xl sm:text-2xl font-bold mb-1.5 sm:mb-2">Programa Exclusivo</h3>
+                    <p className="text-white/60 text-sm sm:text-base">Plazas limitadas - Proceso de admisión</p>
                   </div>
                   
-                  <div className="py-8 border-y border-[#d4af37]/20 my-6">
-                    <p className="text-white/60 mb-2">Inversión personalizada según tu perfil</p>
-                    <p className="text-4xl font-bold text-[#d4af37]">Agenda tu llamada</p>
-                    <p className="text-white/60 text-sm mt-2">para conocer las opciones disponibles</p>
+                  <div className="py-5 sm:py-8 border-y border-[#d4af37]/20 my-4 sm:my-6">
+                    <p className="text-white/60 mb-1.5 sm:mb-2 text-sm sm:text-base">Inversión personalizada según tu perfil</p>
+                    <p className="text-2xl sm:text-4xl font-bold text-[#d4af37]">Agenda tu llamada</p>
+                    <p className="text-white/60 text-xs sm:text-sm mt-1.5 sm:mt-2">para conocer las opciones disponibles</p>
                   </div>
 
                   <Button 
                     size="lg"
                     onClick={handleScheduleCall}
-                    className="w-full bg-gradient-to-r from-[#d4af37] to-[#c9a227] hover:from-[#c9a227] hover:to-[#b8922a] text-black font-bold text-lg py-6 rounded-xl shadow-[0_0_40px_rgba(212,175,55,0.3)]"
+                    className="w-full bg-gradient-to-r from-[#d4af37] to-[#c9a227] hover:from-[#c9a227] hover:to-[#b8922a] text-black font-bold text-sm sm:text-lg py-5 sm:py-6 rounded-xl shadow-[0_0_40px_rgba(212,175,55,0.3)]"
                   >
-                    <Phone className="mr-2 h-5 w-5" />
+                    <Phone className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                     Agendar Llamada de Admisión
                   </Button>
 
-                  <p className="text-xs text-white/40 mt-4">
+                  <p className="text-[10px] sm:text-xs text-white/40 mt-3 sm:mt-4">
                     Sin compromiso • Llamada informativa de 30 min
                   </p>
                 </CardContent>
@@ -555,10 +557,10 @@ export default function CodigoQuantumLanding() {
       </section>
 
       {/* Final CTA */}
-      <section className="relative py-24">
+      <section className="relative py-16 sm:py-24">
         <div className="container mx-auto px-4">
           <motion.div 
-            className="relative rounded-3xl overflow-hidden"
+            className="relative rounded-2xl sm:rounded-3xl overflow-hidden"
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -566,13 +568,13 @@ export default function CodigoQuantumLanding() {
             <div className="absolute inset-0 bg-gradient-to-r from-[#d4af37]/20 to-[#d4af37]/5" />
             <div className="absolute inset-0 bg-[url('/noise.png')] opacity-5" />
             
-            <div className="relative p-12 md:p-20 text-center">
-              <Badge className="bg-white/10 text-white border-white/20 mb-6">
-                <Clock className="w-4 h-4 mr-2" />
+            <div className="relative p-6 sm:p-12 md:p-20 text-center">
+              <Badge className="bg-white/10 text-white border-white/20 mb-4 sm:mb-6 text-xs sm:text-sm">
+                <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
                 Plazas limitadas
               </Badge>
               
-              <h2 className="text-4xl md:text-6xl font-bold mb-6">
+              <h2 className="text-2xl sm:text-4xl md:text-6xl font-bold mb-4 sm:mb-6 px-2">
                 ¿Listo para dar el{" "}
                 <span className="bg-gradient-to-r from-[#d4af37] to-[#f4e5b2] bg-clip-text text-transparent">
                   salto cuántico
@@ -580,7 +582,7 @@ export default function CodigoQuantumLanding() {
                 ?
               </h2>
               
-              <p className="text-xl text-white/60 max-w-2xl mx-auto mb-8">
+              <p className="text-base sm:text-xl text-white/60 max-w-2xl mx-auto mb-6 sm:mb-8 px-2">
                 Agenda una llamada con nuestro equipo de admisiones y descubre si el programa es para ti.
               </p>
 
@@ -588,10 +590,10 @@ export default function CodigoQuantumLanding() {
                 <Button 
                   size="lg"
                   onClick={handleScheduleCall}
-                  className="bg-gradient-to-r from-[#d4af37] to-[#c9a227] hover:from-[#c9a227] hover:to-[#b8922a] text-black font-bold text-xl px-12 py-8 rounded-xl shadow-[0_0_60px_rgba(212,175,55,0.4)]"
+                  className="bg-gradient-to-r from-[#d4af37] to-[#c9a227] hover:from-[#c9a227] hover:to-[#b8922a] text-black font-bold text-base sm:text-xl px-8 sm:px-12 py-5 sm:py-8 rounded-xl shadow-[0_0_60px_rgba(212,175,55,0.4)]"
                 >
                   Agendar Mi Llamada
-                  <ChevronRight className="ml-2 h-6 w-6" />
+                  <ChevronRight className="ml-2 h-5 w-5 sm:h-6 sm:w-6" />
                 </Button>
               </motion.div>
             </div>
@@ -600,25 +602,25 @@ export default function CodigoQuantumLanding() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-[#d4af37]/10 py-8">
+      <footer className="border-t border-[#d4af37]/10 py-6 sm:py-8">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <img src={codigoQuantumLogo} alt="Código Quantum" className="h-8 w-auto" />
-              <span className="text-[#d4af37] font-bold">Código Quantum</span>
+          <div className="flex flex-col items-center gap-4 sm:gap-6 md:flex-row md:justify-between">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <img src={codigoQuantumLogo} alt="Código Quantum" className="h-6 sm:h-8 w-auto" />
+              <span className="text-[#d4af37] font-bold text-sm sm:text-base">Código Quantum</span>
             </div>
-            <p className="text-white/40 text-sm">
+            <p className="text-white/40 text-xs sm:text-sm text-center">
               © 2024 Código Quantum. Todos los derechos reservados.
             </p>
-            <div className="flex items-center gap-6">
-              <button className="text-white/40 hover:text-[#d4af37] text-sm transition-colors">
+            <div className="flex items-center gap-4 sm:gap-6">
+              <button className="text-white/40 hover:text-[#d4af37] text-xs sm:text-sm transition-colors">
                 Términos
               </button>
-              <button className="text-white/40 hover:text-[#d4af37] text-sm transition-colors">
+              <button className="text-white/40 hover:text-[#d4af37] text-xs sm:text-sm transition-colors">
                 Privacidad
               </button>
               <button 
-                className="text-white/40 hover:text-[#d4af37] text-sm transition-colors"
+                className="text-white/40 hover:text-[#d4af37] text-xs sm:text-sm transition-colors"
                 onClick={() => navigate("/")}
               >
                 Skoolify
