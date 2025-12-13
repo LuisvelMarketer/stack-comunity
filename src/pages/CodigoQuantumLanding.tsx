@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,6 +12,8 @@ import { motion } from "framer-motion";
 import codigoQuantumLogo from "@/assets/codigo-quantum-logo.png";
 import codigoQuantumBanner from "@/assets/codigo-quantum-banner.png";
 
+// Lazy load quantum background for performance
+const QuantumBackground = lazy(() => import("@/components/quantum/QuantumBackground"));
 const fadeInUp = {
   initial: { opacity: 0, y: 40 },
   animate: { opacity: 1, y: 0 },
@@ -140,20 +142,40 @@ export default function CodigoQuantumLanding() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white overflow-hidden">
-      {/* Animated Background */}
-      <div className="fixed inset-0 pointer-events-none">
+      {/* Quantum Animated Particles Background */}
+      <Suspense fallback={null}>
+        <div className="fixed inset-0 pointer-events-none z-0">
+          <QuantumBackground />
+        </div>
+      </Suspense>
+
+      {/* Animated Background Overlays */}
+      <div className="fixed inset-0 pointer-events-none z-[1]">
         {/* Gold grid pattern */}
         <div 
-          className="absolute inset-0 opacity-[0.03]"
+          className="absolute inset-0 opacity-[0.02]"
           style={{
-            backgroundImage: `linear-gradient(rgba(212, 175, 55, 0.3) 1px, transparent 1px), 
-                             linear-gradient(90deg, rgba(212, 175, 55, 0.3) 1px, transparent 1px)`,
-            backgroundSize: '60px 60px'
+            backgroundImage: `linear-gradient(rgba(212, 175, 55, 0.4) 1px, transparent 1px), 
+                             linear-gradient(90deg, rgba(212, 175, 55, 0.4) 1px, transparent 1px)`,
+            backgroundSize: '80px 80px'
           }}
         />
-        {/* Radial glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-[#d4af37]/10 rounded-full blur-[150px]" />
-        <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-[#d4af37]/5 rounded-full blur-[150px]" />
+        {/* Radial glows */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[1000px] bg-[#d4af37]/10 rounded-full blur-[200px] animate-pulse" />
+        <div className="absolute bottom-0 right-0 w-[700px] h-[700px] bg-[#d4af37]/5 rounded-full blur-[180px]" />
+        <div className="absolute top-1/2 left-0 w-[500px] h-[500px] bg-[#ffd700]/5 rounded-full blur-[150px]" />
+        
+        {/* Quantum energy lines */}
+        <motion.div 
+          className="absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-transparent via-[#d4af37]/20 to-transparent"
+          animate={{ opacity: [0.2, 0.5, 0.2] }}
+          transition={{ duration: 4, repeat: Infinity }}
+        />
+        <motion.div 
+          className="absolute top-0 left-3/4 w-px h-full bg-gradient-to-b from-transparent via-[#d4af37]/20 to-transparent"
+          animate={{ opacity: [0.5, 0.2, 0.5] }}
+          transition={{ duration: 4, repeat: Infinity }}
+        />
       </div>
 
       {/* Header */}
@@ -190,8 +212,8 @@ export default function CodigoQuantumLanding() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center pt-20">
-        <div className="container mx-auto px-4 py-20">
+      <section className="relative min-h-screen flex items-center pt-20 z-10">
+        <div className="container mx-auto px-4 py-20 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div 
               className="space-y-8"
