@@ -397,6 +397,97 @@ export type Database = {
           },
         ]
       }
+      code_snippet_favorites: {
+        Row: {
+          created_at: string
+          id: string
+          snippet_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          snippet_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          snippet_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "code_snippet_favorites_snippet_id_fkey"
+            columns: ["snippet_id"]
+            isOneToOne: false
+            referencedRelation: "code_snippets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      code_snippets: {
+        Row: {
+          category: string | null
+          community_id: string | null
+          content: string
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_public: boolean | null
+          language: string | null
+          tags: string[] | null
+          thumbnail_url: string | null
+          title: string
+          type: string
+          updated_at: string
+          usage_count: number | null
+        }
+        Insert: {
+          category?: string | null
+          community_id?: string | null
+          content: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          language?: string | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title: string
+          type?: string
+          updated_at?: string
+          usage_count?: number | null
+        }
+        Update: {
+          category?: string | null
+          community_id?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          language?: string | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title?: string
+          type?: string
+          updated_at?: string
+          usage_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "code_snippets_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       commissions: {
         Row: {
           affiliate_id: string
