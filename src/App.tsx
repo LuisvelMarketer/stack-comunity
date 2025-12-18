@@ -35,6 +35,8 @@ import Courses from "./pages/Courses";
 import CodigoQuantumLanding from "./pages/CodigoQuantumLanding";
 import MyPortfolio from "./pages/MyPortfolio";
 import PublicPortfolio from "./pages/PublicPortfolio";
+import Library from "./pages/Library";
+import SnippetDetail from "./pages/SnippetDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -256,6 +258,23 @@ const App = () => (
             />
             {/* Public portfolio route - no auth required */}
             <Route path="/portfolio/:slug" element={<PublicPortfolio />} />
+            {/* Library routes */}
+            <Route
+              path="/library"
+              element={
+                <ProtectedRoute>
+                  <Library />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/library/:id"
+              element={
+                <ProtectedRoute>
+                  <SnippetDetail />
+                </ProtectedRoute>
+              }
+            />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
