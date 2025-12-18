@@ -1588,6 +1588,66 @@ export type Database = {
           },
         ]
       }
+      portfolio_settings: {
+        Row: {
+          contact_email: string | null
+          created_at: string
+          featured_projects: string[] | null
+          github_url: string | null
+          headline: string | null
+          id: string
+          is_public: boolean | null
+          linkedin_url: string | null
+          show_achievements: boolean | null
+          show_certificates: boolean | null
+          show_projects: boolean | null
+          slug: string
+          summary: string | null
+          theme: string | null
+          updated_at: string
+          user_id: string
+          website_url: string | null
+        }
+        Insert: {
+          contact_email?: string | null
+          created_at?: string
+          featured_projects?: string[] | null
+          github_url?: string | null
+          headline?: string | null
+          id?: string
+          is_public?: boolean | null
+          linkedin_url?: string | null
+          show_achievements?: boolean | null
+          show_certificates?: boolean | null
+          show_projects?: boolean | null
+          slug: string
+          summary?: string | null
+          theme?: string | null
+          updated_at?: string
+          user_id: string
+          website_url?: string | null
+        }
+        Update: {
+          contact_email?: string | null
+          created_at?: string
+          featured_projects?: string[] | null
+          github_url?: string | null
+          headline?: string | null
+          id?: string
+          is_public?: boolean | null
+          linkedin_url?: string | null
+          show_achievements?: boolean | null
+          show_certificates?: boolean | null
+          show_projects?: boolean | null
+          slug?: string
+          summary?: string | null
+          theme?: string | null
+          updated_at?: string
+          user_id?: string
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       post_comments: {
         Row: {
           content: string
