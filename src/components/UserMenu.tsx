@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { User, LogOut, Settings, LayoutDashboard, Shield, MessageCircle, Gift, Users, CreditCard, Store, Lightbulb } from "lucide-react";
+import { User, LogOut, Settings, LayoutDashboard, Shield, MessageCircle, Gift, Users, CreditCard, Store, Lightbulb, Briefcase } from "lucide-react";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -212,6 +212,14 @@ export const UserMenu = ({ showAdminLink = false }: UserMenuProps) => {
           >
             <User className="mr-2 h-4 w-4" />
             <span>Mi Perfil</span>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem 
+            onClick={() => navigate("/my-portfolio")}
+            className="cursor-pointer"
+          >
+            <Briefcase className="mr-2 h-4 w-4" />
+            <span>Mi Portfolio</span>
           </DropdownMenuItem>
 
           <DropdownMenuItem 
