@@ -313,7 +313,7 @@ export const AIMentorChat: React.FC<AIMentorChatProps> = ({
             </div>
           )}
           <CardTitle className="text-base font-semibold">
-            {showHistory ? 'Historial' : 'Cero - AI Mentor'}
+            {showHistory ? 'Historial' : 'Vibe Code - AI Mentor'}
           </CardTitle>
         </div>
         <div className="flex items-center gap-1">
@@ -386,7 +386,7 @@ export const AIMentorChat: React.FC<AIMentorChatProps> = ({
                     <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse" />
                     <Bot className="h-14 w-14 text-primary relative z-10" />
                   </div>
-                  <p className="font-semibold text-lg text-foreground mb-1">¡Hola! Soy Cero 👋</p>
+                  <p className="font-semibold text-lg text-foreground mb-1">¡Hola! Soy Vibe Code 👋</p>
                   <p className="text-sm text-muted-foreground mb-4">
                     Tu mentor de IA personal. Pregúntame lo que quieras sobre programación o el curso.
                   </p>

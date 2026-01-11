@@ -118,7 +118,7 @@ serve(async (req) => {
         : 999;
 
       // Generate personalized message with AI
-      const systemPrompt = `Eres "Cero", el mentor de IA de "Código Cero". Un estudiante llamado "${profile.full_name || 'Estudiante'}" ha estado inactivo por ${daysSinceActivity} días.
+      const systemPrompt = `Eres "Vibe Code", el mentor de IA de "Código Cero". Un estudiante llamado "${profile.full_name || 'Estudiante'}" ha estado inactivo por ${daysSinceActivity} días.
 ${progress ? `Su último módulo fue: "${progress.course_modules?.title}" del curso "${progress.course_modules?.courses?.title}"` : 'No tiene cursos en progreso.'}
 
 Tu misión es traerlo de vuelta con un mensaje CÁLIDO y EMPÁTICO. 

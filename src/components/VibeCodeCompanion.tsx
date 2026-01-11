@@ -24,7 +24,7 @@ import {
   Star
 } from 'lucide-react';
 
-interface CeroCompanionProps {
+interface VibeCodeCompanionProps {
   courseId?: string;
   moduleId?: string;
 }
@@ -47,7 +47,7 @@ const suggestionIcons: Record<string, any> = {
   explore_feature: Sparkles,
 };
 
-export const CeroCompanion = ({ courseId, moduleId }: CeroCompanionProps) => {
+export const VibeCodeCompanion = ({ courseId, moduleId }: VibeCodeCompanionProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
@@ -221,7 +221,7 @@ export const CeroCompanion = ({ courseId, moduleId }: CeroCompanionProps) => {
                             }}
                           >
                             <MessageCircle className="h-3 w-3 mr-1" />
-                            Hablar con Cero
+                            Hablar con Vibe Code
                           </Button>
                           {(latestSuggestion as any).action_type && (
                             <Button
@@ -247,7 +247,7 @@ export const CeroCompanion = ({ courseId, moduleId }: CeroCompanionProps) => {
                           <EncouragementIcon className="h-4 w-4 text-primary" />
                         </div>
                         <div className="flex-1">
-                          <p className="text-sm font-medium">¡Hola! Soy Cero 👋</p>
+                          <p className="text-sm font-medium">¡Hola! Soy Vibe Code 👋</p>
                           <p className="text-xs text-muted-foreground">{currentEncouragement.text}</p>
                         </div>
                       </div>
@@ -307,7 +307,7 @@ export const CeroCompanion = ({ courseId, moduleId }: CeroCompanionProps) => {
                   <Bot className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-sm">Cero - Tu Mentor</h3>
+                  <h3 className="font-semibold text-sm">Vibe Code - Tu Mentor</h3>
                   <p className="text-[10px] text-muted-foreground">Siempre aquí para ti</p>
                 </div>
               </div>
@@ -430,7 +430,7 @@ export const CeroCompanion = ({ courseId, moduleId }: CeroCompanionProps) => {
                 onClick={handleOpenChat}
               >
                 <MessageCircle className="h-4 w-4" />
-                Hablar con Cero
+                Hablar con Vibe Code
               </Button>
             </div>
           </Card>

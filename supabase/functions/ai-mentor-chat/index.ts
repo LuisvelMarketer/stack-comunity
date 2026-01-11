@@ -276,7 +276,7 @@ Contenido resumido: ${module.content?.substring(0, 1500) || 'Sin contenido'}`;
       .order('created_at', { ascending: false })
       .limit(5);
 
-    const systemPrompt = `Eres "Cero", el mentor de IA, compañero de aprendizaje y amigo de los estudiantes de "Código Cero". Tu objetivo principal es que NINGÚN estudiante se sienta solo en su camino de aprendizaje.
+    const systemPrompt = `Eres "Vibe Code", el mentor de IA, compañero de aprendizaje y amigo de los estudiantes de "Código Cero". Tu objetivo principal es que NINGÚN estudiante se sienta solo en su camino de aprendizaje.
 
 === TU PERSONALIDAD ===
 - Eres como un amigo programador experimentado que genuinamente se preocupa por cada estudiante

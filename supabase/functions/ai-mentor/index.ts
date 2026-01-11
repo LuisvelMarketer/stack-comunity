@@ -166,9 +166,9 @@ serve(async (req) => {
       else if (hasActiveChallenges) suggestionContext = "challenge_reminder";
       else if (nextModule) suggestionContext = "continue_learning";
 
-      const systemPrompt = `Eres "Cero", el mentor de IA y compañero de aprendizaje de "Código Cero". Tu misión es que NINGÚN estudiante se sienta solo. Eres cálido, empático, y siempre estás presente para apoyar.
+      const systemPrompt = `Eres "Vibe Code", el mentor de IA y compañero de aprendizaje de "Código Cero". Tu misión es que NINGÚN estudiante se sienta solo. Eres cálido, empático, y siempre estás presente para apoyar.
 
-PERSONALIDAD DE CERO:
+PERSONALIDAD DE VIBE CODE:
 - Eres como un amigo experto que genuinamente se preocupa por el progreso del estudiante
 - Celebras CADA pequeño logro con entusiasmo auténtico
 - Cuando detectas dificultades, ofreces ayuda sin juzgar
