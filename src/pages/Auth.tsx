@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import skoolifyLogo from "@/assets/skoolify-logo.png";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -12,27 +12,94 @@ import { Gift, ArrowRight, Eye, EyeOff, Users, BookOpen, Trophy } from "lucide-r
 import { z } from "zod";
 import { PasswordStrengthIndicator } from "@/components/PasswordStrengthIndicator";
 import { motion, AnimatePresence } from "framer-motion";
+import { sanitizeText } from "@/lib/validation-schemas";
 
+// Security: Extended list of common passwords
 const COMMON_PASSWORDS = [
   "12345678", "password", "123456789", "12345", "1234567", 
-  "password1", "qwerty", "abc123", "Password1", "password123"
+  "password1", "qwerty", "abc123", "Password1", "password123",
+  "letmein", "welcome", "monkey", "dragon", "master",
+  "login", "admin", "passw0rd", "123123", "111111"
 ];
 
+// Security: Regex patterns for input sanitization
+const DANGEROUS_PATTERNS = [
+  /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+  /javascript:/gi,
+  /on\w+\s*=/gi,
+  /data:/gi,
+  /vbscript:/gi,
+  /expression\s*\(/gi,
+];
+
+// Security: Sanitize input to prevent XSS and injection
+const sanitizeInput = (input: string): string => {
+  let sanitized = input.trim();
+  DANGEROUS_PATTERNS.forEach(pattern => {
+    sanitized = sanitized.replace(pattern, '');
+  });
+  // Remove null bytes and control characters
+  sanitized = sanitized.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+  return sanitized;
+};
+
+// Security: Validate email format strictly
+const isValidEmail = (email: string): boolean => {
+  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+  return emailRegex.test(email) && email.length <= 255 && !email.includes('..') && !email.startsWith('.') && !email.endsWith('.');
+};
+
+// Security: Strict validation schemas with sanitization
 const signUpSchema = z.object({
-  fullName: z.string().trim().min(1, "El nombre es requerido").max(100),
-  email: z.string().email("Email inválido").max(255),
+  fullName: z.string()
+    .transform(val => sanitizeInput(val))
+    .pipe(z.string()
+      .min(1, "El nombre es requerido")
+      .max(100, "Nombre demasiado largo")
+      .regex(/^[a-zA-ZÀ-ÿ\s'-]+$/, "Nombre contiene caracteres no permitidos")
+    ),
+  email: z.string()
+    .transform(val => sanitizeInput(val.toLowerCase()))
+    .pipe(z.string()
+      .email("Email inválido")
+      .max(255, "Email demasiado largo")
+      .refine(isValidEmail, "Formato de email inválido")
+    ),
   password: z.string()
     .min(8, "Mínimo 8 caracteres")
-    .max(128)
+    .max(128, "Contraseña demasiado larga")
     .regex(/[A-Z]/, "Debe contener una mayúscula")
+    .regex(/[a-z]/, "Debe contener una minúscula")
     .regex(/[0-9]/, "Debe contener un número")
-    .refine((p) => !COMMON_PASSWORDS.includes(p.toLowerCase()), "Contraseña muy común"),
+    .regex(/[!@#$%^&*(),.?":{}|<>]/, "Debe contener un carácter especial")
+    .refine((p) => !COMMON_PASSWORDS.includes(p.toLowerCase()), "Contraseña muy común")
+    .refine((p) => !/(.)\1{2,}/.test(p), "No puede contener caracteres repetidos consecutivos"),
 });
 
 const signInSchema = z.object({
-  email: z.string().email("Email inválido"),
-  password: z.string().min(1, "Contraseña requerida"),
+  email: z.string()
+    .transform(val => sanitizeInput(val.toLowerCase()))
+    .pipe(z.string()
+      .email("Email inválido")
+      .max(255)
+    ),
+  password: z.string()
+    .min(1, "Contraseña requerida")
+    .max(128, "Contraseña demasiado larga"),
 });
+
+const forgotPasswordSchema = z.object({
+  email: z.string()
+    .transform(val => sanitizeInput(val.toLowerCase()))
+    .pipe(z.string()
+      .email("Email inválido")
+      .max(255)
+    ),
+});
+
+// Security: Rate limiting for failed attempts
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
 
 const Auth = () => {
   const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
@@ -42,6 +109,8 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockoutUntil, setLockoutUntil] = useState<number | null>(null);
   const [searchParams] = useSearchParams();
   const referralCode = searchParams.get('ref');
   const { signIn, signUp, resetPassword, signInWithGoogle, user } = useAuth();
@@ -51,9 +120,40 @@ const Auth = () => {
   // Determine panel positions based on mode
   const isSignUp = mode === "signup";
 
+  // Security: Check lockout status
+  const isLockedOut = useCallback(() => {
+    if (!lockoutUntil) return false;
+    if (Date.now() >= lockoutUntil) {
+      setLockoutUntil(null);
+      setFailedAttempts(0);
+      return false;
+    }
+    return true;
+  }, [lockoutUntil]);
+
+  // Security: Handle failed login attempt
+  const handleFailedAttempt = useCallback(() => {
+    const newAttempts = failedAttempts + 1;
+    setFailedAttempts(newAttempts);
+    
+    if (newAttempts >= MAX_FAILED_ATTEMPTS) {
+      const lockoutTime = Date.now() + LOCKOUT_DURATION_MS;
+      setLockoutUntil(lockoutTime);
+      toast({
+        title: "Cuenta bloqueada temporalmente",
+        description: "Demasiados intentos fallidos. Intenta de nuevo en 15 minutos.",
+        variant: "destructive",
+      });
+    }
+  }, [failedAttempts, toast]);
+
   useEffect(() => {
     if (referralCode) {
-      localStorage.setItem('referral_code', referralCode.toUpperCase());
+      // Security: Sanitize referral code
+      const sanitizedCode = sanitizeInput(referralCode).toUpperCase().slice(0, 20);
+      if (/^[A-Z0-9]+$/.test(sanitizedCode)) {
+        localStorage.setItem('referral_code', sanitizedCode);
+      }
     }
   }, [referralCode]);
 
@@ -61,8 +161,18 @@ const Auth = () => {
     const storedReferralCode = localStorage.getItem('referral_code');
     if (!storedReferralCode) return;
     try {
+      // Security: Validate UUID format for user_id
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(userId)) {
+        console.error('Invalid user ID format');
+        return;
+      }
+      
       await supabase.functions.invoke('track-referral', {
-        body: { referral_code: storedReferralCode, user_id: userId }
+        body: { 
+          referral_code: sanitizeInput(storedReferralCode), 
+          user_id: userId 
+        }
       });
       localStorage.removeItem('referral_code');
     } catch (error) {
@@ -78,19 +188,37 @@ const Auth = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
+
+    // Security: Check if locked out
+    if (isLockedOut()) {
+      const remainingTime = Math.ceil((lockoutUntil! - Date.now()) / 60000);
+      toast({
+        title: "Cuenta bloqueada",
+        description: `Intenta de nuevo en ${remainingTime} minutos.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       if (mode === "signin") {
         const validated = signInSchema.parse({ email, password });
-        await signIn(validated.email, validated.password);
+        const result = await signIn(validated.email, validated.password);
+        if (!result) {
+          handleFailedAttempt();
+        } else {
+          setFailedAttempts(0);
+        }
       } else if (mode === "signup") {
         const validated = signUpSchema.parse({ fullName, email, password });
         await signUp(validated.email, validated.password, validated.fullName);
         const { data: { user: newUser } } = await supabase.auth.getUser();
         if (newUser) await trackReferral(newUser.id);
       } else if (mode === "forgot") {
-        const result = await resetPassword(email);
+        const validated = forgotPasswordSchema.parse({ email });
+        const result = await resetPassword(validated.email);
         if (result.success) setMode("signin");
       }
     } catch (error) {
@@ -100,6 +228,9 @@ const Auth = () => {
           if (err.path[0]) newErrors[err.path[0].toString()] = err.message;
         });
         setErrors(newErrors);
+      } else {
+        // Security: Don't expose internal error details
+        handleFailedAttempt();
       }
     } finally {
       setIsLoading(false);
