@@ -7,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminRoute } from "@/components/AdminRoute";
 import { PushNotificationPrompt } from "@/components/PushNotificationPrompt";
+import { CeroCompanion } from "@/components/CeroCompanion";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -49,6 +50,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <PushNotificationPrompt />
+          <CeroCompanion />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
