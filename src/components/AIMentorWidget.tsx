@@ -28,6 +28,7 @@ const suggestionIcons: Record<string, any> = {
   milestone: Trophy,
   streak: Flame,
   challenge: Target,
+  explore_feature: Sparkles,
 };
 
 const priorityStyles: Record<string, { bg: string; text: string; border: string }> = {
@@ -41,6 +42,12 @@ const actionLabels: Record<string, string> = {
   view_challenges: 'Ver desafíos',
   view_streak: 'Ver racha',
   explore_courses: 'Explorar cursos',
+  explore_build_public: 'Ver Build in Public',
+  explore_marketplace: 'Ver Marketplace',
+  explore_incubator: 'Ver Incubadora',
+  explore_portfolio: 'Mi Portafolio',
+  explore_library: 'Ver Biblioteca',
+  explore_communities: 'Ver Comunidades',
 };
 
 export const AIMentorWidget = () => {
@@ -75,7 +82,25 @@ export const AIMentorWidget = () => {
         navigate('/profile');
         break;
       case 'explore_courses':
-        navigate('/');
+        navigate('/courses');
+        break;
+      case 'explore_build_public':
+        navigate('/build-in-public');
+        break;
+      case 'explore_marketplace':
+        navigate('/marketplace');
+        break;
+      case 'explore_incubator':
+        navigate('/incubator');
+        break;
+      case 'explore_portfolio':
+        navigate('/my-portfolio');
+        break;
+      case 'explore_library':
+        navigate('/library');
+        break;
+      case 'explore_communities':
+        navigate('/communities');
         break;
       default:
         break;

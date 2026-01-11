@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 
 interface AISuggestion {
   id: string;
-  suggestion_type: 'blocked' | 'encouragement' | 'tip' | 'milestone' | 'streak' | 'challenge';
+  suggestion_type: 'blocked' | 'encouragement' | 'tip' | 'milestone' | 'streak' | 'challenge' | 'explore_feature';
   title: string;
   content: string;
   priority: 'low' | 'medium' | 'high';

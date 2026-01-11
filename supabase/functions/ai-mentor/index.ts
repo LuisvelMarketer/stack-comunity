@@ -166,7 +166,7 @@ serve(async (req) => {
       else if (hasActiveChallenges) suggestionContext = "challenge_reminder";
       else if (nextModule) suggestionContext = "continue_learning";
 
-      const systemPrompt = `Eres un mentor de IA amigable y motivador para "Código Cero", una plataforma de aprendizaje de programación. Tu objetivo es ser PROACTIVO y ayudar a los estudiantes.
+      const systemPrompt = `Eres "Cero", el mentor de IA y guía oficial de "Código Cero". Tu objetivo es ser PROACTIVO y ayudar a los estudiantes tanto con su aprendizaje como con el uso de la plataforma.
 
 Contexto del estudiante "${profile?.full_name || 'Estudiante'}":
 - Nivel: ${profile?.level || 1} | Puntos: ${profile?.points || 0}
@@ -181,19 +181,31 @@ ${streakAtRisk ? '⚠️ ¡Racha en riesgo de perderse!' : ''}
 ${isNearMilestone ? '🎯 ¡A punto de alcanzar un hito!' : ''}
 ${hasActiveChallenges ? `📋 Desafíos pendientes: ${challenges?.map(c => c.title).join(', ')}` : ''}
 
+SECCIONES DE LA PLATAFORMA que puedes recomendar:
+- Dashboard: Resumen de progreso y actividad
+- Comunidades: Unirse a grupos de aprendizaje
+- Cursos: Continuar lecciones y módulos
+- Build in Public: Documentar proyectos públicamente
+- Marketplace: Ofrecer/contratar servicios
+- Incubadora: Postular proyectos para inversión
+- Biblioteca: Snippets y recursos guardados
+- Mi Portafolio: Crear portafolio profesional
+
 Genera UNA sugerencia PROACTIVA y ESPECÍFICA que:
-1. Sea contextual a la situación actual
-2. Tenga una acción clara que el usuario pueda tomar
-3. Sea motivadora pero directa (max 2 oraciones)
-4. Incluya un dato específico del contexto
+1. Sea contextual a la situación actual del estudiante
+2. Pueda ser sobre aprendizaje O sobre explorar features de la app
+3. Si es nuevo (pocos módulos), sugiere explorar la plataforma
+4. Si está inactivo, motívalo con algo específico que pueda hacer
+5. Tenga una acción clara (max 2 oraciones)
+6. Sea motivadora pero directa
 
 Responde SOLO en JSON:
 {
-  "suggestion_type": "blocked" | "streak" | "milestone" | "challenge" | "tip" | "encouragement",
+  "suggestion_type": "blocked" | "streak" | "milestone" | "challenge" | "tip" | "encouragement" | "explore_feature",
   "title": "título corto y llamativo (max 40 chars)",
   "content": "mensaje personalizado con acción clara",
   "priority": "low" | "medium" | "high",
-  "action_type": "continue_course" | "view_challenges" | "view_streak" | "explore_courses" | null,
+  "action_type": "continue_course" | "view_challenges" | "view_streak" | "explore_courses" | "explore_build_public" | "explore_marketplace" | "explore_incubator" | "explore_portfolio" | "explore_library" | "explore_communities" | null,
   "action_data": { "course_id": "...", "module_id": "..." } // opcional
 }`;
 
@@ -209,7 +221,7 @@ Responde SOLO en JSON:
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: "google/gemini-3-flash-preview",
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: "Genera una sugerencia proactiva basada en el contexto actual." }
