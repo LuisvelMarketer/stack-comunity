@@ -1,10 +1,31 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+// CORS Configuration
+const ALLOWED_ORIGINS = [
+  'https://lovable.dev',
+  'https://preview.lovable.app',
+  'https://zdrekqhxzhuttafkwtpa.lovableproject.com',
+];
+
+function getCorsHeaders(origin: string | null): Record<string, string> {
+  const isDevelopment = origin?.includes('localhost') || origin?.includes('127.0.0.1');
+  let allowedOrigin = ALLOWED_ORIGINS[0];
+  
+  if (origin && (ALLOWED_ORIGINS.includes(origin) || isDevelopment)) {
+    allowedOrigin = origin;
+  }
+  
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Max-Age': '86400',
+  };
+}
+
+// Rate limit configuration
+const RATE_LIMIT = { requests: 30, windowMs: 60000 }; // 30 req/min
 
 // Helper function to verify user authentication
 async function verifyAuth(req: Request) {
@@ -28,7 +49,52 @@ async function verifyAuth(req: Request) {
   return { user, error: null };
 }
 
+// Check rate limit
+async function checkRateLimit(userId: string, supabaseAdmin: any): Promise<{ allowed: boolean; remaining: number }> {
+  const now = new Date();
+  const windowStart = new Date(now.getTime() - RATE_LIMIT.windowMs);
+
+  try {
+    const { data: existing } = await supabaseAdmin
+      .from('rate_limits')
+      .select('*')
+      .eq('function_name', 'ai-mentor-chat')
+      .eq('user_id', userId)
+      .gte('window_start', windowStart.toISOString())
+      .single();
+
+    if (existing) {
+      if (existing.request_count >= RATE_LIMIT.requests) {
+        return { allowed: false, remaining: 0 };
+      }
+
+      await supabaseAdmin
+        .from('rate_limits')
+        .update({ request_count: existing.request_count + 1 })
+        .eq('id', existing.id);
+
+      return { allowed: true, remaining: RATE_LIMIT.requests - existing.request_count - 1 };
+    }
+
+    await supabaseAdmin
+      .from('rate_limits')
+      .insert({
+        user_id: userId,
+        function_name: 'ai-mentor-chat',
+        request_count: 1,
+        window_start: now.toISOString(),
+      });
+
+    return { allowed: true, remaining: RATE_LIMIT.requests - 1 };
+  } catch {
+    return { allowed: true, remaining: RATE_LIMIT.requests };
+  }
+}
+
 serve(async (req) => {
+  const origin = req.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -41,6 +107,29 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
+
+    // Check rate limit
+    const rateLimitResult = await checkRateLimit(user.id, supabaseAdmin);
+    if (!rateLimitResult.allowed) {
+      console.log("[AI-MENTOR-CHAT] Rate limit exceeded for user:", user.id);
+      return new Response(JSON.stringify({ 
+        error: "Límite de solicitudes excedido. Espera un momento antes de continuar.",
+        retryAfter: 60 
+      }), {
+        status: 429,
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json',
+          'Retry-After': '60'
+        },
       });
     }
 
@@ -63,11 +152,7 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      { auth: { persistSession: false } }
-    );
+    const supabaseClient = supabaseAdmin;
 
     // Get comprehensive student context
     let studentContext = "";

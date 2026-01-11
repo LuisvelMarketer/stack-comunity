@@ -4,10 +4,27 @@ import { Resend } from "https://esm.sh/resend@2.0.0";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+// CORS Configuration
+const ALLOWED_ORIGINS = [
+  'https://lovable.dev',
+  'https://preview.lovable.app',
+  'https://zdrekqhxzhuttafkwtpa.lovableproject.com',
+];
+
+function getCorsHeaders(origin: string | null): Record<string, string> {
+  const isDevelopment = origin?.includes('localhost') || origin?.includes('127.0.0.1');
+  let allowedOrigin = ALLOWED_ORIGINS[0];
+  
+  if (origin && (ALLOWED_ORIGINS.includes(origin) || isDevelopment)) {
+    allowedOrigin = origin;
+  }
+  
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+  };
+}
 
 interface FeedbackEmailRequest {
   project_id: string;
@@ -33,6 +50,9 @@ const verifyAuthorization = (req: Request): boolean => {
 };
 
 serve(async (req: Request) => {
+  const origin = req.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
+
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
