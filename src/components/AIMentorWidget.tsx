@@ -135,7 +135,7 @@ export const AIMentorWidget = () => {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-sm">AI Mentor</h3>
+              <h3 className="font-semibold text-sm">Vibe Code</h3>
               {hasHighPriority && (
                 <Badge variant="destructive" className="text-[10px] px-1.5 py-0 animate-pulse">
                   ¡Atención!

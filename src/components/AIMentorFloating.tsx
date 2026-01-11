@@ -129,7 +129,7 @@ export const AIMentorFloating = ({ courseId, moduleId }: AIMentorFloatingProps) 
               <div className="flex items-center gap-2 mb-1">
                 <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
                   <Bot className="h-3 w-3 mr-1" />
-                  AI Mentor
+                  Vibe Code
                 </Badge>
                 {latestSuggestion.priority === 'high' && (
                   <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
