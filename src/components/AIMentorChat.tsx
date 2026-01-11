@@ -313,7 +313,7 @@ export const AIMentorChat: React.FC<AIMentorChatProps> = ({
             </div>
           )}
           <CardTitle className="text-base font-semibold">
-            {showHistory ? 'Historial' : 'Vibe Code - AI Mentor'}
+            {showHistory ? 'Historial' : 'Vibe Code'}
           </CardTitle>
         </div>
         <div className="flex items-center gap-1">
