@@ -17,7 +17,8 @@ import {
   Bug,
   Lightbulb,
   Trophy,
-  Filter
+  Filter,
+  ArrowLeft
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
@@ -170,6 +171,15 @@ export default function BuildInPublic() {
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-background border-b">
         <div className="container mx-auto px-4 py-12">
+          {/* Back to Dashboard Button */}
+          <div className="mb-6">
+            <Link to="/dashboard">
+              <Button variant="ghost" size="sm" className="gap-2">
+                <ArrowLeft className="h-4 w-4" />
+                Volver al Dashboard
+              </Button>
+            </Link>
+          </div>
           <div className="max-w-3xl mx-auto text-center">
             <div className="flex items-center justify-center gap-2 mb-4">
               <Bug className="h-10 w-10 text-red-500" />
