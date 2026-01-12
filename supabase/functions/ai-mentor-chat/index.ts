@@ -28,26 +28,27 @@ function getCorsHeaders(origin: string | null): Record<string, string> {
 // Rate limit configuration
 const RATE_LIMIT = { requests: 30, windowMs: 60000 }; // 30 req/min
 
-// Helper function to verify user authentication
+// Helper function to verify user authentication using getClaims
 async function verifyAuth(req: Request) {
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader) {
-    return { user: null, error: "No authorization header" };
+  if (!authHeader?.startsWith('Bearer ')) {
+    return { userId: null, error: "No authorization header" };
   }
 
   const supabaseClient = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+    Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+    { global: { headers: { Authorization: authHeader } } }
   );
 
   const token = authHeader.replace("Bearer ", "");
-  const { data: { user }, error } = await supabaseClient.auth.getUser(token);
+  const { data, error } = await supabaseClient.auth.getClaims(token);
 
-  if (error || !user) {
-    return { user: null, error: "Invalid or expired token" };
+  if (error || !data?.claims) {
+    return { userId: null, error: "Invalid or expired token" };
   }
 
-  return { user, error: null };
+  return { userId: data.claims.sub as string, error: null };
 }
 
 // Check rate limit
@@ -102,8 +103,8 @@ serve(async (req) => {
 
   try {
     // Verify authentication
-    const { user, error: authError } = await verifyAuth(req);
-    if (authError || !user) {
+    const { userId, error: authError } = await verifyAuth(req);
+    if (authError || !userId) {
       console.log("[AI-MENTOR-CHAT] Authentication failed:", authError);
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
@@ -118,9 +119,9 @@ serve(async (req) => {
     );
 
     // Check rate limit
-    const rateLimitResult = await checkRateLimit(user.id, supabaseAdmin);
+    const rateLimitResult = await checkRateLimit(userId, supabaseAdmin);
     if (!rateLimitResult.allowed) {
-      console.log("[AI-MENTOR-CHAT] Rate limit exceeded for user:", user.id);
+      console.log("[AI-MENTOR-CHAT] Rate limit exceeded for user:", userId);
       return new Response(JSON.stringify({ 
         error: "Límite de solicitudes excedido. Espera un momento antes de continuar.",
         retryAfter: 60 
@@ -137,7 +138,7 @@ serve(async (req) => {
     const { messages, user_id, course_id, module_id } = await req.json();
     
     // Validate that requested user_id matches authenticated user
-    if (user_id && user_id !== user.id) {
+    if (user_id && user_id !== userId) {
       console.log("[AI-MENTOR-CHAT] User ID mismatch");
       return new Response(JSON.stringify({ error: "Forbidden" }), {
         status: 403,
@@ -145,7 +146,7 @@ serve(async (req) => {
       });
     }
 
-    const effectiveUserId = user_id || user.id;
+    const effectiveUserId = user_id || userId;
     console.log(`[AI-MENTOR-CHAT] User: ${effectiveUserId}, Course: ${course_id}, Module: ${module_id}`);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
