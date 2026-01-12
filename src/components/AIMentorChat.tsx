@@ -40,7 +40,7 @@ export const AIMentorChat: React.FC<AIMentorChatProps> = ({
   isOpen,
   onClose
 }) => {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -182,7 +182,7 @@ export const AIMentorChat: React.FC<AIMentorChatProps> = ({
   }, [messages]);
 
   const sendMessage = async () => {
-    if (!input.trim() || isLoading || !user) return;
+    if (!input.trim() || isLoading || !user || !session?.access_token) return;
 
     const userMessage: Message = { role: 'user', content: input.trim() };
     setMessages(prev => [...prev, userMessage]);
@@ -207,7 +207,7 @@ export const AIMentorChat: React.FC<AIMentorChatProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           messages: [...messages, userMessage].map(m => ({ role: m.role, content: m.content })),
