@@ -1,10 +1,28 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+// CORS Configuration
+const ALLOWED_ORIGINS = [
+  'https://lovable.dev',
+  'https://preview.lovable.app',
+  'https://zdrekqhxzhuttafkwtpa.lovableproject.com',
+  'https://skoolify-comunidad.lovable.app',
+];
+
+function getCorsHeaders(origin: string | null): Record<string, string> {
+  const isDevelopment = origin?.includes('localhost') || origin?.includes('127.0.0.1');
+  let allowedOrigin = ALLOWED_ORIGINS[0];
+  
+  if (origin && (ALLOWED_ORIGINS.includes(origin) || isDevelopment || origin.endsWith('.lovable.app') || origin.endsWith('.lovableproject.com'))) {
+    allowedOrigin = origin;
+  }
+  
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  };
+}
 
 interface UserProgress {
   module_id: string;
@@ -42,6 +60,9 @@ async function verifyAuth(req: Request) {
 }
 
 serve(async (req) => {
+  const origin = req.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }

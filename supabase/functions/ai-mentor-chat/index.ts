@@ -6,13 +6,14 @@ const ALLOWED_ORIGINS = [
   'https://lovable.dev',
   'https://preview.lovable.app',
   'https://zdrekqhxzhuttafkwtpa.lovableproject.com',
+  'https://skoolify-comunidad.lovable.app',
 ];
 
 function getCorsHeaders(origin: string | null): Record<string, string> {
   const isDevelopment = origin?.includes('localhost') || origin?.includes('127.0.0.1');
   let allowedOrigin = ALLOWED_ORIGINS[0];
   
-  if (origin && (ALLOWED_ORIGINS.includes(origin) || isDevelopment)) {
+  if (origin && (ALLOWED_ORIGINS.includes(origin) || isDevelopment || origin.endsWith('.lovable.app') || origin.endsWith('.lovableproject.com'))) {
     allowedOrigin = origin;
   }
   
