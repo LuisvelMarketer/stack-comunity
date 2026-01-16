@@ -53,3 +53,6 @@ verify_jwt = false
 
 [functions.generate-portfolio-pdf]
 verify_jwt = true
+
+[functions.create-enrollment]
+verify_jwt = false
