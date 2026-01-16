@@ -1730,6 +1730,54 @@ export type Database = {
           },
         ]
       }
+      pending_enrollments: {
+        Row: {
+          activated_at: string | null
+          amount_cents: number | null
+          course_type: string
+          created_at: string | null
+          currency: string | null
+          email: string
+          full_name: string | null
+          id: string
+          purchase_date: string | null
+          source: string | null
+          status: string | null
+          stripe_session_id: string | null
+          tier: string | null
+        }
+        Insert: {
+          activated_at?: string | null
+          amount_cents?: number | null
+          course_type?: string
+          created_at?: string | null
+          currency?: string | null
+          email: string
+          full_name?: string | null
+          id?: string
+          purchase_date?: string | null
+          source?: string | null
+          status?: string | null
+          stripe_session_id?: string | null
+          tier?: string | null
+        }
+        Update: {
+          activated_at?: string | null
+          amount_cents?: number | null
+          course_type?: string
+          created_at?: string | null
+          currency?: string | null
+          email?: string
+          full_name?: string | null
+          id?: string
+          purchase_date?: string | null
+          source?: string | null
+          status?: string | null
+          stripe_session_id?: string | null
+          tier?: string | null
+        }
+        Relationships: []
+      }
       portfolio_settings: {
         Row: {
           contact_email: string | null
