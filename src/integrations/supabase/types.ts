@@ -802,35 +802,53 @@ export type Database = {
       }
       course_enrollments: {
         Row: {
+          amount_paid: number | null
           community_id: string
           completed_at: string | null
           course_id: string
+          course_type: string | null
           created_at: string
+          currency: string | null
           enrolled_at: string
           id: string
+          is_active: boolean | null
           status: string
+          stripe_session_id: string | null
+          tier: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          amount_paid?: number | null
           community_id: string
           completed_at?: string | null
           course_id: string
+          course_type?: string | null
           created_at?: string
+          currency?: string | null
           enrolled_at?: string
           id?: string
+          is_active?: boolean | null
           status?: string
+          stripe_session_id?: string | null
+          tier?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          amount_paid?: number | null
           community_id?: string
           completed_at?: string | null
           course_id?: string
+          course_type?: string | null
           created_at?: string
+          currency?: string | null
           enrolled_at?: string
           id?: string
+          is_active?: boolean | null
           status?: string
+          stripe_session_id?: string | null
+          tier?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -1732,8 +1750,9 @@ export type Database = {
       }
       pending_enrollments: {
         Row: {
+          activated: boolean | null
           activated_at: string | null
-          amount_cents: number | null
+          amount_paid: number | null
           course_type: string
           created_at: string | null
           currency: string | null
@@ -1747,8 +1766,9 @@ export type Database = {
           tier: string | null
         }
         Insert: {
+          activated?: boolean | null
           activated_at?: string | null
-          amount_cents?: number | null
+          amount_paid?: number | null
           course_type?: string
           created_at?: string | null
           currency?: string | null
@@ -1762,8 +1782,9 @@ export type Database = {
           tier?: string | null
         }
         Update: {
+          activated?: boolean | null
           activated_at?: string | null
-          amount_cents?: number | null
+          amount_paid?: number | null
           course_type?: string
           created_at?: string | null
           currency?: string | null
@@ -1973,6 +1994,7 @@ export type Database = {
           badges: Json | null
           bio: string | null
           created_at: string
+          email: string | null
           followers_count: number
           following_count: number
           full_name: string | null
@@ -1990,6 +2012,7 @@ export type Database = {
           badges?: Json | null
           bio?: string | null
           created_at?: string
+          email?: string | null
           followers_count?: number
           following_count?: number
           full_name?: string | null
@@ -2007,6 +2030,7 @@ export type Database = {
           badges?: Json | null
           bio?: string | null
           created_at?: string
+          email?: string | null
           followers_count?: number
           following_count?: number
           full_name?: string | null
