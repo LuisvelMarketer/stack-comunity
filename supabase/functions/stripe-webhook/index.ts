@@ -7,6 +7,10 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, stripe-signature",
 };
 
+// Código Cero product and price IDs
+const CODIGO_CERO_PRICE_ID = "price_1SqzUwPj8vjAHltshbt4EmDf";
+const CODIGO_CERO_PRODUCT_ID = "prod_TockytiwhBNeam";
+
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[STRIPE-WEBHOOK] ${step}${detailsStr}`);

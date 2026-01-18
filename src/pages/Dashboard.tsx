@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useCourseEnrollment } from "@/hooks/useCourseEnrollment";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ import { UserStreakCard } from "@/components/gamification/UserStreakCard";
 import { DailyMissionsCard } from "@/components/gamification/DailyMissionsCard";
 import { LevelProgressCard } from "@/components/gamification/LevelProgressCard";
 import { AIMentorChat, AIMentorChatButton } from "@/components/AIMentorChat";
+import { LockedDashboard } from "@/components/LockedDashboard";
 import { Home, Users, GraduationCap, Calendar, Rocket, Briefcase } from "lucide-react";
 import { PushNotificationPrompt } from "@/components/PushNotificationPrompt";
 import { toast } from "sonner";
@@ -25,26 +27,31 @@ import skoolifyLogo from "@/assets/skoolify-logo.png";
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { isEnrolled, loading: enrollmentLoading } = useCourseEnrollment();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Handle subscription return
+  // Handle payment/subscription return
   useEffect(() => {
+    const payment = searchParams.get('payment');
     const subscription = searchParams.get('subscription');
-    if (subscription === 'success') {
-      toast.success('¡Suscripción activada! Ya tienes acceso Premium.');
+    
+    if (payment === 'success' || subscription === 'success') {
+      toast.success('¡Pago completado! Tu acceso será activado en unos momentos.');
       setSearchParams({});
-    } else if (subscription === 'cancelled') {
-      toast.info('Proceso de suscripción cancelado.');
+      // Refresh page after a short delay to check enrollment
+      setTimeout(() => window.location.reload(), 2000);
+    } else if (payment === 'cancelled' || subscription === 'cancelled') {
+      toast.info('Proceso de pago cancelado.');
       setSearchParams({});
     }
   }, [searchParams, setSearchParams]);
 
   useEffect(() => {
     checkAdminRole();
-  }, []);
+  }, [user]);
 
   const checkAdminRole = async () => {
     if (!user) return;
@@ -62,6 +69,30 @@ const Dashboard = () => {
       console.error("Error checking admin role:", error);
     }
   };
+
+  // Show locked dashboard for non-enrolled users
+  if (!enrollmentLoading && !isEnrolled && !isAdmin) {
+    return (
+      <div className="min-h-screen bg-gradient-hero">
+        <nav className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+          <div className="container mx-auto px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <img src={skoolifyLogo} alt="Código Cero" className="w-8 h-8 rounded-lg" />
+                <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                  Código Cero
+                </h1>
+              </div>
+              <div className="flex items-center gap-2">
+                <UserMenu showAdminLink={false} />
+              </div>
+            </div>
+          </div>
+        </nav>
+        <LockedDashboard />
+      </div>
+    );
+  }
 
 
   return (
