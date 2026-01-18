@@ -2,28 +2,15 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
-// Strict CORS - only allow known origins
-const ALLOWED_ORIGINS = [
-  "https://skoolify-comunidad.lovable.app",
-  "https://lovable.app",
-];
-
-const getCorsHeaders = (origin: string | null) => {
-  const allowedOrigin = origin && ALLOWED_ORIGINS.some(o => origin.includes(o)) 
-    ? origin 
-    : ALLOWED_ORIGINS[0];
-  
-  return {
-    "Access-Control-Allow-Origin": allowedOrigin,
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-webhook-secret, x-request-timestamp, x-request-signature",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "X-Content-Type-Options": "nosniff",
-    "X-Frame-Options": "DENY",
-    "Content-Security-Policy": "default-src 'none'",
-  };
+// CORS - allow external webhook sources
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-webhook-secret",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "X-Content-Type-Options": "nosniff",
 };
 
-// Input validation schema with strict sanitization
+// Input validation schema with flexible sanitization for external webhooks
 const enrollmentSchema = z.object({
   email: z.string()
     .email("Invalid email format")
@@ -31,25 +18,39 @@ const enrollmentSchema = z.object({
     .transform(val => val.toLowerCase().trim()),
   full_name: z.string()
     .max(100, "Name too long")
-    .regex(/^[a-zA-ZÀ-ÿ\s'-]+$/, "Invalid characters in name")
     .optional()
-    .transform(val => val?.trim()),
-  course_type: z.enum(["cero", "quantum"]).default("cero"),
-  tier: z.enum(["standard", "premium", "vip"]).default("standard"),
-  amount_paid: z.number().positive().max(100000).optional(),
-  currency: z.enum(["USD", "EUR", "MXN"]).default("USD"),
-  purchase_date: z.string().datetime().optional(),
-  stripe_session_id: z.string()
-    .max(100)
-    .regex(/^cs_[a-zA-Z0-9]+$/, "Invalid Stripe session format")
-    .optional(),
-  source: z.enum(["webhook", "manual", "stripe"]).default("webhook"),
+    .transform(val => val?.trim().replace(/[<>]/g, '')), // Basic XSS prevention
+  course_type: z.string().default("cero").transform(val => {
+    // Normalize course_type values
+    const normalized = val.toLowerCase().trim();
+    if (normalized === "quantum" || normalized === "codigo quantum") return "quantum";
+    return "cero";
+  }),
+  tier: z.string().default("standard").transform(val => {
+    const normalized = val.toLowerCase().trim();
+    if (["premium", "vip"].includes(normalized)) return normalized;
+    return "standard";
+  }),
+  amount_paid: z.union([z.number(), z.string()]).optional().transform(val => {
+    if (val === undefined || val === null || val === "") return undefined;
+    const num = typeof val === "string" ? parseFloat(val) : val;
+    return isNaN(num) ? undefined : Math.round(num);
+  }),
+  amount_cents: z.union([z.number(), z.string()]).optional().transform(val => {
+    if (val === undefined || val === null || val === "") return undefined;
+    const num = typeof val === "string" ? parseFloat(val) : val;
+    return isNaN(num) ? undefined : Math.round(num);
+  }),
+  currency: z.string().default("USD").transform(val => val.toUpperCase()),
+  purchase_date: z.string().optional(),
+  stripe_session_id: z.string().max(200).optional(),
+  source: z.string().default("webhook"),
 });
 
 // Rate limiting using IP-based tracking
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT_WINDOW_MS = 60000; // 1 minute
-const MAX_REQUESTS_PER_WINDOW = 30;
+const MAX_REQUESTS_PER_WINDOW = 60;
 
 const checkRateLimit = (ip: string): boolean => {
   const now = Date.now();
@@ -80,17 +81,6 @@ const secureCompare = (a: string, b: string): boolean => {
   return result === 0;
 };
 
-// Validate request timestamp to prevent replay attacks
-const validateTimestamp = (timestamp: string | null): boolean => {
-  if (!timestamp) return false;
-  
-  const requestTime = parseInt(timestamp, 10);
-  const now = Date.now();
-  const fiveMinutes = 5 * 60 * 1000;
-  
-  return !isNaN(requestTime) && Math.abs(now - requestTime) < fiveMinutes;
-};
-
 const logStep = (step: string, details?: Record<string, unknown>) => {
   // Avoid logging sensitive data
   const safeDetails = details ? {
@@ -101,9 +91,6 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
 };
 
 serve(async (req) => {
-  const origin = req.headers.get("origin");
-  const corsHeaders = getCorsHeaders(origin);
-
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -136,6 +123,8 @@ serve(async (req) => {
   }
 
   try {
+    logStep("Request received", { ip: clientIp, method: req.method });
+
     // 1. Validate webhook secret (constant-time comparison)
     const webhookSecret = req.headers.get("x-webhook-secret");
     const expectedSecret = Deno.env.get("SKOOL_WEBHOOK_SECRET");
@@ -151,28 +140,22 @@ serve(async (req) => {
     if (!webhookSecret || !secureCompare(webhookSecret, expectedSecret)) {
       logStep("Invalid webhook secret", { ip: clientIp });
       // Delay response to prevent timing attacks
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 500));
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // 2. Validate request timestamp (prevent replay attacks)
-    const requestTimestamp = req.headers.get("x-request-timestamp");
-    if (!validateTimestamp(requestTimestamp)) {
-      logStep("Invalid or expired timestamp", { ip: clientIp });
-      return new Response(JSON.stringify({ error: "Request expired" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    logStep("Webhook secret validated");
 
-    // 3. Parse and validate request body with Zod
+    // 2. Parse and validate request body with Zod
     let rawBody: unknown;
     try {
       rawBody = await req.json();
-    } catch {
+      logStep("Body parsed", { keys: Object.keys(rawBody as object) });
+    } catch (e) {
+      logStep("JSON parse error", { error: String(e) });
       return new Response(JSON.stringify({ error: "Invalid JSON" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -191,17 +174,31 @@ serve(async (req) => {
       });
     }
 
-    const { email, full_name, course_type, tier, amount_paid, currency, purchase_date, stripe_session_id, source } = parseResult.data;
+    const { 
+      email, 
+      full_name, 
+      course_type, 
+      tier, 
+      amount_paid, 
+      amount_cents,
+      currency, 
+      purchase_date, 
+      stripe_session_id, 
+      source 
+    } = parseResult.data;
     
-    logStep("Validated enrollment request", { email, course_type, source });
+    // Use amount_paid or amount_cents (for backward compatibility)
+    const finalAmount = amount_paid || amount_cents;
+    
+    logStep("Validated enrollment request", { email, course_type, tier, source });
 
-    // 4. Initialize Supabase with service role
+    // 3. Initialize Supabase with service role
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // 5. Check if user exists in profiles
+    // 4. Check if user exists in profiles by email
     const { data: existingProfile, error: profileError } = await supabase
       .from("profiles")
       .select("id, email")
@@ -213,73 +210,106 @@ serve(async (req) => {
       throw new Error("Database error");
     }
 
-    // 6. Get the default course and community IDs
+    logStep("Profile check complete", { exists: !!existingProfile });
+
+    // 5. Get the first course and community for default enrollment
     const { data: defaultCourse } = await supabase
       .from("courses")
       .select("id, community_id")
+      .eq("is_published", true)
+      .order("order_index", { ascending: true })
       .limit(1)
-      .single();
-
-    const courseId = defaultCourse?.id || "00000000-0000-0000-0000-000000000000";
-    const communityId = defaultCourse?.community_id || "00000000-0000-0000-0000-000000000000";
+      .maybeSingle();
 
     if (existingProfile?.id) {
       // User exists - create enrollment directly
+      const enrollmentData: Record<string, unknown> = {
+        user_id: existingProfile.id,
+        course_type: course_type,
+        tier: tier,
+        is_active: true,
+        status: "active",
+        enrolled_at: new Date().toISOString(),
+      };
+
+      // Add optional fields
+      if (defaultCourse?.id) enrollmentData.course_id = defaultCourse.id;
+      if (defaultCourse?.community_id) enrollmentData.community_id = defaultCourse.community_id;
+      if (finalAmount !== undefined) enrollmentData.amount_paid = finalAmount;
+      if (currency) enrollmentData.currency = currency;
+      if (stripe_session_id) enrollmentData.stripe_session_id = stripe_session_id;
+
+      logStep("Creating enrollment", { user_id: existingProfile.id, course_type });
+
       const { error: enrollmentError } = await supabase
         .from("course_enrollments")
-        .upsert({
-          user_id: existingProfile.id,
-          course_id: courseId,
-          community_id: communityId,
-          course_type: course_type,
-          tier: tier,
-          is_active: true,
-          amount_paid: amount_paid,
-          currency: currency,
-          stripe_session_id: stripe_session_id,
-          enrolled_at: new Date().toISOString(),
-        }, { onConflict: "user_id,course_id" });
+        .upsert(enrollmentData, { 
+          onConflict: "user_id,course_id",
+          ignoreDuplicates: false 
+        });
 
       if (enrollmentError) {
-        logStep("Error creating enrollment", { error: enrollmentError.message });
-        throw new Error("Failed to create enrollment");
+        logStep("Error creating enrollment", { error: enrollmentError.message, code: enrollmentError.code });
+        throw new Error(`Failed to create enrollment: ${enrollmentError.message}`);
       }
 
       logStep("Enrollment created for existing user", { email });
+      
+      return new Response(JSON.stringify({ 
+        success: true, 
+        message: "Enrollment created",
+        user_exists: true 
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     } else {
       // User doesn't exist yet - store in pending_enrollments
+      const pendingData: Record<string, unknown> = {
+        email,
+        course_type: course_type,
+        status: "pending",
+        activated: false,
+      };
+
+      // Add optional fields
+      if (full_name) pendingData.full_name = full_name;
+      if (tier) pendingData.tier = tier;
+      if (finalAmount !== undefined) pendingData.amount_paid = finalAmount;
+      if (currency) pendingData.currency = currency;
+      if (purchase_date) pendingData.purchase_date = purchase_date;
+      if (stripe_session_id) pendingData.stripe_session_id = stripe_session_id;
+      if (source) pendingData.source = source;
+
+      logStep("Creating pending enrollment", { email, course_type });
+
       const { error: pendingError } = await supabase
         .from("pending_enrollments")
-        .upsert({
-          email,
-          full_name,
-          course_type: course_type,
-          tier: tier,
-          amount_paid: amount_paid,
-          currency,
-          purchase_date: purchase_date || new Date().toISOString(),
-          stripe_session_id,
-          source: source,
-          status: "pending",
-          activated: false,
-        }, { onConflict: "email,course_type" });
+        .upsert(pendingData, { 
+          onConflict: "email,course_type",
+          ignoreDuplicates: false 
+        });
 
       if (pendingError) {
-        logStep("Error creating pending enrollment", { error: pendingError.message });
-        throw new Error("Failed to create pending enrollment");
+        logStep("Error creating pending enrollment", { error: pendingError.message, code: pendingError.code });
+        throw new Error(`Failed to create pending enrollment: ${pendingError.message}`);
       }
 
       logStep("Pending enrollment created", { email });
-    }
 
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+      return new Response(JSON.stringify({ 
+        success: true, 
+        message: "Pending enrollment created",
+        user_exists: false 
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
   } catch (error) {
-    // Log error internally but return generic message
-    console.error("[CREATE-ENROLLMENT] Internal error:", error);
-    return new Response(JSON.stringify({ error: "Internal server error" }), {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("[CREATE-ENROLLMENT] Internal error:", errorMessage);
+    return new Response(JSON.stringify({ error: "Internal server error", details: errorMessage }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
