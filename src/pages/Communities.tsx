@@ -112,9 +112,11 @@ export default function Communities() {
 
   const fetchCommunities = async () => {
     try {
+      // Only show Código Cero community
       const { data: communitiesData, error } = await supabase
         .from("communities")
         .select("*")
+        .eq("slug", "codigo-cero")
         .order("member_count", { ascending: false });
 
       if (error) throw error;
