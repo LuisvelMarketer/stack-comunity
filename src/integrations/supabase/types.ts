@@ -2373,6 +2373,110 @@ export type Database = {
           },
         ]
       }
+      sales_email_logs: {
+        Row: {
+          clicked_at: string | null
+          email_type: string
+          id: string
+          lead_id: string
+          opened_at: string | null
+          sent_at: string
+          sent_by: string | null
+          subject: string
+        }
+        Insert: {
+          clicked_at?: string | null
+          email_type: string
+          id?: string
+          lead_id: string
+          opened_at?: string | null
+          sent_at?: string
+          sent_by?: string | null
+          subject: string
+        }
+        Update: {
+          clicked_at?: string | null
+          email_type?: string
+          id?: string
+          lead_id?: string
+          opened_at?: string | null
+          sent_at?: string
+          sent_by?: string | null
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_email_logs_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "sales_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_leads: {
+        Row: {
+          amount_paid: number | null
+          call_date: string | null
+          call_status: string
+          converted_at: string | null
+          created_at: string
+          created_by: string | null
+          email: string
+          follow_up_count: number | null
+          full_name: string
+          id: string
+          last_follow_up_at: string | null
+          lead_status: string
+          next_follow_up_at: string | null
+          notes: string | null
+          objections: string[] | null
+          pain_points: string[] | null
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_paid?: number | null
+          call_date?: string | null
+          call_status?: string
+          converted_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          email: string
+          follow_up_count?: number | null
+          full_name: string
+          id?: string
+          last_follow_up_at?: string | null
+          lead_status?: string
+          next_follow_up_at?: string | null
+          notes?: string | null
+          objections?: string[] | null
+          pain_points?: string[] | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_paid?: number | null
+          call_date?: string | null
+          call_status?: string
+          converted_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          follow_up_count?: number | null
+          full_name?: string
+          id?: string
+          last_follow_up_at?: string | null
+          lead_status?: string
+          next_follow_up_at?: string | null
+          notes?: string | null
+          objections?: string[] | null
+          pain_points?: string[] | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       season_prizes: {
         Row: {
           created_at: string
