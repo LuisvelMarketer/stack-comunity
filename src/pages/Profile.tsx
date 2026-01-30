@@ -580,8 +580,6 @@ export default function Profile() {
             </Button>
           </div>
         </div>
-      </main>
-
       {/* Follow List Dialog */}
       <Dialog open={!!followListType} onOpenChange={() => setFollowListType(null)}>
         <DialogContent className="max-w-md">
@@ -625,5 +623,6 @@ export default function Profile() {
         </DialogContent>
       </Dialog>
     </div>
+    </MainLayout>
   );
 }
