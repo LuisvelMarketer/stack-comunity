@@ -1,12 +1,12 @@
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { useSnippet, useSnippets } from '@/hooks/useSnippets';
-import { UserMenu } from '@/components/UserMenu';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { UserAvatar } from '@/components/UserAvatar';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { 
   ArrowLeft, 
   Copy, 
@@ -16,8 +16,7 @@ import {
   MessageSquare, 
   FileCode,
   Calendar,
-  Check,
-  BookOpen
+  Check
 } from 'lucide-react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -75,34 +74,30 @@ export default function SnippetDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur">
-          <div className="container flex h-16 items-center justify-between">
-            <Skeleton className="h-8 w-32" />
-            <Skeleton className="h-10 w-10 rounded-full" />
-          </div>
-        </header>
-        <main className="container py-8 max-w-4xl">
+      <MainLayout>
+        <div className="container py-8 max-w-4xl">
           <Skeleton className="h-10 w-3/4 mb-4" />
           <Skeleton className="h-6 w-1/2 mb-8" />
           <Skeleton className="h-96 w-full" />
-        </main>
-      </div>
+        </div>
+      </MainLayout>
     );
   }
 
   if (!snippet) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">Snippet no encontrado</h1>
-          <p className="text-muted-foreground mb-4">El recurso que buscas no existe o ha sido eliminado.</p>
-          <Button onClick={() => navigate('/library')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Volver a la biblioteca
-          </Button>
+      <MainLayout>
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-2">Snippet no encontrado</h1>
+            <p className="text-muted-foreground mb-4">El recurso que buscas no existe o ha sido eliminado.</p>
+            <Button onClick={() => navigate('/library')}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Volver a la biblioteca
+            </Button>
+          </div>
         </div>
-      </div>
+      </MainLayout>
     );
   }
 
@@ -113,22 +108,14 @@ export default function SnippetDetail() {
         <meta name="description" content={snippet.description || `${typeLabels[snippet.type]} - ${snippet.title}`} />
       </Helmet>
 
-      <div className="min-h-screen bg-background">
-        {/* Header */}
-        <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="container flex h-16 items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="sm" onClick={() => navigate('/library')}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Biblioteca
-              </Button>
-            </div>
-            <UserMenu showAdminLink />
-          </div>
-        </header>
+      <MainLayout>
+        <div className="container py-8 max-w-4xl">
+          {/* Back button */}
+          <Button variant="ghost" size="sm" onClick={() => navigate('/library')} className="mb-6">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Biblioteca
+          </Button>
 
-        {/* Main Content */}
-        <main className="container py-8 max-w-4xl">
           {/* Header Section */}
           <div className="mb-8">
             <div className="flex items-start justify-between gap-4 mb-4">
@@ -184,54 +171,34 @@ export default function SnippetDetail() {
 
           {/* Actions */}
           <div className="flex gap-2 mb-6">
-            <Button size="lg" onClick={handleCopy} className="gap-2">
-              {copied ? (
-                <>
-                  <Check className="h-5 w-5" />
-                  ¡Copiado!
-                </>
-              ) : (
-                <>
-                  <Copy className="h-5 w-5" />
-                  Copiar {typeLabels[snippet.type].toLowerCase()}
-                </>
-              )}
+            <Button onClick={handleCopy} className="gap-2">
+              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              {copied ? 'Copiado' : 'Copiar'}
             </Button>
             <Button
-              size="lg"
-              variant="outline"
+              variant={isFavorite ? "secondary" : "outline"}
               onClick={() => toggleFavorite(snippet.id)}
-              className={cn('gap-2', isFavorite && 'text-yellow-500 border-yellow-500/50')}
+              className="gap-2"
             >
-              <Star className={cn('h-5 w-5', isFavorite && 'fill-current')} />
+              <Star className={cn("h-4 w-4", isFavorite && "fill-yellow-400 text-yellow-400")} />
               {isFavorite ? 'Guardado' : 'Guardar'}
             </Button>
           </div>
 
           {/* Code Block */}
-          <Card>
-            <CardHeader className="flex-row items-center justify-between pb-4">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Code className="h-4 w-4" />
-                {snippet.language || 'Código'}
-              </CardTitle>
-              <Button variant="ghost" size="sm" onClick={handleCopy}>
-                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              </Button>
-            </CardHeader>
+          <Card className="overflow-hidden">
             <CardContent className="p-0">
-              <div className="rounded-b-lg overflow-hidden">
+              <div className="relative">
                 <SyntaxHighlighter
-                  language={languageMap[snippet.language || 'javascript'] || 'javascript'}
+                  language={languageMap[snippet.language || snippet.type] || 'text'}
                   style={vscDarkPlus}
                   customStyle={{
                     margin: 0,
-                    padding: '1.5rem',
+                    borderRadius: '0.5rem',
                     fontSize: '0.875rem',
-                    lineHeight: '1.7',
-                    borderRadius: 0,
+                    padding: '1.5rem',
                   }}
-                  showLineNumbers
+                  showLineNumbers={snippet.type === 'code'}
                   wrapLines
                   wrapLongLines
                 >
@@ -240,8 +207,8 @@ export default function SnippetDetail() {
               </div>
             </CardContent>
           </Card>
-        </main>
-      </div>
+        </div>
+      </MainLayout>
     </>
   );
 }

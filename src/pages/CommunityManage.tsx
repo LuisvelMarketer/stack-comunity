@@ -30,7 +30,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Users, Settings, BookOpen, Trash2, Save, Bell, DollarSign, Tag, X, Plus, Images, Upload, ImageIcon, BarChart3, Mail, Target } from "lucide-react";
+import { Users, Settings, BookOpen, Save, Bell, DollarSign, X, Plus, Images, Upload, ImageIcon, BarChart3, Mail, Target, Trash2 } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -45,7 +45,7 @@ import { CommunityGalleryManager } from "@/components/community/CommunityGallery
 import { CommunityAnalyticsTab } from "@/components/community/CommunityAnalyticsTab";
 import { EmailCampaignManager } from "@/components/community/EmailCampaignManager";
 import { WeeklyChallengesManager } from "@/components/community/WeeklyChallengesManager";
-import { UserMenu } from "@/components/UserMenu";
+import { MainLayout } from "@/components/layout/MainLayout";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -327,25 +327,10 @@ export default function CommunityManage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => navigate("/my-communities")}
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <h1 className="text-xl font-bold">Gestionar: {community.name}</h1>
-          </div>
-          <UserMenu />
-        </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-8">
+    <MainLayout>
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-2xl font-bold mb-6">Gestionar: {community.name}</h1>
+        
         <Tabs defaultValue="analytics" className="space-y-6">
           <TabsList className="flex-wrap">
             <TabsTrigger value="analytics" className="gap-2">
@@ -732,7 +717,7 @@ export default function CommunityManage() {
             </Card>
           </TabsContent>
         </Tabs>
-      </main>
-    </div>
+      </div>
+    </MainLayout>
   );
 }
