@@ -420,7 +420,7 @@ export default function Messages() {
             )}
           </Card>
         </div>
-      </main>
-    </div>
+      </div>
+    </MainLayout>
   );
 }
