@@ -9,11 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { MainLayout } from "@/components/layout/MainLayout";
 import { Users, Plus, Settings, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { UserMenu } from "@/components/UserMenu";
 
 export default function MyCommunities() {
   const { user } = useAuth();
@@ -122,26 +122,8 @@ export default function MyCommunities() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div 
-              onClick={() => navigate("/dashboard")} 
-              className="flex items-center gap-2 cursor-pointer"
-            >
-              <img src={skoolifyLogo} alt="Skoolify" className="w-8 h-8 rounded-lg" />
-              <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                Skoolify
-              </h1>
-            </div>
-          </div>
-          <UserMenu />
-        </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-8">
+    <MainLayout showAdminLink>
+      <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold">Mis Comunidades</h1>
@@ -274,7 +256,7 @@ export default function MyCommunities() {
             ))}
           </div>
         )}
-      </main>
-    </div>
+      </div>
+    </MainLayout>
   );
 }

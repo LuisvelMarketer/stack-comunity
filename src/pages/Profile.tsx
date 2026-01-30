@@ -13,8 +13,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Upload, Loader2, Trophy, Award, Users, Sun, Moon, Monitor } from "lucide-react";
-import { UserMenu } from "@/components/UserMenu";
+import { Upload, Loader2, Trophy, Award, Users, Sun, Moon, Monitor } from "lucide-react";
+import { MainLayout } from "@/components/layout/MainLayout";
 import { useThemePreference } from "@/hooks/useThemePreference";
 import { UserAchievements } from "@/components/UserAchievements";
 import { NotificationSettings } from "@/components/NotificationSettings";
@@ -263,25 +263,8 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-hero">
-      <nav className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            Mi Perfil
-          </h1>
-          <UserMenu showAdminLink={false} />
-        </div>
-      </nav>
-
-      <main className="container mx-auto px-4 py-8 max-w-4xl">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/dashboard")}
-          className="mb-6"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Volver al Dashboard
-        </Button>
+    <MainLayout>
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
 
         <div className="space-y-6">
           {/* Avatar Section */}
