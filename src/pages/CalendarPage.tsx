@@ -7,8 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarAddButton } from "@/components/ui/calendar-add-button";
+import { MainLayout } from "@/components/layout/MainLayout";
 import { 
-  ArrowLeft, 
   Calendar as CalendarIcon, 
   Video, 
   MapPin, 
@@ -128,21 +128,13 @@ export default function CalendarPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div className="flex items-center gap-2">
-            <CalendarIcon className="h-5 w-5 text-primary" />
-            <h1 className="font-semibold">Calendario</h1>
-          </div>
+    <MainLayout>
+      <div className="container py-6">
+        <div className="flex items-center gap-2 mb-6">
+          <CalendarIcon className="h-6 w-6 text-primary" />
+          <h1 className="text-2xl font-bold">Calendario</h1>
         </div>
-      </header>
 
-      <main className="container py-6">
         <div className="grid gap-6 lg:grid-cols-[1fr_400px]">
           {/* Calendario */}
           <Card>
@@ -376,7 +368,7 @@ export default function CalendarPage() {
             )}
           </CardContent>
         </Card>
-      </main>
-    </div>
+      </div>
+    </MainLayout>
   );
 }

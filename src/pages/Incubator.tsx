@@ -7,13 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { UserMenu } from "@/components/UserMenu";
+import { MainLayout } from "@/components/layout/MainLayout";
 import { IncubatorProjectCard } from "@/components/incubator/IncubatorProjectCard";
 import { InvestorProfileDialog } from "@/components/incubator/InvestorProfileDialog";
 import { MyIncubatorProjects } from "@/components/incubator/MyIncubatorProjects";
 import { MyInvestments } from "@/components/incubator/MyInvestments";
 import { 
-  ArrowLeft, 
   Lightbulb, 
   Search, 
   TrendingUp, 
@@ -178,27 +177,14 @@ export default function Incubator() {
   });
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div className="flex items-center gap-2">
-              <Lightbulb className="h-6 w-6 text-primary" />
-              <h1 className="text-xl font-bold">Incubadora de Ideas</h1>
-            </div>
-          </div>
-          <UserMenu />
-        </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-8">
+    <MainLayout>
+      <div className="container mx-auto px-4 py-8">
         {/* Hero Section */}
         <div className="mb-8 text-center">
-          <h2 className="text-3xl font-bold mb-2">Conecta tu proyecto con inversores</h2>
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Lightbulb className="h-8 w-8 text-primary" />
+            <h2 className="text-3xl font-bold">Incubadora de Ideas</h2>
+          </div>
           <p className="text-muted-foreground max-w-2xl mx-auto">
             La incubadora conecta proyectos prometedores de estudiantes con micro-inversores 
             interesados en apoyar el próximo gran emprendimiento.
@@ -338,7 +324,7 @@ export default function Incubator() {
             <MyInvestments investorProfile={investorProfile} />
           </TabsContent>
         </Tabs>
-      </main>
+      </div>
 
       <InvestorProfileDialog
         open={investorDialogOpen}
@@ -349,6 +335,6 @@ export default function Incubator() {
           setInvestorDialogOpen(false);
         }}
       />
-    </div>
+    </MainLayout>
   );
 }

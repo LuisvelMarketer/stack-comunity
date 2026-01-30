@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -8,12 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserAvatar } from "@/components/UserAvatar";
+import { MainLayout } from "@/components/layout/MainLayout";
 import { 
-  ArrowLeft, 
   Search, 
   Star, 
-  Clock, 
-  ShoppingCart,
   Plus,
   Briefcase,
   TrendingUp
@@ -47,7 +44,6 @@ interface StudentService {
 }
 
 export default function Marketplace() {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const [services, setServices] = useState<StudentService[]>([]);
   const [loading, setLoading] = useState(true);
@@ -108,29 +104,21 @@ export default function Marketplace() {
     .slice(0, 5);
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+    <MainLayout>
+      <div className="container py-6">
+        <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
-            <Briefcase className="h-5 w-5 text-primary" />
-            <h1 className="font-semibold">Marketplace de Estudiantes</h1>
+            <Briefcase className="h-6 w-6 text-primary" />
+            <h1 className="text-2xl font-bold">Marketplace de Estudiantes</h1>
           </div>
-          <div className="ml-auto">
-            {user && (
-              <Button onClick={() => setIsCreateOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Ofrecer Servicio
-              </Button>
-            )}
-          </div>
+          {user && (
+            <Button onClick={() => setIsCreateOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Ofrecer Servicio
+            </Button>
+          )}
         </div>
-      </header>
 
-      <main className="container py-6">
         <Tabs defaultValue="explore" className="space-y-6">
           <TabsList>
             <TabsTrigger value="explore">Explorar</TabsTrigger>
@@ -310,13 +298,13 @@ export default function Marketplace() {
             </TabsContent>
           )}
         </Tabs>
-      </main>
+      </div>
 
       <CreateServiceDialog
         open={isCreateOpen}
         onOpenChange={setIsCreateOpen}
         onSuccess={loadServices}
       />
-    </div>
+    </MainLayout>
   );
 }

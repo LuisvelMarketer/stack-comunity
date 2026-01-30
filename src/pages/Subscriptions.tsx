@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Calendar, CreditCard, ExternalLink, Users } from "lucide-react";
+import { MainLayout } from "@/components/layout/MainLayout";
+import { Calendar, CreditCard, ExternalLink, Users } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "sonner";
@@ -116,24 +117,15 @@ export default function Subscriptions() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold">Mis Suscripciones</h1>
-              <p className="text-sm text-muted-foreground">
-                Gestiona tus membresías a comunidades
-              </p>
-            </div>
-          </div>
+    <MainLayout>
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold">Mis Suscripciones</h1>
+          <p className="text-sm text-muted-foreground">
+            Gestiona tus membresías a comunidades
+          </p>
         </div>
-      </header>
 
-      <main className="container mx-auto px-4 py-8">
         {loading ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map((i) => (
@@ -237,7 +229,7 @@ export default function Subscriptions() {
             ))}
           </div>
         )}
-      </main>
-    </div>
+      </div>
+    </MainLayout>
   );
 }

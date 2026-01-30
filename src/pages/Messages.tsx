@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ArrowLeft, Send, MessageSquare, Search } from "lucide-react";
-import { UserMenu } from "@/components/UserMenu";
+import { Send, MessageSquare, Search } from "lucide-react";
+import { MainLayout } from "@/components/layout/MainLayout";
 import { MessageBubble } from "@/components/messages/MessageBubble";
 import { ConversationItem } from "@/components/messages/ConversationItem";
 import { TypingIndicator } from "@/components/messages/TypingIndicator";
@@ -290,21 +290,9 @@ export default function Messages() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-hero">
-      <nav className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            Mensajes
-          </h1>
-          <UserMenu showAdminLink={false} />
-        </div>
-      </nav>
-
-      <main className="container mx-auto px-4 py-8 max-w-6xl">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Volver
-        </Button>
+    <MainLayout>
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <h1 className="text-2xl font-bold mb-6">Mensajes</h1>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[calc(100vh-250px)]">
           {/* Conversations List */}

@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
-import skoolifyLogo from "@/assets/skoolify-logo.png";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { UserMenu } from "@/components/UserMenu";
+import { MainLayout } from "@/components/layout/MainLayout";
 import { BookOpen, Play, Users, Clock, CheckCircle } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 
@@ -139,26 +138,8 @@ export default function Courses() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div 
-              onClick={() => navigate("/dashboard")}
-              className="flex items-center gap-2 cursor-pointer"
-            >
-              <img src={skoolifyLogo} alt="Skoolify" className="w-8 h-8 rounded-lg" />
-              <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                Skoolify
-              </h1>
-            </div>
-          </div>
-          <UserMenu showAdminLink={isAdmin} />
-        </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-8">
+    <MainLayout showAdminLink={isAdmin}>
+      <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold">Mis Cursos</h1>
           <p className="text-muted-foreground mt-1">
@@ -259,7 +240,7 @@ export default function Courses() {
             })}
           </div>
         )}
-      </main>
-    </div>
+      </div>
+    </MainLayout>
   );
 }

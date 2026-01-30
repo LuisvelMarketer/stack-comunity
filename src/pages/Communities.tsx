@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { UserMenu } from "@/components/UserMenu";
+import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  Search, Users, ArrowLeft, ChevronRight, Star, 
+  Search, Users, ChevronRight, Star, 
   TrendingUp, Clock, Tag, X
 } from "lucide-react";
 
@@ -146,39 +146,15 @@ export default function Communities() {
   const featuredCommunity = communities[0];
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <div>
-                <h1 className="text-2xl font-bold">Explorar Comunidades</h1>
-                <p className="text-sm text-muted-foreground">
-                  Encuentra tu comunidad perfecta
-                </p>
-              </div>
-            </div>
-            {user ? (
-              <UserMenu />
-            ) : (
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" onClick={() => navigate("/auth")}>
-                  Iniciar Sesión
-                </Button>
-                <Button onClick={() => navigate("/auth")}>
-                  Registrarse
-                </Button>
-              </div>
-            )}
-          </div>
+    <MainLayout>
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold">Explorar Comunidades</h1>
+          <p className="text-sm text-muted-foreground">
+            Encuentra tu comunidad perfecta
+          </p>
         </div>
-      </header>
 
-      <main className="container mx-auto px-4 py-8">
         {/* Search and Filters */}
         <div className="flex flex-col gap-4 mb-8">
           <div className="flex flex-col md:flex-row gap-4">
@@ -415,7 +391,7 @@ export default function Communities() {
             ))}
           </div>
         )}
-      </main>
-    </div>
+      </div>
+    </MainLayout>
   );
 }

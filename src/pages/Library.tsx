@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import { Helmet } from 'react-helmet';
-import { UserMenu } from '@/components/UserMenu';
 import { SnippetFilters } from '@/components/library/SnippetFilters';
 import { SnippetGrid } from '@/components/library/SnippetGrid';
 import { SnippetEditor } from '@/components/library/SnippetEditor';
 import { useSnippets, SnippetFilters as Filters } from '@/hooks/useSnippets';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { Code, BookOpen } from 'lucide-react';
-import { Link } from 'react-router-dom';
 
 export default function Library() {
   const [filters, setFilters] = useState<Filters>({ type: 'all' });
@@ -21,29 +20,8 @@ export default function Library() {
         <meta name="description" content="Explora nuestra biblioteca de snippets de código, prompts de IA y templates listos para usar en tus proyectos." />
       </Helmet>
 
-      <div className="min-h-screen bg-background">
-        {/* Header */}
-        <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="container flex h-16 items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link to="/dashboard" className="flex items-center gap-2">
-                <img 
-                  src="/images/codigo-cero-logo.png" 
-                  alt="Codigo Cero" 
-                  className="h-8 w-auto"
-                />
-              </Link>
-              <div className="hidden md:flex items-center gap-2 text-muted-foreground">
-                <BookOpen className="h-4 w-4" />
-                <span className="font-medium">Biblioteca</span>
-              </div>
-            </div>
-            <UserMenu showAdminLink />
-          </div>
-        </header>
-
-        {/* Main Content */}
-        <main className="container py-8">
+      <MainLayout showAdminLink={isAdmin}>
+        <div className="container py-8">
           {/* Hero Section */}
           <div className="mb-8 space-y-4">
             <div className="flex items-center justify-between">
@@ -85,8 +63,8 @@ export default function Library() {
             onCopy={copyToClipboard}
             onToggleFavorite={toggleFavorite}
           />
-        </main>
-      </div>
+        </div>
+      </MainLayout>
     </>
   );
 }

@@ -6,9 +6,10 @@ import { ProjectCard } from '@/components/build-in-public/ProjectCard';
 import { FeedbackLeaderboard } from '@/components/build-in-public/FeedbackLeaderboard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Rocket, 
@@ -17,8 +18,7 @@ import {
   Bug,
   Lightbulb,
   Trophy,
-  Filter,
-  ArrowLeft
+  Filter
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
@@ -167,19 +167,10 @@ export default function BuildInPublic() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <MainLayout>
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-background border-b">
         <div className="container mx-auto px-4 py-12">
-          {/* Back to Dashboard Button */}
-          <div className="mb-6">
-            <Link to="/dashboard">
-              <Button variant="ghost" size="sm" className="gap-2">
-                <ArrowLeft className="h-4 w-4" />
-                Volver al Dashboard
-              </Button>
-            </Link>
-          </div>
           <div className="max-w-3xl mx-auto text-center">
             <div className="flex items-center justify-center gap-2 mb-4">
               <Bug className="h-10 w-10 text-red-500" />
@@ -377,12 +368,12 @@ export default function BuildInPublic() {
 
           {/* Right Sidebar - Leaderboard */}
           <div className="hidden lg:block w-80 flex-shrink-0">
-            <div className="sticky top-4">
+            <div className="sticky top-20">
               <FeedbackLeaderboard />
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </MainLayout>
   );
 }
