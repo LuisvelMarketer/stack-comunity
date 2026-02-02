@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { BookOpen, Users, Trophy, Zap, Star, ArrowRight, Check, MessageCircle, Video, Calendar, Award, ChevronRight, Play, Globe, Lock, TrendingUp, BarChart3, Shield, Heart, MessageSquare, Share2, Sparkles } from "lucide-react";
-import skoolifyLogo from "@/assets/skoolify-logo.png";
+import stackLogo from "@/assets/stack-logo.png";
 interface Community {
   id: string;
   name: string;
@@ -188,8 +188,8 @@ const Index = () => {
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/60 backdrop-blur-xl border-b border-border/50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <img src={skoolifyLogo} alt="Skoolify" className="w-8 h-8 rounded-lg" />
-            <span className="text-xl font-bold bg-gradient-to-r from-purple-400 via-violet-400 to-indigo-400 bg-clip-text text-transparent">Skoolify</span>
+            <img src={stackLogo} alt="STACK" className="w-8 h-8 rounded-lg" />
+            <span className="text-xl font-semibold tracking-widest bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent">STACK</span>
           </div>
           <nav className="hidden md:flex items-center gap-8">
             <button onClick={() => document.getElementById("features")?.scrollIntoView({
@@ -246,25 +246,25 @@ const Index = () => {
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
                   </span>
-                  <span className="text-sm text-primary font-medium">La plataforma #1 de comunidades de aprendizaje</span>
+                  <span className="text-sm text-primary font-medium">Infrastructure for the Elite</span>
                 </div>
               </div>
             </div>
 
             {/* Main headline with blur in effect */}
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-8 scroll-blur stagger-2">
-              <span className="block text-[#b58ff2]" style={{
-              textShadow: '0 0 40px rgba(181, 143, 242, 0.5), 0 0 80px rgba(181, 143, 242, 0.3)'
-            }}>Construye tu</span>
+              <span className="block text-[#6BA3FF]" style={{
+              textShadow: '0 0 40px rgba(90, 140, 255, 0.5), 0 0 80px rgba(90, 140, 255, 0.3)'
+            }}>Build your</span>
               <span className="block text-gradient glow-text" style={{
-              textShadow: '0 0 60px rgba(139, 92, 246, 0.6), 0 0 100px rgba(139, 92, 246, 0.4)'
-            }}>imperio educativo</span>
+              textShadow: '0 0 60px rgba(90, 140, 255, 0.6), 0 0 100px rgba(90, 140, 255, 0.4)'
+            }}>elite network</span>
             </h1>
 
             {/* Subheadline */}
             <p className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed scroll-fade-up stagger-3">
-              La plataforma todo-en-uno para crear, monetizar y escalar tu comunidad de aprendizaje. 
-              Sin límites. Sin complicaciones.
+              The all-in-one platform to create, monetize and scale your learning community. 
+              No limits. No complications.
             </p>
 
             {/* CTA Buttons */}
@@ -274,7 +274,7 @@ const Index = () => {
                   <div className="absolute inset-0 bg-primary/50 blur-xl rounded-xl group-hover:bg-primary/70 transition-colors animate-pulse-glow" />
                 </div>
                 <Button size="lg" className="relative h-14 px-8 text-lg bg-gradient-primary hover:opacity-90 transition-opacity" onClick={() => navigate("/auth")}>
-                  Empezar Gratis
+                  Get Started Free
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </div>
@@ -286,7 +286,7 @@ const Index = () => {
                 behavior: "smooth"
               })}>
                   <Play className="mr-2 h-5 w-5" />
-                  Ver Demo
+                  Watch Demo
                 </Button>
               </div>
             </div>
@@ -303,7 +303,7 @@ const Index = () => {
                       </span>
                     </div>)}
                 </div>
-                <span className="font-medium text-foreground">+10,000 estudiantes</span>
+                <span className="font-medium text-foreground">+10,000 members</span>
               </div>
               <div className="hidden sm:block w-px h-6 bg-border" />
               <div className="flex items-center gap-2">
@@ -323,10 +323,10 @@ const Index = () => {
             {/* Title and subtitle */}
             <div className="text-center mb-8">
               <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
-                Descubre el poder de Skoolify
+                Discover the power of STACK
               </h2>
               <p className="text-muted-foreground max-w-2xl mx-auto">
-                En menos de 3 minutos entenderás por qué miles de creadores eligen nuestra plataforma
+                In less than 3 minutes you'll understand why thousands of creators choose our platform
               </p>
             </div>
 
@@ -698,16 +698,16 @@ const Index = () => {
         <div className="container mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-2">
-              <img src={skoolifyLogo} alt="Skoolify" className="w-8 h-8 rounded-lg" />
-              <span className="text-xl font-bold bg-gradient-to-r from-purple-400 via-violet-400 to-indigo-400 bg-clip-text text-transparent">Skoolify</span>
+              <img src={stackLogo} alt="STACK" className="w-8 h-8 rounded-lg" />
+              <span className="text-xl font-semibold tracking-widest bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent">STACK</span>
             </div>
             <div className="flex items-center gap-8 text-sm text-muted-foreground">
-              <a href="#" className="hover:text-foreground transition-colors">Términos</a>
-              <a href="#" className="hover:text-foreground transition-colors">Privacidad</a>
-              <a href="#" className="hover:text-foreground transition-colors">Contacto</a>
+              <a href="#" className="hover:text-foreground transition-colors">Terms</a>
+              <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
+              <a href="#" className="hover:text-foreground transition-colors">Contact</a>
             </div>
             <p className="text-sm text-muted-foreground">
-              © 2024 Skoolify. Todos los derechos reservados.
+              © 2024 STACK. All rights reserved.
             </p>
           </div>
         </div>

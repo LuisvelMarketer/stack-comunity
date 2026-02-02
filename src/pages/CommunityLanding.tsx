@@ -58,7 +58,7 @@ export default function CommunityLanding() {
   // Update page meta tags for SEO
   useEffect(() => {
     if (community) {
-      document.title = `${community.name} - Comunidad de Aprendizaje | Código Cero`;
+      document.title = `${community.name} - Learning Community | STACK`;
       
       // Update meta description
       const metaDescription = document.querySelector('meta[name="description"]');
@@ -194,9 +194,9 @@ export default function CommunityLanding() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <button 
             onClick={() => navigate("/")}
-            className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent"
+            className="text-xl font-semibold tracking-widest bg-gradient-primary bg-clip-text text-transparent"
           >
-            Código Cero
+            STACK
           </button>
           <div className="flex items-center gap-3">
             <Button variant="ghost" onClick={() => navigate("/auth")}>

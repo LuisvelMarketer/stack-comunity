@@ -21,11 +21,11 @@ export const MyCommunities = () => {
   }, []);
 
   const loadCommunities = async () => {
-    // Only show Código Cero community
+    // Only show STACK community
     const { data, error } = await supabase
       .from("communities")
       .select("*")
-      .eq("slug", "codigo-cero")
+      .eq("slug", "stack")
       .order("name");
 
     if (!error && data) {
