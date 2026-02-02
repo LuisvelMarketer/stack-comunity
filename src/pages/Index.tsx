@@ -187,9 +187,12 @@ const Index = () => {
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/60 backdrop-blur-xl border-b border-border/50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <img src={stackLogo} alt="STACK" className="w-8 h-8 rounded-lg" />
-            <span className="text-xl font-semibold tracking-widest bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent">STACK</span>
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <div className="absolute inset-0 bg-primary/40 blur-lg rounded-xl" />
+              <img src={stackLogo} alt="STACK" className="relative w-12 h-12 rounded-xl" />
+            </div>
+            <span className="text-2xl font-bold tracking-widest text-primary" style={{ textShadow: '0 0 30px hsl(171 52% 56% / 0.5)' }}>STACK</span>
           </div>
           <nav className="hidden md:flex items-center gap-8">
             <button onClick={() => document.getElementById("features")?.scrollIntoView({
@@ -253,11 +256,11 @@ const Index = () => {
 
             {/* Main headline with blur in effect */}
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-8 scroll-blur stagger-2">
-              <span className="block text-[#6BA3FF]" style={{
-              textShadow: '0 0 40px rgba(90, 140, 255, 0.5), 0 0 80px rgba(90, 140, 255, 0.3)'
+              <span className="block text-primary" style={{
+              textShadow: '0 0 40px hsl(171 52% 56% / 0.6), 0 0 80px hsl(171 52% 56% / 0.4)'
             }}>Build your</span>
               <span className="block text-gradient glow-text" style={{
-              textShadow: '0 0 60px rgba(90, 140, 255, 0.6), 0 0 100px rgba(90, 140, 255, 0.4)'
+              textShadow: '0 0 60px hsl(171 52% 56% / 0.7), 0 0 100px hsl(171 52% 56% / 0.5)'
             }}>elite network</span>
             </h1>
 
@@ -332,13 +335,13 @@ const Index = () => {
 
             {/* Glow effect behind the video */}
             <div className="absolute inset-0 -z-10 top-20">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] h-[80%] bg-primary/40 blur-[120px] rounded-full animate-pulse" />
-              <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[50%] h-[50%] bg-purple-500/25 blur-[100px] rounded-full" />
-              <div className="absolute top-1/2 right-1/4 -translate-x-1/2 -translate-y-1/2 w-[40%] h-[40%] bg-blue-500/20 blur-[80px] rounded-full" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] h-[80%] bg-primary/50 blur-[120px] rounded-full animate-pulse" />
+              <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[50%] h-[50%] bg-primary/30 blur-[100px] rounded-full" />
+              <div className="absolute top-1/2 right-1/4 -translate-x-1/2 -translate-y-1/2 w-[40%] h-[40%] bg-primary/25 blur-[80px] rounded-full" />
             </div>
             
             <div className="gradient-border rounded-2xl overflow-hidden shadow-glow-lg relative group cursor-pointer" style={{
-            boxShadow: '0 0 100px rgba(139, 92, 246, 0.4), 0 0 50px rgba(139, 92, 246, 0.25)'
+            boxShadow: '0 0 100px hsl(171 52% 56% / 0.4), 0 0 50px hsl(171 52% 56% / 0.25)'
           }}>
               <div className="bg-card/90 backdrop-blur-sm p-1">
                 {/* Browser mockup header */}
@@ -379,7 +382,7 @@ const Index = () => {
                       
                       {/* Main play button */}
                       <div className="relative w-20 h-20 md:w-28 md:h-28 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center shadow-glow transition-transform duration-300 group-hover/play:scale-110" style={{
-                      boxShadow: '0 0 40px rgba(139, 92, 246, 0.5)'
+                      boxShadow: '0 0 40px hsl(171 52% 56% / 0.6)'
                     }}>
                         <Play className="w-8 h-8 md:w-12 md:h-12 text-primary-foreground fill-primary-foreground ml-1" />
                       </div>
