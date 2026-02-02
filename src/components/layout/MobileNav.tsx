@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
-import skoolifyLogo from "@/assets/skoolify-logo.png";
+import stackLogo from "@/assets/stack-logo.png";
 
 interface NavItem {
   label: string;
@@ -44,9 +44,9 @@ export function MobileNav({ items }: MobileNavProps) {
       <SheetContent side="left" className="w-72">
         <SheetHeader className="border-b pb-4 mb-4">
           <SheetTitle className="flex items-center gap-2">
-            <img src={skoolifyLogo} alt="Skoolify" className="w-8 h-8 rounded-lg" />
-            <span className="bg-gradient-primary bg-clip-text text-transparent">
-              Skoolify
+            <img src={stackLogo} alt="STACK" className="w-8 h-8 rounded-lg" />
+            <span className="tracking-widest font-semibold bg-gradient-primary bg-clip-text text-transparent">
+              STACK
             </span>
           </SheetTitle>
         </SheetHeader>

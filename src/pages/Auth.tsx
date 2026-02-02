@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import skoolifyLogo from "@/assets/skoolify-logo.png";
+import stackLogo from "@/assets/stack-logo.png";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -280,10 +280,10 @@ const Auth = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        <img src={skoolifyLogo} alt="Skoolify" className="w-12 h-12 rounded-lg" />
+        <img src={stackLogo} alt="STACK" className="w-12 h-12 rounded-lg" />
         <div>
-          <h1 className="text-4xl font-bold text-white">Skoolify</h1>
-          <p className="text-white/80 text-lg">La plataforma de comunidades de aprendizaje</p>
+          <h1 className="text-4xl font-semibold tracking-widest text-white">STACK</h1>
+          <p className="text-white/80 text-lg">Infrastructure for the Elite</p>
         </div>
       </motion.div>
 
@@ -330,7 +330,7 @@ const Auth = () => {
           </p>
         </div>
         <p className="text-white/60 text-sm">
-          © 2024 Skoolify. Todos los derechos reservados.
+          © 2024 STACK. All rights reserved.
         </p>
       </motion.div>
     </motion.div>
@@ -345,9 +345,9 @@ const Auth = () => {
       <div className="w-full max-w-md space-y-8">
         {/* Mobile logo */}
         <div className="lg:hidden text-center mb-8 flex items-center justify-center gap-2">
-          <img src={skoolifyLogo} alt="Skoolify" className="w-10 h-10 rounded-lg" />
-          <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            Skoolify
+          <img src={stackLogo} alt="STACK" className="w-10 h-10 rounded-lg" />
+          <h1 className="text-3xl font-semibold tracking-widest bg-gradient-primary bg-clip-text text-transparent">
+            STACK
           </h1>
         </div>
 
@@ -728,10 +728,10 @@ const BrandingContent = ({ features, isSignUp }: { features: { icon: any; title:
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
     >
-      <img src={skoolifyLogo} alt="Skoolify" className="w-12 h-12 rounded-lg" />
+      <img src={stackLogo} alt="STACK" className="w-12 h-12 rounded-lg" />
       <div>
-        <h1 className="text-4xl font-bold text-white">Skoolify</h1>
-        <p className="text-white/80 text-lg">La plataforma de comunidades de aprendizaje</p>
+        <h1 className="text-4xl font-semibold tracking-widest text-white">STACK</h1>
+        <p className="text-white/80 text-lg">Infrastructure for the Elite</p>
       </div>
     </motion.div>
 
@@ -821,9 +821,9 @@ const FormPanelContent = ({
   <div className="w-full max-w-md space-y-8">
     {/* Mobile logo */}
     <div className="lg:hidden text-center mb-8 flex items-center justify-center gap-2">
-      <img src={skoolifyLogo} alt="Skoolify" className="w-10 h-10 rounded-lg" />
-      <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-        Skoolify
+      <img src={stackLogo} alt="STACK" className="w-10 h-10 rounded-lg" />
+      <h1 className="text-3xl font-semibold tracking-widest bg-gradient-primary bg-clip-text text-transparent">
+        STACK
       </h1>
     </div>
 

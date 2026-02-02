@@ -16,7 +16,7 @@ export default function Library() {
   return (
     <>
       <Helmet>
-        <title>Biblioteca de Códigos y Prompts | Skoolify</title>
+        <title>Biblioteca de Códigos y Prompts | STACK</title>
         <meta name="description" content="Explora nuestra biblioteca de snippets de código, prompts de IA y templates listos para usar en tus proyectos." />
       </Helmet>
 

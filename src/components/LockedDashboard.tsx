@@ -79,8 +79,8 @@ export const LockedDashboard = () => {
             Acceso Exclusivo
           </Badge>
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            <span className="bg-gradient-to-r from-primary via-purple-400 to-pink-400 bg-clip-text text-transparent">
-              Código Cero
+            <span className="bg-gradient-to-r from-primary via-blue-400 to-cyan-400 bg-clip-text text-transparent">
+              STACK Elite
             </span>
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">

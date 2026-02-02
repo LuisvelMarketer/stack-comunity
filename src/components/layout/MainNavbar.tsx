@@ -4,7 +4,7 @@ import { UserMenu } from "@/components/UserMenu";
 import { MobileNav } from "./MobileNav";
 import { Home, Users, GraduationCap, Calendar, Rocket, Briefcase } from "lucide-react";
 import { cn } from "@/lib/utils";
-import skoolifyLogo from "@/assets/skoolify-logo.png";
+import stackLogo from "@/assets/stack-logo.png";
 
 interface NavItem {
   label: string;
@@ -46,9 +46,9 @@ export function MainNavbar({ showAdminLink = false }: MainNavbarProps) {
               onClick={() => navigate("/dashboard")}
               className="flex items-center gap-2 cursor-pointer"
             >
-              <img src={skoolifyLogo} alt="Skoolify" className="w-8 h-8 rounded-lg" />
-              <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent hidden sm:block">
-                Skoolify
+              <img src={stackLogo} alt="STACK" className="w-8 h-8 rounded-lg" />
+              <h1 className="text-xl font-semibold tracking-widest bg-gradient-primary bg-clip-text text-transparent hidden sm:block">
+                STACK
               </h1>
             </div>
 
