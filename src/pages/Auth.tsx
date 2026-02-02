@@ -254,7 +254,7 @@ const Auth = () => {
       layout
       className="hidden lg:flex lg:w-1/2 p-12 flex-col justify-between relative overflow-hidden"
       style={{
-        background: 'linear-gradient(135deg, #0a0f14 0%, #14181E 50%, #1a2530 100%)'
+        background: 'linear-gradient(135deg, #080c10 0%, #0f1419 30%, #14181E 60%, #1a2530 100%)'
       }}
     >
       {/* Animated glow orbs */}
