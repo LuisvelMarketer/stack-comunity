@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import skoolifyLogo from "@/assets/skoolify-logo.png";
+import stackLogo from "@/assets/stack-logo.png";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -195,9 +195,9 @@ export default function CommunityDetail() {
       <nav className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between pt-[8px] pb-[8px]">
           <div className="flex items-center gap-2">
-            <img src={skoolifyLogo} alt="Skoolify" className="w-8 h-8 rounded-lg" />
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Skoolify
+            <img src={stackLogo} alt="STACK" className="w-8 h-8 rounded-lg" />
+            <h1 className="text-2xl font-bold tracking-widest bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              STACK
             </h1>
           </div>
           <UserMenu showAdminLink={false} />
