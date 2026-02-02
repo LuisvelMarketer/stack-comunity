@@ -14,8 +14,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 216 20% 10%;
     
-    --primary: 220 100% 68%;
-    --primary-foreground: 220 15% 97%;
+    --primary: 171 52% 56%;
+    --primary-foreground: 216 23% 10%;
     
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 216 20% 10%;
@@ -31,27 +31,27 @@
     
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 220 100% 68%;
+    --ring: 171 52% 56%;
     
     --radius: 0.5rem;
     
     /* Sidebar */
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 220 100% 68%;
-    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-primary: 171 52% 56%;
+    --sidebar-primary-foreground: 216 23% 10%;
     --sidebar-accent: 240 4.8% 95.9%;
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 220 100% 68%;
+    --sidebar-ring: 171 52% 56%;
     
-    /* Custom gradients - STACK Neural Blue */
-    --gradient-primary: linear-gradient(135deg, hsl(220 100% 68%), hsl(210 100% 55%));
-    --gradient-hero: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(220 15% 95%) 100%);
+    /* Custom gradients - STACK Cyan */
+    --gradient-primary: linear-gradient(135deg, hsl(171 52% 56%), hsl(176 60% 45%));
+    --gradient-hero: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(171 30% 95%) 100%);
     
     /* Shadows */
-    --shadow-elegant: 0 10px 30px -10px hsl(220 100% 68% / 0.2);
-    --shadow-glow: 0 0 40px hsl(220 100% 68% / 0.15);
+    --shadow-elegant: 0 10px 30px -10px hsl(171 52% 56% / 0.2);
+    --shadow-glow: 0 0 40px hsl(171 52% 56% / 0.15);
   }
 
   .dark {
@@ -65,7 +65,7 @@
     --popover: 203 30% 17%;
     --popover-foreground: 220 20% 97%;
     
-    --primary: 220 100% 68%;
+    --primary: 171 52% 56%;
     --primary-foreground: 216 23% 10%;
     
     --secondary: 203 25% 20%;
@@ -82,25 +82,25 @@
     
     --border: 203 25% 22%;
     --input: 203 25% 22%;
-    --ring: 220 100% 68%;
+    --ring: 171 52% 56%;
     
     /* Sidebar - STACK Steel Gray */
     --sidebar-background: 203 30% 14%;
     --sidebar-foreground: 220 15% 90%;
-    --sidebar-primary: 220 100% 68%;
+    --sidebar-primary: 171 52% 56%;
     --sidebar-primary-foreground: 216 23% 10%;
     --sidebar-accent: 203 25% 20%;
     --sidebar-accent-foreground: 220 15% 90%;
     --sidebar-border: 203 25% 22%;
-    --sidebar-ring: 220 100% 68%;
+    --sidebar-ring: 171 52% 56%;
     
-    /* Custom gradients - STACK Neural Blue */
-    --gradient-primary: linear-gradient(135deg, hsl(220 100% 68%), hsl(210 100% 60%));
-    --gradient-hero: radial-gradient(ellipse 80% 50% at 50% -20%, hsl(220 100% 68% / 0.25), transparent);
+    /* Custom gradients - STACK Cyan */
+    --gradient-primary: linear-gradient(135deg, hsl(171 52% 56%), hsl(176 60% 45%));
+    --gradient-hero: radial-gradient(ellipse 80% 50% at 50% -20%, hsl(171 52% 56% / 0.25), transparent);
     
-    /* Shadows - Neural Blue glow */
+    /* Shadows - Stack Cyan glow */
     --shadow-elegant: 0 10px 30px -10px hsl(0 0% 0% / 0.5);
-    --shadow-glow: 0 0 80px hsl(220 100% 68% / 0.2);
+    --shadow-glow: 0 0 80px hsl(171 52% 56% / 0.2);
   }
 }
 
@@ -145,13 +145,13 @@
     @apply bg-gradient-primary bg-clip-text text-transparent;
   }
 
-  /* Glow effects - STACK Neural Blue */
+  /* Glow effects - STACK Cyan */
   .glow-primary {
-    box-shadow: 0 0 40px hsl(220 100% 68% / 0.4);
+    box-shadow: 0 0 40px hsl(171 52% 56% / 0.4);
   }
 
   .glow-text {
-    text-shadow: 0 0 30px hsl(220 100% 68% / 0.5);
+    text-shadow: 0 0 30px hsl(171 52% 56% / 0.5);
   }
 
   /* Grid pattern */
@@ -396,10 +396,10 @@
     animation: float-rotate 8s ease-in-out infinite;
   }
 
-  /* ========== GLOW ANIMATIONS - STACK Neural Blue ========== */
+  /* ========== GLOW ANIMATIONS - STACK Cyan ========== */
   @keyframes pulse-glow {
-    0%, 100% { box-shadow: 0 0 20px hsl(220 100% 68% / 0.4); }
-    50% { box-shadow: 0 0 60px hsl(220 100% 68% / 0.7); }
+    0%, 100% { box-shadow: 0 0 20px hsl(171 52% 56% / 0.4); }
+    50% { box-shadow: 0 0 60px hsl(171 52% 56% / 0.7); }
   }
 
   .animate-pulse-glow {
@@ -458,14 +458,14 @@
     transition: transform 0.05s linear;
   }
 
-  /* ========== HOVER ENHANCEMENTS - STACK Neural Blue ========== */
+  /* ========== HOVER ENHANCEMENTS - STACK Cyan ========== */
   .hover-lift {
     transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
   }
 
   .hover-lift:hover {
     transform: translateY(-8px);
-    box-shadow: 0 20px 40px -15px hsl(220 100% 68% / 0.3);
+    box-shadow: 0 20px 40px -15px hsl(171 52% 56% / 0.3);
   }
 
   .hover-glow {
@@ -473,7 +473,7 @@
   }
 
   .hover-glow:hover {
-    box-shadow: 0 0 40px hsl(220 100% 68% / 0.4);
+    box-shadow: 0 0 40px hsl(171 52% 56% / 0.4);
   }
 
   /* ========== MAGNETIC EFFECT ========== */

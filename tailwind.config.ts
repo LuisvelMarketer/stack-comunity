@@ -185,7 +185,7 @@ export default {
       boxShadow: {
         elegant: "var(--shadow-elegant)",
         glow: "var(--shadow-glow)",
-        "glow-lg": "0 0 60px hsl(220 100% 68% / 0.3)",
+        "glow-lg": "0 0 60px hsl(171 52% 56% / 0.3)",
       },
     },
   },
