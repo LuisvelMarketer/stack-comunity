@@ -252,38 +252,76 @@ const Auth = () => {
   const BrandingPanel = () => (
     <motion.div 
       layout
-      className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary via-primary/90 to-primary/80 p-12 flex-col justify-between relative overflow-hidden"
+      className="hidden lg:flex lg:w-1/2 p-12 flex-col justify-between relative overflow-hidden"
+      style={{
+        background: 'linear-gradient(135deg, #0a0f14 0%, #14181E 50%, #1a2530 100%)'
+      }}
     >
-      {/* Background pattern */}
-      <div className="absolute inset-0 opacity-10">
+      {/* Animated glow orbs */}
+      <div className="absolute inset-0">
         <motion.div 
-          className="absolute top-20 left-20 w-72 h-72 bg-white rounded-full blur-3xl"
+          className="absolute top-20 left-20 w-80 h-80 rounded-full blur-[100px]"
+          style={{ background: 'hsl(171 52% 56% / 0.25)' }}
           animate={{ 
-            scale: [1, 1.2, 1],
-            opacity: [0.1, 0.2, 0.1] 
+            scale: [1, 1.3, 1],
+            opacity: [0.2, 0.35, 0.2] 
           }}
-          transition={{ duration: 4, repeat: Infinity }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div 
-          className="absolute bottom-20 right-20 w-96 h-96 bg-white rounded-full blur-3xl"
+          className="absolute bottom-20 right-20 w-96 h-96 rounded-full blur-[120px]"
+          style={{ background: 'hsl(171 52% 56% / 0.2)' }}
           animate={{ 
             scale: [1.2, 1, 1.2],
-            opacity: [0.1, 0.15, 0.1] 
+            opacity: [0.15, 0.3, 0.15] 
           }}
-          transition={{ duration: 5, repeat: Infinity }}
+          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div 
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full blur-[80px]"
+          style={{ background: 'hsl(171 52% 56% / 0.15)' }}
+          animate={{ 
+            scale: [1, 1.2, 1],
+            rotate: [0, 180, 360]
+          }}
+          transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
         />
       </div>
+
+      {/* Grid pattern overlay */}
+      <div 
+        className="absolute inset-0 opacity-[0.03]"
+        style={{
+          backgroundImage: 'linear-gradient(hsl(171 52% 56%) 1px, transparent 1px), linear-gradient(90deg, hsl(171 52% 56%) 1px, transparent 1px)',
+          backgroundSize: '50px 50px'
+        }}
+      />
       
+      {/* Logo and brand */}
       <motion.div 
-        className="relative z-10 flex items-center gap-3"
+        className="relative z-10 flex items-center gap-4"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        <img src={stackLogo} alt="STACK" className="w-12 h-12 rounded-lg" />
+        <div className="relative">
+          <div 
+            className="absolute inset-0 blur-xl rounded-xl"
+            style={{ background: 'hsl(171 52% 56% / 0.5)' }}
+          />
+          <img src={stackLogo} alt="STACK" className="relative w-16 h-16 rounded-xl" />
+        </div>
         <div>
-          <h1 className="text-4xl font-semibold tracking-widest text-white">STACK</h1>
-          <p className="text-white/80 text-lg">Infrastructure for the Elite</p>
+          <h1 
+            className="text-4xl font-bold tracking-widest"
+            style={{ 
+              color: 'hsl(171 52% 56%)',
+              textShadow: '0 0 40px hsl(171 52% 56% / 0.6), 0 0 80px hsl(171 52% 56% / 0.3)'
+            }}
+          >
+            STACK
+          </h1>
+          <p className="text-white/70 text-lg tracking-wide">Infrastructure for the Elite</p>
         </div>
       </motion.div>
 
@@ -296,12 +334,19 @@ const Auth = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 + i * 0.1 }}
           >
-            <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
-              <feature.icon className="h-6 w-6 text-white" />
+            <div 
+              className="w-14 h-14 rounded-xl backdrop-blur-sm flex items-center justify-center flex-shrink-0 border"
+              style={{ 
+                background: 'hsl(171 52% 56% / 0.15)',
+                borderColor: 'hsl(171 52% 56% / 0.3)',
+                boxShadow: '0 0 20px hsl(171 52% 56% / 0.2)'
+              }}
+            >
+              <feature.icon className="h-6 w-6" style={{ color: 'hsl(171 52% 56%)' }} />
             </div>
             <div>
               <h3 className="text-white font-semibold text-lg">{feature.title}</h3>
-              <p className="text-white/70">{feature.desc}</p>
+              <p className="text-white/60">{feature.desc}</p>
             </div>
           </motion.div>
         ))}
@@ -318,18 +363,22 @@ const Auth = () => {
             {[1, 2, 3, 4].map((i) => (
               <motion.div 
                 key={i} 
-                className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm border-2 border-white/30"
+                className="w-10 h-10 rounded-full backdrop-blur-sm border-2"
+                style={{ 
+                  background: 'hsl(171 52% 56% / 0.2)',
+                  borderColor: 'hsl(171 52% 56% / 0.4)'
+                }}
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.7 + i * 0.1, type: "spring" }}
               />
             ))}
           </div>
-          <p className="text-white/90 text-sm">
-            <span className="font-semibold">+10,000</span> miembros activos
+          <p className="text-white/80 text-sm">
+            <span className="font-semibold" style={{ color: 'hsl(171 52% 56%)' }}>+10,000</span> miembros activos
           </p>
         </div>
-        <p className="text-white/60 text-sm">
+        <p className="text-white/40 text-sm">
           © 2024 STACK. All rights reserved.
         </p>
       </motion.div>
