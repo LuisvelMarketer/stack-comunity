@@ -17,7 +17,7 @@ const navItems: NavItem[] = [
   { label: "Comunidades", href: "/communities", icon: Users },
   { label: "Classroom", href: "/courses", icon: GraduationCap },
   { label: "Calendario", href: "/calendar", icon: Calendar },
-  { label: "Build in Public", href: "/build-in-public", icon: Rocket },
+  { label: "Build", href: "/build-in-public", icon: Rocket },
   { label: "Marketplace", href: "/marketplace", icon: Briefcase },
 ];
 
@@ -63,13 +63,13 @@ export function MainNavbar({ showAdminLink = false }: MainNavbarProps) {
                   key={item.href}
                   onClick={() => navigate(item.href)}
                   className={cn(
-                    "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
+                    "flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap",
                     active 
                       ? "bg-primary text-primary-foreground shadow-md" 
                       : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                   )}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-4 h-4 flex-shrink-0" />
                   <span>{item.label}</span>
                 </button>
               );
