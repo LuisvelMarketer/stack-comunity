@@ -1,166 +1,143 @@
 
+# Plan: Eliminar el Flash de la Página de Pricing
 
-# Plan: Corrección de Paleta de Colores - STACK
+## Problema Identificado
 
-## Análisis del Logo
+El flash de la página de pricing (LockedDashboard) ocurre debido a múltiples condiciones de carrera:
 
-Analizando las imágenes del logo STACK, identifico 3 colores principales en las capas:
+### Causa Raíz #1: Estado de carga no sincronizado
+En `Dashboard.tsx` (líneas 69-75):
+```tsx
+if (!enrollmentLoading && !isEnrolled && !isAdmin) {
+  return <LockedDashboard />;
+}
+```
+
+El problema es que:
+- `enrollmentLoading` termina en ~100ms
+- `isAdmin` (verificación RPC) tarda ~200-300ms
+- Durante ese gap, `!enrollmentLoading && !isEnrolled && !isAdmin` es `true` → ¡Flash!
+
+### Causa Raíz #2: Múltiples verificaciones de admin
+- `Dashboard.tsx` tiene su propia verificación de admin con `checkAdminRole()` (líneas 51-66)
+- `useIsAdmin` hook también verifica admin por separado
+- Ambas empiezan en `false` y no hay estado de carga coordinado
+
+---
+
+## Solución Propuesta
+
+### Paso 1: Unificar verificación de admin en Dashboard
+
+Reemplazar la verificación manual en Dashboard con el hook `useIsAdmin` que ya tiene un estado `loading`:
+
+```tsx
+// Dashboard.tsx - Cambiar de:
+const [isAdmin, setIsAdmin] = useState(false);
+// ...checkAdminRole useEffect...
+
+// A:
+const { isAdmin, loading: adminLoading } = useIsAdmin();
+```
+
+### Paso 2: Esperar todas las cargas antes de renderizar
+
+Modificar la condición para esperar que TODAS las verificaciones terminen:
+
+```tsx
+// Dashboard.tsx - Cambiar de:
+if (!enrollmentLoading && !isEnrolled && !isAdmin) {
+  return <LockedDashboard />;
+}
+
+// A:
+// Mostrar loading mientras cualquier verificación esté en progreso
+if (enrollmentLoading || adminLoading) {
+  return (
+    <MainLayout>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    </MainLayout>
+  );
+}
+
+// Solo después de que TODAS las cargas terminen, evaluar acceso
+if (!isEnrolled && !isAdmin) {
+  return <LockedDashboard />;
+}
+```
+
+### Paso 3: Eliminar código duplicado
+
+Remover el `useEffect` y `checkAdminRole` manuales ya que usaremos `useIsAdmin`:
+
+```tsx
+// ELIMINAR estas líneas (47-66):
+useEffect(() => {
+  checkAdminRole();
+}, [user]);
+
+const checkAdminRole = async () => { ... };
+```
+
+---
+
+## Cambios de Archivos
+
+### 1. `src/pages/Dashboard.tsx`
 
 ```text
-┌─────────────────────────────────────┐
-│     Capa Superior: Gris Oscuro      │  #2D3748 / #1A202C
-├─────────────────────────────────────┤
-│      Capa Media: Steel Gray         │  #4A5568 / #223440
-├─────────────────────────────────────┤
-│     Capa Inferior: Cyan/Turquesa    │  #4FD1C5 / #5DE0E6 ← COLOR DE ACENTO
-└─────────────────────────────────────┘
+Cambios:
+1. Importar useIsAdmin (ya existe en el proyecto)
+2. Reemplazar useState isAdmin por useIsAdmin hook
+3. Eliminar checkAdminRole y su useEffect
+4. Agregar estado de carga combinado antes de evaluar acceso
 ```
 
-## Problema Actual
-
-El sistema usa **Neural Blue (#5A8CFF)** como color primario, pero el logo tiene **Cyan/Turquesa** como color de acento real.
-
-| Actual | Correcto |
-|--------|----------|
-| `#5A8CFF` (Azul) | `#4FD1C5` (Cyan/Turquesa) |
-| HSL: 220° 100% 68% | HSL: 171° 52% 56% |
+Resultado esperado:
+- El spinner de carga se muestra hasta que AMBAS verificaciones (enrollment + admin) terminen
+- No hay ventana de tiempo donde se pueda mostrar LockedDashboard incorrectamente
 
 ---
 
-## Nueva Paleta Propuesta
+## Flujo Corregido
 
-### Colores Principales
-
-| Nombre | Hex | HSL | Uso |
-|--------|-----|-----|-----|
-| **Midnight Core** | `#14181E` | 216° 23% 10% | Fondo principal |
-| **Stack Cyan** | `#4FD1C5` | 171° 52% 56% | Color primario, acentos, glow |
-| **Steel Gray** | `#223440` | 203° 30% 17% | Cards, elementos secundarios |
-| **Cloud White** | `#F5F7FA` | 220° 20% 97% | Texto principal |
-| **Dark Layer** | `#2D3748` | 218° 23% 23% | Capa superior del logo |
-| **Mid Layer** | `#4A5568` | 218° 17% 35% | Capa media del logo |
-
----
-
-## Fase 1: Variables CSS Base
-
-### Archivo: `src/index.css`
-
-**Cambios en Light Mode:**
-```css
-:root {
-  --primary: 171 52% 56%;           /* #4FD1C5 - Stack Cyan */
-  --primary-foreground: 220 15% 97%;
-  --ring: 171 52% 56%;
-  /* ... resto mantiene estructura */
-}
-```
-
-**Cambios en Dark Mode:**
-```css
-.dark {
-  --background: 216 23% 10%;        /* #14181E - Midnight Core */
-  --foreground: 220 20% 97%;        /* #F5F7FA - Cloud White */
-  --card: 203 30% 17%;              /* #223440 - Steel Gray */
-  --primary: 171 52% 56%;           /* #4FD1C5 - Stack Cyan */
-  --ring: 171 52% 56%;
-  
-  /* Gradientes actualizados a Cyan */
-  --gradient-primary: linear-gradient(135deg, hsl(171 52% 56%), hsl(176 60% 45%));
-  --shadow-glow: 0 0 80px hsl(171 52% 56% / 0.2);
-}
+```text
+Usuario navega a /dashboard
+         │
+         ▼
+   ProtectedRoute
+   (loading = true → spinner)
+         │
+   loading = false, user existe
+         │
+         ▼
+      Dashboard
+         │
+    ┌────┴────┐
+    ▼         ▼
+enrollmentLoading  adminLoading
+   = true          = true
+    │              │
+    ▼              ▼
+  ¿Loading?  ──────┴──────► SÍ → Spinner (NO flash)
+    │
+   Ambos = false
+    │
+    ▼
+  ¿isEnrolled || isAdmin?
+    │
+   YES → Dashboard completo
+   NO  → LockedDashboard
 ```
 
 ---
 
-## Fase 2: Efectos de Glow
+## Detalles Técnicos
 
-### Archivo: `src/index.css` - Utilities
-
-Todos los efectos de glow deben cambiar de azul (220°) a cyan (171°):
-
-```css
-/* Glow effects - STACK Cyan */
-.glow-primary {
-  box-shadow: 0 0 40px hsl(171 52% 56% / 0.4);
-}
-
-.glow-text {
-  text-shadow: 0 0 30px hsl(171 52% 56% / 0.5);
-}
-
-@keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px hsl(171 52% 56% / 0.4); }
-  50% { box-shadow: 0 0 60px hsl(171 52% 56% / 0.7); }
-}
-
-.hover-lift:hover {
-  box-shadow: 0 20px 40px -15px hsl(171 52% 56% / 0.3);
-}
-
-.hover-glow:hover {
-  box-shadow: 0 0 40px hsl(171 52% 56% / 0.4);
-}
-```
-
----
-
-## Fase 3: Tailwind Config
-
-### Archivo: `tailwind.config.ts`
-
-```typescript
-boxShadow: {
-  elegant: "var(--shadow-elegant)",
-  glow: "var(--shadow-glow)",
-  "glow-lg": "0 0 60px hsl(171 52% 56% / 0.3)",  // Cambio de 220° a 171°
-},
-```
-
----
-
-## Fase 4: Metadata SEO
-
-### Archivo: `index.html`
-
-```html
-<meta name="theme-color" content="#4FD1C5" />  <!-- Stack Cyan -->
-```
-
----
-
-## Resumen de Cambios
-
-### Archivos a Modificar
-
-1. **`src/index.css`**
-   - Variables CSS (--primary, --ring)
-   - Gradientes (--gradient-primary, --gradient-hero)
-   - Sombras (--shadow-glow, --shadow-elegant)
-   - Efectos glow (.glow-primary, .glow-text)
-   - Animaciones (pulse-glow, hover effects)
-
-2. **`tailwind.config.ts`**
-   - boxShadow.glow-lg
-
-3. **`index.html`**
-   - meta theme-color
-
-### Cambio Principal
-
-| Componente | De (Azul) | A (Cyan) |
-|------------|-----------|----------|
-| Hue | 220° | 171° |
-| Hex | #5A8CFF | #4FD1C5 |
-| Nombre | Neural Blue | Stack Cyan |
-
----
-
-## Resultado Visual Esperado
-
-- Botones primarios en **cyan/turquesa**
-- Efectos de glow en **cyan** (más consistente con el logo)
-- Gradientes de **cyan a teal**
-- Links y acentos en el mismo tono **turquesa**
-- Estética más fiel al logo de STACK con sus capas
-
+Esta solución:
+- Elimina duplicación de código (una sola verificación de admin)
+- Sincroniza los estados de carga
+- Previene cualquier renderizado prematuro de LockedDashboard
+- Mantiene la misma lógica de negocio (usuarios no-enrolled y no-admin ven pricing)
