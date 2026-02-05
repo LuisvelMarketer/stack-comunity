@@ -143,11 +143,15 @@ export const UserMenu = ({ showAdminLink = false }: UserMenuProps) => {
     <div className="flex items-center gap-2">
       <GlobalSearch />
       <ThemeToggle />
-      <Button
-        variant="ghost"
-        size="icon"
-        className="relative h-9 w-9 rounded-full hover:bg-muted"
-        onClick={() => navigate("/messages")}
+      <div
+        role="button"
+        tabIndex={0}
+        className="relative h-9 w-9 rounded-full hover:bg-muted flex items-center justify-center cursor-pointer transition-colors"
+        onClick={() => {
+          console.log("Navigating to messages");
+          navigate("/messages");
+        }}
+        onKeyDown={(e) => e.key === 'Enter' && navigate("/messages")}
         title="Mensajes"
       >
         <MessageCircle className="h-5 w-5 text-foreground" />
@@ -156,7 +160,7 @@ export const UserMenu = ({ showAdminLink = false }: UserMenuProps) => {
             {unreadMessages > 9 ? "9+" : unreadMessages}
           </span>
         )}
-      </Button>
+      </div>
       <NotificationCenter />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
