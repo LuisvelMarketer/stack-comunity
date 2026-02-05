@@ -234,7 +234,7 @@ function generatePDFHTML(data: any): string {
   ` : ""}
 
   <footer>
-    <p>Portfolio generado con Skoolify • ${new Date().toLocaleDateString("es-ES")}</p>
+     <p>Portfolio generado con STACK • ${new Date().toLocaleDateString("es-ES")}</p>
   </footer>
 </body>
 </html>

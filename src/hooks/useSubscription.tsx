@@ -10,7 +10,7 @@ import { useAuth } from './useAuth';
 export const PREMIUM_PRODUCT = {
   product_id: "prod_TZgd1fKmbpcWYM",
   price_id: "price_1ScXGPPj8vjAHltscNz2jo9R",
-  name: "Skoolify Premium",
+   name: "STACK Premium",
   price: 29.99,
 };
 

@@ -623,7 +623,7 @@ export default function CodigoQuantumLanding() {
                 className="text-white/40 hover:text-[#d4af37] text-xs sm:text-sm transition-colors"
                 onClick={() => navigate("/")}
               >
-                Skoolify
+                 STACK
               </button>
             </div>
           </div>
