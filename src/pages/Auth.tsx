@@ -288,31 +288,58 @@ const Auth = () => {
         }}
       />
       
-      {/* Logo and brand */}
+      {/* Logo and brand - with backdrop for visibility */}
       <motion.div 
-        className="relative z-10 flex items-center gap-4"
+        className="relative z-10"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        <div className="relative">
+        {/* Dark backdrop card */}
+        <div 
+          className="relative px-8 py-6 rounded-2xl border"
+          style={{ 
+            background: 'linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(10,14,20,0.8) 100%)',
+            borderColor: 'hsl(171 52% 56% / 0.3)',
+            boxShadow: '0 0 60px hsl(171 52% 56% / 0.15), inset 0 1px 0 rgba(255,255,255,0.05)'
+          }}
+        >
+          {/* Glow behind the card */}
           <div 
-            className="absolute inset-0 blur-xl rounded-xl"
-            style={{ background: 'hsl(171 52% 56% / 0.5)' }}
+            className="absolute -inset-4 rounded-3xl blur-2xl -z-10"
+            style={{ background: 'hsl(171 52% 56% / 0.1)' }}
           />
-          <img src={stackLogo} alt="STACK" className="relative w-16 h-16 rounded-xl" />
-        </div>
-        <div>
-          <h1 
-            className="text-4xl font-bold tracking-widest"
-            style={{ 
-              color: 'hsl(171 52% 56%)',
-              textShadow: '0 0 40px hsl(171 52% 56% / 0.6), 0 0 80px hsl(171 52% 56% / 0.3)'
-            }}
-          >
-            STACK
-          </h1>
-          <p className="text-white/70 text-lg tracking-wide">Infrastructure for the Elite</p>
+          
+          <div className="flex items-center gap-5">
+            <div className="relative">
+              {/* Logo glow */}
+              <div 
+                className="absolute inset-0 blur-xl rounded-xl scale-150"
+                style={{ background: 'hsl(171 52% 56% / 0.4)' }}
+              />
+              <img src={stackLogo} alt="STACK" className="relative w-20 h-20 rounded-xl" />
+            </div>
+            <div>
+              <h1 
+                className="text-5xl font-bold tracking-widest"
+                style={{ 
+                  color: '#fff',
+                  textShadow: '0 0 30px hsl(171 52% 56% / 0.8), 0 0 60px hsl(171 52% 56% / 0.5), 0 2px 4px rgba(0,0,0,0.5)'
+                }}
+              >
+                STACK
+              </h1>
+              <p 
+                className="text-xl tracking-wide font-medium mt-1"
+                style={{ 
+                  color: 'hsl(171 52% 56%)',
+                  textShadow: '0 0 20px hsl(171 52% 56% / 0.5)'
+                }}
+              >
+                Infrastructure for the Elite
+              </p>
+            </div>
+          </div>
         </div>
       </motion.div>
 
