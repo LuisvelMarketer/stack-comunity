@@ -257,34 +257,25 @@ const Auth = () => {
         background: 'linear-gradient(135deg, #030508 0%, #070a0e 30%, #0a0e14 60%, #0e1318 100%)'
       }}
     >
-      {/* Animated glow orbs */}
-      <div className="absolute inset-0">
+      {/* Subtle animated glow orbs - reduced opacity */}
+      <div className="absolute inset-0 pointer-events-none">
         <motion.div 
-          className="absolute top-20 left-20 w-80 h-80 rounded-full blur-[100px]"
-          style={{ background: 'hsl(171 52% 56% / 0.25)' }}
-          animate={{ 
-            scale: [1, 1.3, 1],
-            opacity: [0.2, 0.35, 0.2] 
-          }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div 
-          className="absolute bottom-20 right-20 w-96 h-96 rounded-full blur-[120px]"
-          style={{ background: 'hsl(171 52% 56% / 0.2)' }}
-          animate={{ 
-            scale: [1.2, 1, 1.2],
-            opacity: [0.15, 0.3, 0.15] 
-          }}
-          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div 
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full blur-[80px]"
-          style={{ background: 'hsl(171 52% 56% / 0.15)' }}
+          className="absolute top-20 left-20 w-48 h-48 rounded-full blur-[80px]"
+          style={{ background: 'hsl(171 52% 56% / 0.08)' }}
           animate={{ 
             scale: [1, 1.2, 1],
-            rotate: [0, 180, 360]
+            opacity: [0.05, 0.1, 0.05] 
           }}
-          transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div 
+          className="absolute bottom-32 right-20 w-56 h-56 rounded-full blur-[100px]"
+          style={{ background: 'hsl(171 52% 56% / 0.06)' }}
+          animate={{ 
+            scale: [1.1, 1, 1.1],
+            opacity: [0.04, 0.08, 0.04] 
+          }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
         />
       </div>
 
