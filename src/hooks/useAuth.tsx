@@ -38,38 +38,56 @@ export const useAuth = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Set up auth state listener
+    let isMounted = true;
+
+    // Function to check onboarding status
+    const checkOnboarding = async (userId: string) => {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('onboarding_completed')
+        .eq('id', userId)
+        .single();
+
+      if (isMounted && profile && !profile.onboarding_completed) {
+        navigate('/onboarding');
+      }
+    };
+
+    // Listener for ONGOING auth changes (does NOT control loading)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
+        if (!isMounted) return;
+        
         setSession(session);
         setUser(session?.user ?? null);
-        setLoading(false);
 
-        // Check if user needs onboarding after sign in
+        // Check onboarding only on sign in events (fire and forget)
         if (event === 'SIGNED_IN' && session?.user) {
-          setTimeout(async () => {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('onboarding_completed')
-              .eq('id', session.user.id)
-              .single();
-
-            if (profile && !profile.onboarding_completed) {
-              navigate('/onboarding');
-            }
-          }, 0);
+          checkOnboarding(session.user.id);
         }
       }
     );
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    // INITIAL load (controls loading state)
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!isMounted) return;
 
-    return () => subscription.unsubscribe();
+        setSession(session);
+        setUser(session?.user ?? null);
+      } finally {
+        // Ensure loading is set to false ONLY after initial auth check
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    initializeAuth();
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   const signUp = useCallback(async (email: string, password: string, fullName: string) => {
