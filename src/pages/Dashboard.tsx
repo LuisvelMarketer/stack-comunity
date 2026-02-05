@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useCourseEnrollment } from "@/hooks/useCourseEnrollment";
-import { supabase } from "@/integrations/supabase/client";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useSearchParams } from "react-router-dom";
 import { SocialFeed } from "@/components/social/SocialFeed";
 import { Leaderboard } from "@/components/social/Leaderboard";
@@ -24,7 +24,7 @@ import { toast } from "sonner";
 const Dashboard = () => {
   const { user } = useAuth();
   const { isEnrolled, loading: enrollmentLoading } = useCourseEnrollment();
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { isAdmin, loading: adminLoading } = useIsAdmin();
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -44,29 +44,19 @@ const Dashboard = () => {
     }
   }, [searchParams, setSearchParams]);
 
-  useEffect(() => {
-    checkAdminRole();
-  }, [user]);
+  // Show loading while checking enrollment AND admin status
+  if (enrollmentLoading || adminLoading) {
+    return (
+      <MainLayout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </MainLayout>
+    );
+  }
 
-  const checkAdminRole = async () => {
-    if (!user) return;
-    
-    try {
-      const { data, error } = await supabase.rpc("has_role", {
-        _user_id: user.id,
-        _role: "admin",
-      });
-
-      if (!error && data) {
-        setIsAdmin(true);
-      }
-    } catch (error) {
-      console.error("Error checking admin role:", error);
-    }
-  };
-
-  // Show locked dashboard for non-enrolled users
-  if (!enrollmentLoading && !isEnrolled && !isAdmin) {
+  // Show locked dashboard for non-enrolled AND non-admin users
+  if (!isEnrolled && !isAdmin) {
     return (
       <MainLayout>
         <LockedDashboard />
