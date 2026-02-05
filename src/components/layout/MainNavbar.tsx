@@ -54,7 +54,7 @@ export function MainNavbar({ showAdminLink = false }: MainNavbarProps) {
           </div>
 
           {/* Desktop Navigation - Center */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-2 ml-8">
             {navItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.href);
