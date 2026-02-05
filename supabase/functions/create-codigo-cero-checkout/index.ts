@@ -54,7 +54,7 @@ serve(async (req) => {
     }
 
     // Create checkout session for one-time payment
-    const origin = req.headers.get("origin") || "https://skoolify-comunidad.lovable.app";
+     const origin = req.headers.get("origin") || "https://stack-comunity.lovable.app";
     
     const session = await stripe.checkout.sessions.create({
       customer: customerId,

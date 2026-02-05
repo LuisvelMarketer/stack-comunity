@@ -86,7 +86,7 @@ const PublicPortfolio = () => {
             <p>
               Creado con{" "}
               <a href="/" className="text-primary hover:underline">
-                Skoolify
+                 STACK
               </a>
             </p>
           </footer>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import skoolifyLogo from "@/assets/skoolify-logo.png";
+ import stackLogo from "@/assets/stack-logo.png";
 import { useNavigate } from "react-router-dom";
 import { useCommunityOwner } from "@/hooks/useCommunityOwner";
 import { useIsAdmin } from "@/hooks/useIsAdmin";

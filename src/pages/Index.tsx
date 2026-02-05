@@ -353,7 +353,7 @@ const Index = () => {
                   </div>
                   <div className="flex-1 flex justify-center">
                     <div className="px-4 py-1 bg-background/50 rounded-md text-xs text-muted-foreground">
-                      skoolify.com/demo
+                       stack.com/demo
                     </div>
                   </div>
                 </div>
@@ -679,7 +679,7 @@ const Index = () => {
             <span className="text-gradient">tu comunidad?</span>
           </h2>
           <p className="text-xl text-muted-foreground mb-10 max-w-xl mx-auto">
-            Únete a miles de creadores que ya están monetizando su conocimiento con Skoolify
+             Únete a miles de creadores que ya están monetizando su conocimiento con STACK
           </p>
           <div className="relative inline-block group hover-lift">
             <div className="absolute inset-0 -z-10">

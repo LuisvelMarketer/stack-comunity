@@ -6,7 +6,7 @@ const ALLOWED_ORIGINS = [
   'https://lovable.dev',
   'https://preview.lovable.app',
   'https://zdrekqhxzhuttafkwtpa.lovableproject.com',
-  'https://skoolify-comunidad.lovable.app',
+   'https://stack-comunity.lovable.app',
 ];
 
 function getCorsHeaders(origin: string | null): Record<string, string> {

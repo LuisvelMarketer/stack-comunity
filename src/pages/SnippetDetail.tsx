@@ -104,7 +104,7 @@ export default function SnippetDetail() {
   return (
     <>
       <Helmet>
-        <title>{snippet.title} | Biblioteca - Skoolify</title>
+         <title>{snippet.title} | Biblioteca - STACK</title>
         <meta name="description" content={snippet.description || `${typeLabels[snippet.type]} - ${snippet.title}`} />
       </Helmet>
 

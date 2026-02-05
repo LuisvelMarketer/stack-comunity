@@ -827,7 +827,7 @@ const BrandingContent = ({ features, isSignUp }: { features: { icon: any; title:
         </p>
       </div>
       <p className="text-white/60 text-sm">
-        © 2024 Skoolify. Todos los derechos reservados.
+         © 2024 STACK. Todos los derechos reservados.
       </p>
     </motion.div>
   </>
