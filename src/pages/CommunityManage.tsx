@@ -30,7 +30,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Users, Settings, BookOpen, Save, Bell, DollarSign, X, Plus, Images, Upload, ImageIcon, BarChart3, Mail, Target, Trash2 } from "lucide-react";
+import { Users, Settings, BookOpen, Save, Bell, DollarSign, X, Plus, Images, Upload, ImageIcon, BarChart3, Mail, Target, Trash2, Calendar, Video } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -45,6 +45,8 @@ import { CommunityGalleryManager } from "@/components/community/CommunityGallery
 import { CommunityAnalyticsTab } from "@/components/community/CommunityAnalyticsTab";
 import { EmailCampaignManager } from "@/components/community/EmailCampaignManager";
 import { WeeklyChallengesManager } from "@/components/community/WeeklyChallengesManager";
+import { CommunityEventsManager } from "@/components/community/CommunityEventsManager";
+import { CommunityLivesManager } from "@/components/community/CommunityLivesManager";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -361,6 +363,14 @@ export default function CommunityManage() {
               <Target className="h-4 w-4" />
               Desafíos
             </TabsTrigger>
+            <TabsTrigger value="events" className="gap-2">
+              <Calendar className="h-4 w-4" />
+              Eventos
+            </TabsTrigger>
+            <TabsTrigger value="lives" className="gap-2">
+              <Video className="h-4 w-4" />
+              Lives
+            </TabsTrigger>
             <TabsTrigger value="pricing" className="gap-2">
               <DollarSign className="h-4 w-4" />
               Membresía
@@ -494,6 +504,16 @@ export default function CommunityManage() {
           {/* Challenges Tab */}
           <TabsContent value="challenges">
             <WeeklyChallengesManager communityId={communityId!} />
+          </TabsContent>
+
+          {/* Events Tab */}
+          <TabsContent value="events">
+            <CommunityEventsManager communityId={communityId!} />
+          </TabsContent>
+
+          {/* Lives Tab */}
+          <TabsContent value="lives">
+            <CommunityLivesManager communityId={communityId!} />
           </TabsContent>
 
           {/* Pricing Tab */}
