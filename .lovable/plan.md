@@ -1,143 +1,90 @@
 
-# Plan: Eliminar el Flash de la Página de Pricing
 
-## Problema Identificado
+# Plan: Gestión de Eventos y Lives para Dueños de Comunidad
 
-El flash de la página de pricing (LockedDashboard) ocurre debido a múltiples condiciones de carrera:
+## Problema
 
-### Causa Raíz #1: Estado de carga no sincronizado
-En `Dashboard.tsx` (líneas 69-75):
-```tsx
-if (!enrollmentLoading && !isEnrolled && !isAdmin) {
-  return <LockedDashboard />;
-}
-```
+Actualmente, solo los administradores de la plataforma (role "admin") pueden crear eventos y sesiones en vivo desde el panel `/admin`. Un dueño de comunidad que no sea admin de la plataforma no tiene forma de programar clases, eventos o lives para su comunidad.
 
-El problema es que:
-- `enrollmentLoading` termina en ~100ms
-- `isAdmin` (verificación RPC) tarda ~200-300ms
-- Durante ese gap, `!enrollmentLoading && !isEnrolled && !isAdmin` es `true` → ¡Flash!
+## Solucion
 
-### Causa Raíz #2: Múltiples verificaciones de admin
-- `Dashboard.tsx` tiene su propia verificación de admin con `checkAdminRole()` (líneas 51-66)
-- `useIsAdmin` hook también verifica admin por separado
-- Ambas empiezan en `false` y no hay estado de carga coordinado
+Agregar dos nuevas pestanas al panel de gestion de comunidad (`/community/:id/manage`):
+- **Eventos**: Para crear, editar y eliminar eventos (incluyendo recurrencia semanal para clases)
+- **Lives**: Para programar y gestionar sesiones en vivo
+
+Estas pestanas reutilizaran la logica existente de los componentes admin (`EventsManager` y `LivesManager`), pero filtradas exclusivamente para la comunidad del owner.
 
 ---
 
-## Solución Propuesta
+## Nuevos Componentes
 
-### Paso 1: Unificar verificación de admin en Dashboard
+### 1. `src/components/community/CommunityEventsManager.tsx`
 
-Reemplazar la verificación manual en Dashboard con el hook `useIsAdmin` que ya tiene un estado `loading`:
+Componente basado en el `EventsManager` del admin pero:
+- Recibe `communityId` como prop (no muestra selector de comunidad)
+- Solo muestra eventos de ESA comunidad
+- Permite crear eventos con recurrencia (diaria, semanal, mensual)
+- Incluye campos: titulo, descripcion, fecha, ubicacion, capacidad maxima, tipo de recurrencia, fecha fin de recurrencia
 
-```tsx
-// Dashboard.tsx - Cambiar de:
-const [isAdmin, setIsAdmin] = useState(false);
-// ...checkAdminRole useEffect...
+### 2. `src/components/community/CommunityLivesManager.tsx`
 
-// A:
-const { isAdmin, loading: adminLoading } = useIsAdmin();
-```
-
-### Paso 2: Esperar todas las cargas antes de renderizar
-
-Modificar la condición para esperar que TODAS las verificaciones terminen:
-
-```tsx
-// Dashboard.tsx - Cambiar de:
-if (!enrollmentLoading && !isEnrolled && !isAdmin) {
-  return <LockedDashboard />;
-}
-
-// A:
-// Mostrar loading mientras cualquier verificación esté en progreso
-if (enrollmentLoading || adminLoading) {
-  return (
-    <MainLayout>
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    </MainLayout>
-  );
-}
-
-// Solo después de que TODAS las cargas terminen, evaluar acceso
-if (!isEnrolled && !isAdmin) {
-  return <LockedDashboard />;
-}
-```
-
-### Paso 3: Eliminar código duplicado
-
-Remover el `useEffect` y `checkAdminRole` manuales ya que usaremos `useIsAdmin`:
-
-```tsx
-// ELIMINAR estas líneas (47-66):
-useEffect(() => {
-  checkAdminRole();
-}, [user]);
-
-const checkAdminRole = async () => { ... };
-```
+Componente basado en el `LivesManager` del admin pero:
+- Recibe `communityId` como prop
+- Solo muestra lives de ESA comunidad
+- Permite crear lives con: titulo, descripcion, fecha programada, URL del stream, plataforma (YouTube/Twitch/Zoom)
+- Permite cambiar estado: programado, en vivo, finalizado
 
 ---
 
-## Cambios de Archivos
+## Archivo Modificado
 
-### 1. `src/pages/Dashboard.tsx`
+### 3. `src/pages/CommunityManage.tsx`
+
+Agregar dos nuevas pestanas al `TabsList`:
+- Pestana "Eventos" con icono Calendar
+- Pestana "Lives" con icono Video
+
+Importar y renderizar los nuevos componentes en sus respectivos `TabsContent`.
+
+---
+
+## Detalles Tecnicos
+
+### Base de datos
+No se requieren cambios. Las tablas `events` y `live_sessions` ya tienen `community_id` y soportan todos los campos necesarios (recurrencia, estado, etc).
+
+### Seguridad
+La verificacion de owner ya existe en `CommunityManage.tsx` (linea 128-143). Solo el owner puede acceder a esta pagina, por lo que los nuevos componentes heredan esa proteccion.
+
+### Flujo del owner
 
 ```text
-Cambios:
-1. Importar useIsAdmin (ya existe en el proyecto)
-2. Reemplazar useState isAdmin por useIsAdmin hook
-3. Eliminar checkAdminRole y su useEffect
-4. Agregar estado de carga combinado antes de evaluar acceso
+Owner navega a /community/:id/manage
+       |
+       v
+  Tabs existentes + 2 nuevas:
+  [Analytics][Miembros][Cursos][Eventos][Lives][Galeria]...
+       |                         |        |
+       v                         v        v
+  (existente)              Crear/editar  Crear/editar
+                           eventos con   lives con
+                           recurrencia   estado
 ```
 
-Resultado esperado:
-- El spinner de carga se muestra hasta que AMBAS verificaciones (enrollment + admin) terminen
-- No hay ventana de tiempo donde se pueda mostrar LockedDashboard incorrectamente
+### Campos del formulario de Eventos
+- Titulo (obligatorio)
+- Descripcion
+- Fecha y hora
+- Ubicacion (presencial o link)
+- Capacidad maxima
+- Tipo de recurrencia: Ninguna / Diaria / Semanal / Mensual
+- Fecha fin de recurrencia (si aplica)
 
----
+### Campos del formulario de Lives
+- Titulo (obligatorio)
+- Descripcion
+- Fecha programada
+- URL del stream
+- Plataforma: YouTube / Twitch / Zoom / Otro
+- Imagen miniatura
 
-## Flujo Corregido
-
-```text
-Usuario navega a /dashboard
-         │
-         ▼
-   ProtectedRoute
-   (loading = true → spinner)
-         │
-   loading = false, user existe
-         │
-         ▼
-      Dashboard
-         │
-    ┌────┴────┐
-    ▼         ▼
-enrollmentLoading  adminLoading
-   = true          = true
-    │              │
-    ▼              ▼
-  ¿Loading?  ──────┴──────► SÍ → Spinner (NO flash)
-    │
-   Ambos = false
-    │
-    ▼
-  ¿isEnrolled || isAdmin?
-    │
-   YES → Dashboard completo
-   NO  → LockedDashboard
-```
-
----
-
-## Detalles Técnicos
-
-Esta solución:
-- Elimina duplicación de código (una sola verificación de admin)
-- Sincroniza los estados de carga
-- Previene cualquier renderizado prematuro de LockedDashboard
-- Mantiene la misma lógica de negocio (usuarios no-enrolled y no-admin ven pricing)
